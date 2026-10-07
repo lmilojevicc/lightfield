@@ -1,0 +1,98 @@
+{
+  "commit": "01243432489f596de47419fb39f3bf27cc82ebd4",
+  "version": "1.0.3-canary.20260731173236",
+  "source": "https://github.com/FireCMSco/neat",
+  "presetPath": "editor/src/components/presets.ts",
+  "presetSha256": "6e4bebb1cd26344bee5aafe294605d412ee013af010cfa87001cc5d23650bb2b",
+  "licenseSha256": "7e193ea51a26d223e081774bd55a1b09cedff23c999320edc69dd9a87f2ce87d",
+  "count": 25,
+  "names": [
+    "Neat",
+    "Time",
+    "Fluid",
+    "Flame",
+    "Funky",
+    "Alejandra",
+    "Monterey",
+    "Virus",
+    "Blob",
+    "Sands",
+    "Nighttime",
+    "Prussian",
+    "Clouds",
+    "Lemon",
+    "Dark Mode",
+    "FireCMS",
+    "Stripe",
+    "Pastel",
+    "Cosmic Vortex",
+    "Bloom",
+    "Night Dunes",
+    "Bubble Gum",
+    "Oceans Eleven",
+    "Coral",
+    "Oil Slick"
+  ],
+  "files": [
+    {
+      "name": "current/NeatGradient.ts",
+      "localSha256": "da78f6d248e3a159049e0a8ea4284b5ad3d1463a00f3c1293dfe31c69fe4495e",
+      "upstreamSha256": "6898cf0726fd0c23a2dd29dc332486acbeaa8bbce70112083e9af82c60fe715d",
+      "modification": "host lifecycle/resource/error ownership; content-aware procedural palette invalidation and Canvas2D cache state reset (source adaptation, no algorithm/default changes)"
+    },
+    {
+      "name": "current/license.ts",
+      "localSha256": "95187b18ccf991904e2cc2ffda6f8f5c7eb975dfb57a5839933ad2521b82e350",
+      "upstreamSha256": "6ed961e2488adc786dec16011639e5c572d6f33354ee887847a15603b92d480b",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/math.ts",
+      "localSha256": "cc8a6c9f50418b9964a7714734ffa7a1e70afd41393eee0bd8e14e976c9cb81a",
+      "upstreamSha256": "55c9707de80ff301b919deb0b8013d9f505558fafbbf10a1e83efb1bbbcc1ad0",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/pattern.ts",
+      "localSha256": "9f5f8db094c17f8bc06f05904af3a964a8f1c179716b375560918a6ed0fbc769",
+      "upstreamSha256": "808363ef484c565d3a2af6aaac7e5bf260f1f82c0c70724e3b5cf1556c23e01b",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/patternData.ts",
+      "localSha256": "a5908e1f762b46fd02eab9370dfc01e5104d897229eb9e51e26e673bea0e2677",
+      "upstreamSha256": "903d2d487177fcd612fb87d2682d22b3204394c012c98abb51f4431c962fabe7",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/shaders.ts",
+      "localSha256": "96ed25a30d1026ddec9182036260f8897c8ae4db86aee434b37110dd4a9cc872",
+      "upstreamSha256": "960316ff805ec73eaa30e706a533d3cb69ebf33a3824d5e36a07b39cd2e253f6",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/types.ts",
+      "localSha256": "1a3d26286682d7225f0a295670e388f5b4c4745fa3c70d6dd29cf38cf12bbe81",
+      "upstreamSha256": "0887d4606f2bba0327a07e98bc2d0ac89f6afd0d3b373979107a1ed0c7f752f1",
+      "modification": "compiler annotation only"
+    },
+    {
+      "name": "current/version.ts",
+      "localSha256": "2d68387941da0a03899af962abd04461453a548795fdda55e82444e617a0665b",
+      "upstreamSha256": null,
+      "modification": "generated version from pinned lib/package.json"
+    }
+  ],
+  "registrySha256": "ae2670ebd0fc279f118ebfb9c97754d95c8d139704d09da0fa53a8d91bb565e6",
+  "definitionsSha256": "d4cb1f7c8be3baf36191f7db94c4b2bd243357f4d214f1748da823d59e784428",
+  "legacyPreviewSha256": "385c69793eeeb9a15a7e8a7d7b79182d4e382f5904f6ab07227e3389c1e0ba24",
+  "definitionsModification": "generated controls: colorBlending minimum 0.1; runtime bounds share the descriptor; all 25 official defaults unchanged",
+  "referenceOnlyFiles": [
+    {
+      "name": "current/index.ts",
+      "localSha256": "28654d8fd627b2c82c07877a8600e1d43104cda4d025fd96555157ffc7c87a05",
+      "upstreamSha256": "75ec65066000ee17c76c8e1403d4f904866a148f622ebf7ccbde5ecf8d43e515",
+      "modification": "compiler annotation only"
+    }
+  ]
+}

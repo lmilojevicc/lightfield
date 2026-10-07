@@ -1,0 +1,172 @@
+[
+  {
+    "path": "src/effects/paper/vertex-shader.ts",
+    "sha256": "fe4d9c51ea25a9b16845a45eeb47dc780863762c083a96925607dc8401d83242",
+    "segments": 1
+  },
+  {
+    "path": "src/effects/smoke.ts",
+    "sha256": "2d1315307560677dc29e57ba3466788d626df7982b8ca4dc97ae30104d652585",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/light-rays.ts",
+    "sha256": "8f8a8f2e095a3a5a88096d21d7b940d3c219c5141dd35b0cb42b75aba26ebc7d",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/dark-veil.ts",
+    "sha256": "510fab2501a7f6b90b35bf1266f658960e23b1886b10e1a814fb1f74525d849a",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/julia.ts",
+    "sha256": "a43a8ef5132b4dac805106d68dac4d75a548a91d53d4d4ac8daf119fb3ef781c",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/iridescence.ts",
+    "sha256": "6bb8c6d3ac0f6516b31c7d7bd02dc28c978aae376a83e6f03bcc7457d76da463",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/topo.ts",
+    "sha256": "fae5251ef999d31783dc9d31685e1fd280adb5ce0f6ebcc14e4dd3158fc1a72a",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/ripple.ts",
+    "sha256": "03e16159ad2951f17f026aace69584882fedd025ba6f4277dff630384ab7f904",
+    "segments": 1
+  },
+  {
+    "path": "src/effects/grainient.ts",
+    "sha256": "c63dde6eaf35630086922083a3de8bd61abe3afce85af8fd3a71b49044e5f681",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/liquid-ether.ts",
+    "sha256": "4bf7349b5c2734959e3664c29aabff3fbb63a15c0348822ebe188206c16d602a",
+    "segments": 11
+  },
+  {
+    "path": "src/effects/ferrofluid.ts",
+    "sha256": "e2c810552639fa6d15d206dd1ff831245f2c2e0fe3f539dd6519ca620657da9b",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/side-rays.ts",
+    "sha256": "102689b8195bfa4a6e815f633fb5bc3e61a16f85558f6c8f9b2b26f6158d6489",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/halftone.ts",
+    "sha256": "c60ea08b2c4089b7f9845cdfd81dde11fbee1aaa80ad9ff6654fc511a9eea625",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/shape-blur.ts",
+    "sha256": "53bfcfc912c66216fa715f629eb885d27a05375f26e7eb1176887d40d2bb3d0e",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/line-waves.ts",
+    "sha256": "b5f96efa644ba13584da01e96a80ab6343f9e3a77d6e750455bb149115972bb4",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/soft-aurora.ts",
+    "sha256": "f61ea55db9c3ddc19c8cfa223cc1359364faf8b060c2400b992c0ad9e8d6c3a9",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/aurora.ts",
+    "sha256": "2381a94eda34506bb801acd99eaf31093d7d41380ea0b22394a142859f6cdb5f",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/plasma.ts",
+    "sha256": "9af0e56f100210479cdb10b68a94e9df5880f12ac15604b2db6486dc0bc8b632",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/ray.ts",
+    "sha256": "2f5183c72612014b3416c6291a8bc34f0e568559394554899527124c791a7c12",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/liquid-chrome.ts",
+    "sha256": "bd45405a74a3757cdeb73350624559862db1c6a56805b5eae80a6bd15a38689f",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/beams.ts",
+    "sha256": "a0eb40d8a7106c4448cd00c79b76b1a406b6f21e24416f20fa58bdd9c5840e3e",
+    "segments": 7
+  },
+  {
+    "path": "src/effects/gradient-waves.ts",
+    "sha256": "52c8887016f8e63289986fb97baf289fed0b16d8935bc420b1b9289bde8ad9a7",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/pixel-perfect/dither-wave-shaders.ts",
+    "sha256": "791a5d047442229702c00810afae7066d27f5c953cca94d875d5f4474a0ac3dd",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/pixel-perfect/contour-map-shaders.ts",
+    "sha256": "a716780e6d471e6be209afde96a40169ebf30920864a499c768b746d347454bb",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/prism.ts",
+    "sha256": "9bb6def25d7837555ab7f86bbf9aa8a73c2a38e73c1e180fbcfabc35a1f60346",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/fractal.ts",
+    "sha256": "99b6f8d00d210f516eaa7e769ebe7569090002c9c8fa9c0c86a155f5541a8b71",
+    "segments": 1
+  },
+  {
+    "path": "src/effects/strands.ts",
+    "sha256": "35cba4ab50a243caa563cb8235499045addceccb991a1cf28f8435564bc7d2d1",
+    "segments": 5
+  },
+  {
+    "path": "src/effects/gradient-blinds.ts",
+    "sha256": "82455c11df6629f6cdbe4d5436b417bf86ed74b487ea9ef2e5944449cb899834",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/dither-sky.ts",
+    "sha256": "37ece22ad4a34892e86d70b575ffe55dc96fd32514b43f85c42d87f7bda4e0ee",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/pixel-blast.ts",
+    "sha256": "aecefd894d2aabcdc61aa58b04db000bd787928028270bbc8ab95d7affabae89",
+    "segments": 3
+  },
+  {
+    "path": "src/effects/dither.ts",
+    "sha256": "f9fa75e8f45e16c586279d1ce7732f9e957c1d621686691e9fcd309f12452912",
+    "segments": 3
+  },
+  {
+    "path": "src/effects/silk.ts",
+    "sha256": "1bdc2eaea0bbc17f14959108f6548272a083064e0de64638e51b970a1c603d3a",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/ink.ts",
+    "sha256": "ff9ed0634b009575b0c233a34b6269ea8a541c649da6092e532cf8dc5aa756cb",
+    "segments": 2
+  },
+  {
+    "path": "src/effects/meridian-glsl.ts",
+    "sha256": "df458097d505a60c8e4eed5a1012003449a6d9c23fcbbeb5e68c732367b23c41",
+    "segments": 3
+  }
+]

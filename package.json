@@ -1,0 +1,51 @@
+{
+  "name": "lightfield",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "bun": "1.4.2",
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "bun tooling/build.ts",
+    "build:chromium": "bun tooling/build.ts chromium",
+    "build:firefox": "bun tooling/build.ts firefox",
+    "check": "bun --bun svelte-check --tsconfig ./tsconfig.app.json --fail-on-warnings && bun --bun tsc --project tsconfig.tooling.json && bun --bun tsc --project tsconfig.tests.json && bun --bun tsc --project tsconfig.native-tests.json && bun --bun tsc --project tsconfig.worker.json && bun --bun tsc --project tsconfig.effects-tests.json",
+    "lint": "bun --bun eslint . --max-warnings 0",
+    "format": "bun --bun prettier --write .",
+    "format:check": "bun --bun prettier --check .",
+    "deadcode": "bun --bun knip",
+    "test": "bun test tooling tests/shared tests/domain tests/platform tests/services tests/effects",
+    "inspect": "bun tooling/inspect.ts",
+    "package": "bun tooling/package.ts",
+    "lint:firefox": "bun --bun web-ext lint --source-dir dist/firefox --output text",
+    "validate": "bun run check && bun run lint && bun run format:check && bun run deadcode && bun run test && bun run build && bun run inspect && bun run package && bun run lint:firefox"
+  },
+  "dependencies": {
+    "@paper-design/shaders": "0.0.80",
+    "ogl": "1.0.11",
+    "postprocessing": "6.39.4",
+    "svelte": "5.57.2",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@types/bun": "1.4.2",
+    "@types/three": "0.180.0",
+    "eslint": "10.12.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-svelte": "3.23.0",
+    "knip": "6.40.0",
+    "parse5": "7.3.0",
+    "prettier": "3.9.9",
+    "prettier-plugin-svelte": "4.1.1",
+    "svelte-check": "4.3.3",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.1",
+    "vite": "8.3.3",
+    "web-ext": "10.7.0"
+  }
+}

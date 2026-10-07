@@ -1,0 +1,693 @@
+[
+  {
+    "source": "public/fonts/README.md",
+    "path": "public/fonts/README.md",
+    "sha256": "8e9f9baa9c18b860f0b4233f3fd66efb4b2aad532b9ef242c2b1e36b0146d775"
+  },
+  {
+    "source": "public/fonts/bricolage-400-subset.woff2",
+    "path": "public/fonts/bricolage-400-subset.woff2",
+    "sha256": "9cb45b4aa111b6b914bf0445b2d48c4692e3f78e1d967b164bf829d84685c54e"
+  },
+  {
+    "source": "public/fonts/fraunces-400-subset.woff2",
+    "path": "public/fonts/fraunces-400-subset.woff2",
+    "sha256": "c6a29dc12ac39e9fe65ac94ee86b08a3300a64e127f08056f80b6aee09db2139"
+  },
+  {
+    "source": "public/fonts/fraunces-600-subset.woff2",
+    "path": "public/fonts/fraunces-600-subset.woff2",
+    "sha256": "a910677ee51e3e752ce3265a91ae909e7c4219233e29c467d1325e75ae0b4359"
+  },
+  {
+    "source": "public/fonts/instrumentserif-400-subset.woff2",
+    "path": "public/fonts/instrumentserif-400-subset.woff2",
+    "sha256": "a4c09aa266025bab488c298d8e2088007a87a996dca40a675207ac9e5090e391"
+  },
+  {
+    "source": "public/fonts/jetbrainsmono-400-subset.woff2",
+    "path": "public/fonts/jetbrainsmono-400-subset.woff2",
+    "sha256": "de4ea9aed4cb13538bfa33a566098e23f9eabb7965b4a8c4833d5500db0f3c1a"
+  },
+  {
+    "source": "public/fonts/jetbrainsmono-600-subset.woff2",
+    "path": "public/fonts/jetbrainsmono-600-subset.woff2",
+    "sha256": "140824e3d5355d75456f421a36519a09473a87f2afeb3102f848e623e05a9536"
+  },
+  {
+    "source": "public/fonts/jetbrainsmono-700-subset.woff2",
+    "path": "public/fonts/jetbrainsmono-700-subset.woff2",
+    "sha256": "41fa680fa99ae47d6a201625be3801d2d69a1bbc90e8174099351ccbe7b68ce4"
+  },
+  {
+    "source": "public/fonts/licenses/bricolagegrotesque-OFL.txt",
+    "path": "public/fonts/licenses/bricolagegrotesque-OFL.txt",
+    "sha256": "4b5a7d8f37f5602621c8a8d7358a6a2e71317e6c231c661e15aef0275d3e07ba"
+  },
+  {
+    "source": "public/fonts/licenses/fraunces-OFL.txt",
+    "path": "public/fonts/licenses/fraunces-OFL.txt",
+    "sha256": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b"
+  },
+  {
+    "source": "public/fonts/licenses/instrumentserif-OFL.txt",
+    "path": "public/fonts/licenses/instrumentserif-OFL.txt",
+    "sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
+  },
+  {
+    "source": "public/fonts/licenses/jetbrainsmono-OFL.txt",
+    "path": "public/fonts/licenses/jetbrainsmono-OFL.txt",
+    "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+  },
+  {
+    "source": "public/fonts/sources.json",
+    "path": "public/fonts/sources.json",
+    "sha256": "d922b03969d8bfe192928d07faa871056c750825627e48f51dbbd9d4c174849a"
+  },
+  {
+    "source": "public/icons/icon-128.png",
+    "path": "public/icons/icon-128.png",
+    "sha256": "6f914f6b70401640a70d93ca6fd38eedf30cd0afd4a7cf5ee1eec927f6081338"
+  },
+  {
+    "source": "public/icons/icon-16.png",
+    "path": "public/icons/icon-16.png",
+    "sha256": "51882686faf8fd02c5a3e716beab3ee71aed7e83153c4e5d9469d1efbae9078e"
+  },
+  {
+    "source": "public/icons/icon-32.png",
+    "path": "public/icons/icon-32.png",
+    "sha256": "bcc92711c8296f211b0b7a991c5ebddad2c255fda5f1f557d44675b6256bdf6e"
+  },
+  {
+    "source": "public/icons/icon-48.png",
+    "path": "public/icons/icon-48.png",
+    "sha256": "98c92b3e1e25a6271ebf33164f963e7b4766279a8c85addfb176c0c0827bfa40"
+  },
+  {
+    "source": "public/icons/icon.svg",
+    "path": "public/icons/icon.svg",
+    "sha256": "03a6a3f33f4cf0b328a9ab44d7da9ca7941b5f7998e4a9bc2c8a77d7670a61c6"
+  },
+  {
+    "source": "public/previews/ascii.webp",
+    "path": "public/previews/ascii.webp",
+    "sha256": "dfb235f1485f07ea78e413aa76caac95f7d027edc1931dc96c35a23991b4d60f"
+  },
+  {
+    "source": "public/previews/aurora.webp",
+    "path": "public/previews/aurora.webp",
+    "sha256": "ccb1089c39238b3e240294bbfd27daaee4ac4361b394fea350648f01c7686e27"
+  },
+  {
+    "source": "public/previews/beams.webp",
+    "path": "public/previews/beams.webp",
+    "sha256": "b514ae395db72c5fd7bbbefeba43355fa6bf82424049f912e68982cb1671c1c1"
+  },
+  {
+    "source": "public/previews/dark-veil.webp",
+    "path": "public/previews/dark-veil.webp",
+    "sha256": "e73fb0e64ee52b309b4b4b605679ab9e1f78a944af0c31a56590e6a93f0eb585"
+  },
+  {
+    "source": "public/previews/dither-sky.webp",
+    "path": "public/previews/dither-sky.webp",
+    "sha256": "ea4ee3192e31541a5c604484ec09dff71673c6bf65c8ae0a8b8364de9073ac8c"
+  },
+  {
+    "source": "public/previews/dither.webp",
+    "path": "public/previews/dither.webp",
+    "sha256": "ea4ee3192e31541a5c604484ec09dff71673c6bf65c8ae0a8b8364de9073ac8c"
+  },
+  {
+    "source": "public/previews/dot-field.webp",
+    "path": "public/previews/dot-field.webp",
+    "sha256": "fb7198f935b5e0713f147f1bb48f4faa6c99bd76dcd0bfa9a856f0ae58649600"
+  },
+  {
+    "source": "public/previews/ferrofluid.webp",
+    "path": "public/previews/ferrofluid.webp",
+    "sha256": "607ff55f8a37e2b089f86e15f149f275043bcc9c58b57f6097957a8f0b49d37a"
+  },
+  {
+    "source": "public/previews/fractal.webp",
+    "path": "public/previews/fractal.webp",
+    "sha256": "1d03204d401b26ab3914e542d0fcb301f8e02f15164ea9400bb0fc0991c58bab"
+  },
+  {
+    "source": "public/previews/gradient-blinds.webp",
+    "path": "public/previews/gradient-blinds.webp",
+    "sha256": "0a5e6487230460dc58155b4bd79d1abfa5cd6495e8588598e3a533bed171f9f5"
+  },
+  {
+    "source": "public/previews/gradient-waves.webp",
+    "path": "public/previews/gradient-waves.webp",
+    "sha256": "51a3625a394783b498ea32ec6c052afdf5ed87ae2bda1138e87a00edac8aa847"
+  },
+  {
+    "source": "public/previews/grainient.webp",
+    "path": "public/previews/grainient.webp",
+    "sha256": "34808e6f1e5627432c13f3d2333b8f443e9d28767a3fd574003984564f72b272"
+  },
+  {
+    "source": "public/previews/halftone.webp",
+    "path": "public/previews/halftone.webp",
+    "sha256": "06f9c54a483ad2001fd49e842ce14b8ddf028710a1c7fc7ce15fdcdb56992880"
+  },
+  {
+    "source": "public/previews/ink.webp",
+    "path": "public/previews/ink.webp",
+    "sha256": "b73b8c1fe7733a9f1a9de46627d76ae245cb799ababfce47957aad09f18269f5"
+  },
+  {
+    "source": "public/previews/iridescence.webp",
+    "path": "public/previews/iridescence.webp",
+    "sha256": "173025cba9fdd08c8522e12e6ebba58ce39c836448782671b7359713f1a3b858"
+  },
+  {
+    "source": "public/previews/julia.webp",
+    "path": "public/previews/julia.webp",
+    "sha256": "1d03204d401b26ab3914e542d0fcb301f8e02f15164ea9400bb0fc0991c58bab"
+  },
+  {
+    "source": "public/previews/light-rays.webp",
+    "path": "public/previews/light-rays.webp",
+    "sha256": "75d59393af06c782f4f185399a437196540fe2da18ca6c52683bcb124cf28bcf"
+  },
+  {
+    "source": "public/previews/line-waves.webp",
+    "path": "public/previews/line-waves.webp",
+    "sha256": "a251b1dd7f1ac83e47af2dfe251f549588ef3f00a53a9af1f8f9dcfb2e5e9f89"
+  },
+  {
+    "source": "public/previews/liquid-chrome.webp",
+    "path": "public/previews/liquid-chrome.webp",
+    "sha256": "3f23ad53efc437e3c7d9f22d299e23e6c10ee4748a89ddf48b3cc46dad2bba01"
+  },
+  {
+    "source": "public/previews/liquid-ether.webp",
+    "path": "public/previews/liquid-ether.webp",
+    "sha256": "07a2e295879b123711e5b7b8bc2a7b155004dd6b0a02cce6703cda2993efedd5"
+  },
+  {
+    "source": "public/previews/local-image.webp",
+    "path": "public/previews/local-image.webp",
+    "sha256": "169d957277a7de0746a01a522f0141931568d9c50af5d3d5c74affd30155065e"
+  },
+  {
+    "source": "public/previews/neat-alejandra.webp",
+    "path": "public/previews/neat-alejandra.webp",
+    "sha256": "0f3ce0c68a841ece558dd4a3d6b2ed4712dc8fca94e32c1552b57211e95f5cc1"
+  },
+  {
+    "source": "public/previews/neat-blob.webp",
+    "path": "public/previews/neat-blob.webp",
+    "sha256": "6d4208165f77ea0232a27b2688596b80e4f34c8ae0a0334fdef7b8bb1e77bc0f"
+  },
+  {
+    "source": "public/previews/neat-bloom.webp",
+    "path": "public/previews/neat-bloom.webp",
+    "sha256": "1581baa40c4843a3d5c6f48472a9a771ae0e6e59b12407c8510b1009344f0961"
+  },
+  {
+    "source": "public/previews/neat-bubble-gum.webp",
+    "path": "public/previews/neat-bubble-gum.webp",
+    "sha256": "98f73ebf3c0890e277eee3f456dbebf640bfa10d7635585785d473bc2f1217d5"
+  },
+  {
+    "source": "public/previews/neat-clouds.webp",
+    "path": "public/previews/neat-clouds.webp",
+    "sha256": "3bcdc55039d1195426078ef85e1239dd6b5411857906b60fbb91cbe94d23e846"
+  },
+  {
+    "source": "public/previews/neat-coral.webp",
+    "path": "public/previews/neat-coral.webp",
+    "sha256": "8c3669ffacffb1ac7a9e43b19fc8fb62875463c6baac9884b6d1dd518c50c1ab"
+  },
+  {
+    "source": "public/previews/neat-cosmic-vortex.webp",
+    "path": "public/previews/neat-cosmic-vortex.webp",
+    "sha256": "c92a7d7ce1bbcaf0b6360cbecd3f4ee92448da5b75a7be68f61058a08cd15c22"
+  },
+  {
+    "source": "public/previews/neat-dark-mode.webp",
+    "path": "public/previews/neat-dark-mode.webp",
+    "sha256": "5cb1b6c4946e7224dc7105b2bc1290613e985fc3bd13f9fdbd2a243f7333fddf"
+  },
+  {
+    "source": "public/previews/neat-firecms.webp",
+    "path": "public/previews/neat-firecms.webp",
+    "sha256": "57f422156366c886077acb8a0ae8f6ce02e9f8cb80e02703b594dc18b9ba3340"
+  },
+  {
+    "source": "public/previews/neat-flame.webp",
+    "path": "public/previews/neat-flame.webp",
+    "sha256": "8fde1c11f3996b60f2be3e903ec1868024869faccccf6758ffbe9ae156035611"
+  },
+  {
+    "source": "public/previews/neat-fluid.webp",
+    "path": "public/previews/neat-fluid.webp",
+    "sha256": "3e7eeedb59bdb9996efcd44fcd99300625e34fb729f11f3909d08ecef01359f7"
+  },
+  {
+    "source": "public/previews/neat-funky.webp",
+    "path": "public/previews/neat-funky.webp",
+    "sha256": "b36bb9ef87304cfefa5642a62ef5d61f3ba1d2027b4f18641396e538026ff6d9"
+  },
+  {
+    "source": "public/previews/neat-gradient.webp",
+    "path": "public/previews/neat-gradient.webp",
+    "sha256": "385c69793eeeb9a15a7e8a7d7b79182d4e382f5904f6ab07227e3389c1e0ba24"
+  },
+  {
+    "source": "public/previews/neat-lemon.webp",
+    "path": "public/previews/neat-lemon.webp",
+    "sha256": "271f042235e7227a17bd40ef17a1cd400186bd3f39cc566ced2a103c1f5b46b1"
+  },
+  {
+    "source": "public/previews/neat-monterey.webp",
+    "path": "public/previews/neat-monterey.webp",
+    "sha256": "9c22471cb81cdf0358c76c2fe80e9e8c3d53f2261058553934196045b462e384"
+  },
+  {
+    "source": "public/previews/neat-neat.webp",
+    "path": "public/previews/neat-neat.webp",
+    "sha256": "4ad865986fc5c52f893605266368161489cab77b6488a66b70dd95f6579ba915"
+  },
+  {
+    "source": "public/previews/neat-night-dunes.webp",
+    "path": "public/previews/neat-night-dunes.webp",
+    "sha256": "f2fc2dfbdbe219a86a3e501ad710a8eb82dbb79a1ce478fe494ed50cea2a7b54"
+  },
+  {
+    "source": "public/previews/neat-nighttime.webp",
+    "path": "public/previews/neat-nighttime.webp",
+    "sha256": "d2af2fc05e0f3a08231e77f23d64ec438ff4ebbfa4cf3c754c72f450844e93df"
+  },
+  {
+    "source": "public/previews/neat-oceans-eleven.webp",
+    "path": "public/previews/neat-oceans-eleven.webp",
+    "sha256": "47236f92fbf9c7f7aaa4c825bfb276f7b4ec0a50ef0ee6d0fb2a6401a0948ce6"
+  },
+  {
+    "source": "public/previews/neat-oil-slick.webp",
+    "path": "public/previews/neat-oil-slick.webp",
+    "sha256": "a1c717a639bf34af7faf0fde2bd9fc7d567962e47b03c8ee5065b3635fb5759e"
+  },
+  {
+    "source": "public/previews/neat-pastel.webp",
+    "path": "public/previews/neat-pastel.webp",
+    "sha256": "ae827b7ed9e65739c82eae0e25263e26bbfc92526305cb7210fe9c2cfb943b77"
+  },
+  {
+    "source": "public/previews/neat-prussian.webp",
+    "path": "public/previews/neat-prussian.webp",
+    "sha256": "9852694960def6d66ea890c74218a7492badded499aebcdcaf8da538c5591898"
+  },
+  {
+    "source": "public/previews/neat-sands.webp",
+    "path": "public/previews/neat-sands.webp",
+    "sha256": "f52a5a8a8f72eba839aabf0e4c6fda5d057968ecf2d7cf45963cf82acb1fcafd"
+  },
+  {
+    "source": "public/previews/neat-stripe.webp",
+    "path": "public/previews/neat-stripe.webp",
+    "sha256": "f6ef5f632619ecda3347cb9f1ce0a493c296966a8f99790e4abe86a9e72ff0fc"
+  },
+  {
+    "source": "public/previews/neat-time.webp",
+    "path": "public/previews/neat-time.webp",
+    "sha256": "b922cc11647d6b8d362949cfbbea0ae83993519c36e06a316bc4d8cf1d736b69"
+  },
+  {
+    "source": "public/previews/neat-virus.webp",
+    "path": "public/previews/neat-virus.webp",
+    "sha256": "c6cd63fb5dca3187e452dc270215ea3b51f4caacb8ce3cd2e269b1c07de94c1b"
+  },
+  {
+    "source": "public/previews/orbs-breathing.webp",
+    "path": "public/previews/orbs-breathing.webp",
+    "sha256": "971cd4dcbeb52b79d34af771c2f0f5351f7c229171e4a79053ed40e71804151a"
+  },
+  {
+    "source": "public/previews/orbs-composing.webp",
+    "path": "public/previews/orbs-composing.webp",
+    "sha256": "2aeef49b3b30741106ed43575507fdaf95afaf2130cebc976ff42d5a01989d50"
+  },
+  {
+    "source": "public/previews/orbs-connecting.webp",
+    "path": "public/previews/orbs-connecting.webp",
+    "sha256": "eab9b0b238b8ecb2252afa927e1ef018613732945e32290fa4e5906a93496aa6"
+  },
+  {
+    "source": "public/previews/orbs-listening.webp",
+    "path": "public/previews/orbs-listening.webp",
+    "sha256": "6d646df2d8d1db4c7ec6d0b454dca122dbaa10d761a8c17065c4d1583a2e15ad"
+  },
+  {
+    "source": "public/previews/orbs-searching.webp",
+    "path": "public/previews/orbs-searching.webp",
+    "sha256": "548ea0f101d3bcc94d9c5cab9f8efe1f1223705ba82e631bde3823aa2146d2d3"
+  },
+  {
+    "source": "public/previews/orbs-shaping.webp",
+    "path": "public/previews/orbs-shaping.webp",
+    "sha256": "ba250852f04882b8d9e5f396eaacb1b22fe02b0308d8b8d1dd7d4c88596bf3a6"
+  },
+  {
+    "source": "public/previews/orbs-solving.webp",
+    "path": "public/previews/orbs-solving.webp",
+    "sha256": "fb39d3cb7bf0ee07671a89a502202c2a95a38857d1c139fa98033d376baef526"
+  },
+  {
+    "source": "public/previews/orbs-weaving.webp",
+    "path": "public/previews/orbs-weaving.webp",
+    "sha256": "f241441530a6e79ea44f9139cb59035c2546318599edf3c04e9bf830ca96b8a4"
+  },
+  {
+    "source": "public/previews/orbs-working.webp",
+    "path": "public/previews/orbs-working.webp",
+    "sha256": "2d5aa9040f12bb9689b0f5e46a3b37a0e755ced76414f985ec25077c464c4d54"
+  },
+  {
+    "source": "public/previews/paper-dithering.webp",
+    "path": "public/previews/paper-dithering.webp",
+    "sha256": "cec628981604f004e2d7ac81081bbff5cb6c98ec6a54fbcb775fac49f533561a"
+  },
+  {
+    "source": "public/previews/paper-dot-grid.webp",
+    "path": "public/previews/paper-dot-grid.webp",
+    "sha256": "baa66b1999d0f35f9ff66b13e699af3402035c8410b4c4fe9c077d8b92346bda"
+  },
+  {
+    "source": "public/previews/paper-grain-gradient.webp",
+    "path": "public/previews/paper-grain-gradient.webp",
+    "sha256": "23875121feaf0bfd7c6d6df3c8c7378c3e7c31be930d91942be28446a58c79f5"
+  },
+  {
+    "source": "public/previews/paper-image-collection.webp",
+    "path": "public/previews/paper-image-collection.webp",
+    "sha256": "f1407f7172c6a1d91c0a6fc76f89c98882d519477b00a41508fdeb6d1f33c4e8"
+  },
+  {
+    "source": "public/previews/paper-image-fluted-glass.webp",
+    "path": "public/previews/paper-image-fluted-glass.webp",
+    "sha256": "f1407f7172c6a1d91c0a6fc76f89c98882d519477b00a41508fdeb6d1f33c4e8"
+  },
+  {
+    "source": "public/previews/paper-image-halftone-cmyk.webp",
+    "path": "public/previews/paper-image-halftone-cmyk.webp",
+    "sha256": "253b6ed620764d9ac8c1bcfb75e661984042ef259fb3d3df6df065f74110e08c"
+  },
+  {
+    "source": "public/previews/paper-image-halftone-dots.webp",
+    "path": "public/previews/paper-image-halftone-dots.webp",
+    "sha256": "f9093822ed8f26f0f8b0449de7f703ed23217680f9e35fe6f326483606e593b0"
+  },
+  {
+    "source": "public/previews/paper-image-image-dithering.webp",
+    "path": "public/previews/paper-image-image-dithering.webp",
+    "sha256": "ea30ed8d1bc3b1d179b845365f2e6bf58de5380d5037bc095be65a19ddcbf183"
+  },
+  {
+    "source": "public/previews/paper-image-lens-distortion.webp",
+    "path": "public/previews/paper-image-lens-distortion.webp",
+    "sha256": "4fa379309a316e1e615cd8128c7870267ec47590b50fb7fe161c60ef11c4efc5"
+  },
+  {
+    "source": "public/previews/paper-image-original.webp",
+    "path": "public/previews/paper-image-original.webp",
+    "sha256": "9070aa85bf1645ae38169be080dd1ff97d54eab9ccdaf7914fed883bc54c6e5b"
+  },
+  {
+    "source": "public/previews/paper-image-paper-texture.webp",
+    "path": "public/previews/paper-image-paper-texture.webp",
+    "sha256": "cf0d7713af457e1bf72070f0d6209103ecec1abd22ff08e88f5e28c008e0570a"
+  },
+  {
+    "source": "public/previews/paper-image-water.webp",
+    "path": "public/previews/paper-image-water.webp",
+    "sha256": "d1d8953685096e69d1a582b1da395fea1b478051f797cfc29f147223606b9a29"
+  },
+  {
+    "source": "public/previews/paper-mesh-gradient.webp",
+    "path": "public/previews/paper-mesh-gradient.webp",
+    "sha256": "13288665365611f852333011ea99d3fde85b7e716785b40c2cae8f3a14c89ca9"
+  },
+  {
+    "source": "public/previews/paper-metaballs.webp",
+    "path": "public/previews/paper-metaballs.webp",
+    "sha256": "fdae632d6459282e6595a933e511318a54f3ba43efd4c692c090cb81c83c4494"
+  },
+  {
+    "source": "public/previews/paper-simplex-noise.webp",
+    "path": "public/previews/paper-simplex-noise.webp",
+    "sha256": "31390ccbb3ec4d8fb39cd81b9cae6acf3cc1c218cb57349026729d42070f3456"
+  },
+  {
+    "source": "public/previews/paper-static-mesh-gradient.webp",
+    "path": "public/previews/paper-static-mesh-gradient.webp",
+    "sha256": "d7c6f52605360d139e560480ecb361be8924afdac1251ddc946e0f8bfcf32da7"
+  },
+  {
+    "source": "public/previews/paper-static-radial-gradient.webp",
+    "path": "public/previews/paper-static-radial-gradient.webp",
+    "sha256": "e41e5143594dd0f0202578f2a84e682cf74a71729ccde1cb2541193bbbf1f625"
+  },
+  {
+    "source": "public/previews/paper-warp.webp",
+    "path": "public/previews/paper-warp.webp",
+    "sha256": "7965cb3cce5f296d35a7d48e8638828ed89b21c009f98b7a4dfab34631f7de03"
+  },
+  {
+    "source": "public/previews/personal-collection.webp",
+    "path": "public/previews/personal-collection.webp",
+    "sha256": "169d957277a7de0746a01a522f0141931568d9c50af5d3d5c74affd30155065e"
+  },
+  {
+    "source": "public/previews/pixel-blast.webp",
+    "path": "public/previews/pixel-blast.webp",
+    "sha256": "c4a29e0faa7c6116ad6428f3d68f6af2c671d34a01f5672e0ed455b5f094e3a4"
+  },
+  {
+    "source": "public/previews/pixel-perfect-braille-terrain.webp",
+    "path": "public/previews/pixel-perfect-braille-terrain.webp",
+    "sha256": "5ffb0746178455b95e2efecf081564211f34fbc418043247797fd6772d25870e"
+  },
+  {
+    "source": "public/previews/pixel-perfect-contour-map.webp",
+    "path": "public/previews/pixel-perfect-contour-map.webp",
+    "sha256": "2118c7228b488b0222d31c91c81130e6cf1c99b8d74eef7f050790217a38232f"
+  },
+  {
+    "source": "public/previews/pixel-perfect-currency-sky.webp",
+    "path": "public/previews/pixel-perfect-currency-sky.webp",
+    "sha256": "59e40c36aa769cef32d911b26ccb76bd9ef4b858a020fb55b951ebbc318f6640"
+  },
+  {
+    "source": "public/previews/pixel-perfect-dither-field.webp",
+    "path": "public/previews/pixel-perfect-dither-field.webp",
+    "sha256": "731c8b79f5848584110e57558294b6e4090c18d00cdb74feb5e6b83ed093b55d"
+  },
+  {
+    "source": "public/previews/pixel-perfect-dither-wave.webp",
+    "path": "public/previews/pixel-perfect-dither-wave.webp",
+    "sha256": "8ef22a8f0d333e8c3b5fe6474b223ba6a4a0437eab67f054a98ba4fd93e78cb2"
+  },
+  {
+    "source": "public/previews/pixel-perfect-halftone-blobs.webp",
+    "path": "public/previews/pixel-perfect-halftone-blobs.webp",
+    "sha256": "445678efb0e653a3d852a6e836d12364fad21cbb6760b17cc75f7687f66c51f9"
+  },
+  {
+    "source": "public/previews/plasma.webp",
+    "path": "public/previews/plasma.webp",
+    "sha256": "40b6d52ed035efea2f4c2c425df0d09b350f5c713998f3ff0bd63b0800939408"
+  },
+  {
+    "source": "public/previews/prism.webp",
+    "path": "public/previews/prism.webp",
+    "sha256": "5aec4cc10a6720238d8181177d5b2c2791a5ef759a736f957fbdcc076ed77678"
+  },
+  {
+    "source": "public/previews/ray.webp",
+    "path": "public/previews/ray.webp",
+    "sha256": "1face0f72b035ca4e442ba07d48f9087b7c8ee74a46920cae48463d11bf50b7f"
+  },
+  {
+    "source": "public/previews/ripple.webp",
+    "path": "public/previews/ripple.webp",
+    "sha256": "60264b3ccf80298e3d025205beb0615ffab6018b30c60fc614dffb54c8065e48"
+  },
+  {
+    "source": "public/previews/seamlessBeams.webp",
+    "path": "public/previews/seamlessBeams.webp",
+    "sha256": "99689beb0425babd387788947fa0f1c2b777ff126644200784f5a5d763420116"
+  },
+  {
+    "source": "public/previews/shape-blur.webp",
+    "path": "public/previews/shape-blur.webp",
+    "sha256": "0c2e1b4eb0632ef5244e1a1b507e8ebc307db32aa8ab16312faaa168781418b2"
+  },
+  {
+    "source": "public/previews/side-rays.webp",
+    "path": "public/previews/side-rays.webp",
+    "sha256": "b222120a12d690c0069d08500570694fc1e2c153de45723e1c6328909d72177b"
+  },
+  {
+    "source": "public/previews/silk.webp",
+    "path": "public/previews/silk.webp",
+    "sha256": "d0779f18ecd763d0105af1992ecfc89aeeba3c39aa44e56bbed913e4867652fe"
+  },
+  {
+    "source": "public/previews/smoke.webp",
+    "path": "public/previews/smoke.webp",
+    "sha256": "b73b8c1fe7733a9f1a9de46627d76ae245cb799ababfce47957aad09f18269f5"
+  },
+  {
+    "source": "public/previews/soft-aurora.webp",
+    "path": "public/previews/soft-aurora.webp",
+    "sha256": "b10b7d0e1d1dda5a2d6bdb97db81638c32842899bbcb7231e6581116aa4c3f16"
+  },
+  {
+    "source": "public/previews/strands.webp",
+    "path": "public/previews/strands.webp",
+    "sha256": "e4e2fd149da813b260bd57b20b7d8f2c74866173fc6401c7e2584a3682c418fb"
+  },
+  {
+    "source": "public/previews/topo.webp",
+    "path": "public/previews/topo.webp",
+    "sha256": "3b0bbdc7abc8dba66aa1838a1d8e2447f4bbfd3671673451846a75b14cd8a6a7"
+  },
+  {
+    "source": "public/previews/waves.webp",
+    "path": "public/previews/waves.webp",
+    "sha256": "61afde9e84fb8a9162c45757b44737f266ad695ead9dc7253c4be72663aea48f"
+  },
+  {
+    "source": "src/backgrounds/neat/LICENSE",
+    "path": "src/vendor/neat/LICENSE",
+    "sha256": "7e193ea51a26d223e081774bd55a1b09cedff23c999320edc69dd9a87f2ce87d"
+  },
+  {
+    "source": "src/backgrounds/neat/NOTICE.md",
+    "path": "src/vendor/neat/NOTICE.md",
+    "sha256": "834f5c45708ecaa9c8dbaa07a143f0536629bd6f7005279937e2e4b5bdcfb5f6",
+    "sourceSha256": "d478b7a4ef26dd61d3a9b12848c8a2fb6d0c3a3ffb91424380d5f153e538cfd2",
+    "modification": "lightfield correction: removed unconsumed physical copies; retained authoritative source references and attribution"
+  },
+  {
+    "source": "src/backgrounds/neat/NeatGradient.ts",
+    "path": "src/vendor/neat/NeatGradient.ts",
+    "sha256": "5628c66ea2e0097d5cdab9384b33f1b3f1119a265f394c2a2f51973cbfd77323"
+  },
+  {
+    "source": "src/backgrounds/neat/current/NeatGradient.ts",
+    "path": "src/vendor/neat/current/NeatGradient.ts",
+    "sha256": "da78f6d248e3a159049e0a8ea4284b5ad3d1463a00f3c1293dfe31c69fe4495e"
+  },
+  {
+    "source": "src/backgrounds/neat/current/license.ts",
+    "path": "src/vendor/neat/current/license.ts",
+    "sha256": "95187b18ccf991904e2cc2ffda6f8f5c7eb975dfb57a5839933ad2521b82e350"
+  },
+  {
+    "source": "src/backgrounds/neat/current/math.ts",
+    "path": "src/vendor/neat/current/math.ts",
+    "sha256": "cc8a6c9f50418b9964a7714734ffa7a1e70afd41393eee0bd8e14e976c9cb81a"
+  },
+  {
+    "source": "src/backgrounds/neat/current/pattern.ts",
+    "path": "src/vendor/neat/current/pattern.ts",
+    "sha256": "9f5f8db094c17f8bc06f05904af3a964a8f1c179716b375560918a6ed0fbc769"
+  },
+  {
+    "source": "src/backgrounds/neat/current/patternData.ts",
+    "path": "src/vendor/neat/current/patternData.ts",
+    "sha256": "a5908e1f762b46fd02eab9370dfc01e5104d897229eb9e51e26e673bea0e2677"
+  },
+  {
+    "source": "src/backgrounds/neat/current/shaders.ts",
+    "path": "src/vendor/neat/current/shaders.ts",
+    "sha256": "96ed25a30d1026ddec9182036260f8897c8ae4db86aee434b37110dd4a9cc872"
+  },
+  {
+    "source": "src/backgrounds/neat/current/types.ts",
+    "path": "src/vendor/neat/current/types.ts",
+    "sha256": "1a3d26286682d7225f0a295670e388f5b4c4745fa3c70d6dd29cf38cf12bbe81"
+  },
+  {
+    "source": "src/backgrounds/neat/current/version.ts",
+    "path": "src/vendor/neat/current/version.ts",
+    "sha256": "2d68387941da0a03899af962abd04461453a548795fdda55e82444e617a0665b"
+  },
+  {
+    "source": "src/backgrounds/neat/license.ts",
+    "path": "src/vendor/neat/license.ts",
+    "sha256": "d5f2576e096a0ae8c48afd8588064954e068524fe3986f1a867fad2b7d938d60"
+  },
+  {
+    "source": "src/backgrounds/neat/math.ts",
+    "path": "src/vendor/neat/math.ts",
+    "sha256": "6e417a56b9bc4e85b539333b6a0666b09cda45f2d50a73c887efb6c737beee33"
+  },
+  {
+    "source": "src/backgrounds/neat/official-presets.ts.fixture",
+    "path": "src/vendor/neat/official-presets.ts.fixture",
+    "sha256": "6e4bebb1cd26344bee5aafe294605d412ee013af010cfa87001cc5d23650bb2b"
+  },
+  {
+    "source": "src/backgrounds/neat/preset-provenance.json",
+    "path": "src/vendor/neat/preset-provenance.json",
+    "sha256": "48e47b66895284e137fc42bcb55d0af56e6348f50423d44a047b5d219945471c",
+    "sourceSha256": "3f5295b594816e4740a320e7806969afd1ae764b33c432863eb326a6e2ef26cd",
+    "modification": "lightfield correction: removed unconsumed physical copies; retained authoritative source references and attribution"
+  },
+  {
+    "source": "src/backgrounds/neat/provenance.json",
+    "path": "src/vendor/neat/provenance.json",
+    "sha256": "a404e117161845b39e0e5162c1d1c445b8b30171bf8ba2aa920037cb3e691b6a",
+    "sourceSha256": "8b7cdbf5741f8f0857f90472be470937e73c12f678409f439dcfbd5fcd621004",
+    "modification": "lightfield correction: removed unconsumed physical copies; retained authoritative source references and attribution"
+  },
+  {
+    "source": "src/backgrounds/neat/shaders.ts",
+    "path": "src/vendor/neat/shaders.ts",
+    "sha256": "a90d92a7a1964c8c1fc07ce8cbfad244c7aeaeaca062fa87100606d83b24030b"
+  },
+  {
+    "source": "src/backgrounds/neat/types.ts",
+    "path": "src/vendor/neat/types.ts",
+    "sha256": "4a1af46822678102dca20755fae3fd23d486dfe7046dab70e0f3e18d0760c745"
+  },
+  {
+    "source": "src/backgrounds/neat/version.ts",
+    "path": "src/vendor/neat/version.ts",
+    "sha256": "bf2f86b91c52469e911e0dd4347ed07c771b317c7279eac90d74da17c47c893e"
+  },
+  {
+    "source": "src/backgrounds/orbs/LICENSE",
+    "path": "src/vendor/orbs/LICENSE",
+    "sha256": "915a283980628a0ca9e7b423ebafc6f3a0fa1e630ff17d34e59034808d92011c"
+  },
+  {
+    "source": "src/backgrounds/orbs/engine.d.ts",
+    "path": "src/vendor/orbs/engine.d.ts",
+    "sha256": "838348acfa2e59e0f54aa1b64d2503611ffccf955cc453e20a6c7490a940be90"
+  },
+  {
+    "source": "src/backgrounds/orbs/engine.js",
+    "path": "src/vendor/orbs/engine.js",
+    "sha256": "06be7f8b6208cd96a653c5712bf573891e4fad11348603c42291b20bf900cf56"
+  },
+  {
+    "source": "scripts/capture/fixtures/pixel-perfect/dither-wave.tsx.fixture",
+    "path": "tests/effects/pixel-perfect/fixtures/dither-wave.tsx.fixture",
+    "sha256": "2c298bad94c9cb7aa14b5e0817c63edd6d61f355f9374ee351deec26b1becb7e"
+  },
+  {
+    "source": "scripts/capture/fixtures/pixel-perfect/contour-map.tsx.fixture",
+    "path": "tests/effects/pixel-perfect/fixtures/contour-map.tsx.fixture",
+    "sha256": "e660dddba5506795234234c33b6f8041dc9970b90b8614c2c8e9fb01a1791b85"
+  }
+]

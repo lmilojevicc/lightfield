@@ -1,0 +1,40 @@
+{
+  "project": "Pixel Perfect",
+  "author": "Vansh Nagar",
+  "repository": "https://github.com/vansh-nagar/Pixel-Perfect",
+  "commit": "951c461ed18b750f0edcc4cb0fc26eecb6f45691",
+  "license": "Unverified: no explicit adaptation/redistribution license found in inspected repository or source. Not cleared for release.",
+  "referenceDirectory": "scripts/capture/fixtures/pixel-perfect",
+  "files": [
+    {
+      "name": "braille-terrain.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/braille-terrain-background.tsx",
+      "sha256": "2b8479640b20c0019db078c853f5098189cfd368b230b8ffec441ac3f4b7bcea"
+    },
+    {
+      "name": "contour-map.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/contour-map-background.tsx",
+      "sha256": "e660dddba5506795234234c33b6f8041dc9970b90b8614c2c8e9fb01a1791b85"
+    },
+    {
+      "name": "currency-sky.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/currency-sky-background.tsx",
+      "sha256": "9cb376cb530849d3c5a3668584ea7ed1b07aadd510546cc43dad9a04c1e17cca"
+    },
+    {
+      "name": "dither-field.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/dither-field-background.tsx",
+      "sha256": "760b3ae27137db4f50de49a2d1fdd0e5990d24bc07413751f6d6dc55d315080a"
+    },
+    {
+      "name": "dither-wave.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/dither-wave-background.tsx",
+      "sha256": "2c298bad94c9cb7aa14b5e0817c63edd6d61f355f9374ee351deec26b1becb7e"
+    },
+    {
+      "name": "halftone-blobs.tsx.fixture",
+      "source": "https://github.com/vansh-nagar/Pixel-Perfect/blob/951c461ed18b750f0edcc4cb0fc26eecb6f45691/registry/new-york/backgrounds/halftone-blobs-background.tsx",
+      "sha256": "2af58a4649c334261459d275d4cd937fd9bfb02dbd7ea7c730367efef95d5e78"
+    }
+  ]
+}

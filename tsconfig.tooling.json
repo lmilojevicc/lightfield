@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023"], "types": ["bun"] },
+  "include": ["tooling/**/*.ts", "vite.config.ts", "knip.config.ts"]
+}

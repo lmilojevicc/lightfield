@@ -1,0 +1,136 @@
+{
+  "repository": "https://github.com/google/fonts",
+  "revision": "5e35378e6bda803962ee6fd257e444a7d459660d",
+  "toolchain": {
+    "fonttools": "4.61.1",
+    "brotli": "1.2.0"
+  },
+  "unicodeRanges": [
+    "0020-024F",
+    "0300-036F",
+    "1E00-1EFF",
+    "2000-206F",
+    "20A0-20CF",
+    "2100-214F",
+    "2190-23FF",
+    "2500-25FF",
+    "2C60-2C7F",
+    "A720-A7FF",
+    "AB30-AB6F",
+    "FB00-FB06",
+    "FEFF-FEFF"
+  ],
+  "requiredSpecimen": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 José François Müller Straße smörgås Łódź İstanbul Dvořák Þórður Æsir Œuvre São Tomé −12° × “Today’s Focus”… – — € £",
+  "sources": [
+    {
+      "id": "bricolagegrotesque",
+      "path": "ofl/bricolagegrotesque/BricolageGrotesque[opsz,wdth,wght].ttf",
+      "sha256": "413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
+      "licensePath": "ofl/bricolagegrotesque/OFL.txt",
+      "licenseSha256": "4b5a7d8f37f5602621c8a8d7358a6a2e71317e6c231c661e15aef0275d3e07ba"
+    },
+    {
+      "id": "fraunces",
+      "path": "ofl/fraunces/Fraunces[SOFT,WONK,opsz,wght].ttf",
+      "sha256": "177ff6c0f14e5550a3c624247cd1189611d4eb65d000b14944c63d967958abbb",
+      "licensePath": "ofl/fraunces/OFL.txt",
+      "licenseSha256": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b"
+    },
+    {
+      "id": "instrumentserif",
+      "path": "ofl/instrumentserif/InstrumentSerif-Regular.ttf",
+      "sha256": "498efd461f6ddfcb7a111bf9a565709d2085d48201d501ead960d93e84ffbb88",
+      "licensePath": "ofl/instrumentserif/OFL.txt",
+      "licenseSha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
+    },
+    {
+      "id": "jetbrainsmono",
+      "path": "ofl/jetbrainsmono/JetBrainsMono[wght].ttf",
+      "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+      "licensePath": "ofl/jetbrainsmono/OFL.txt",
+      "licenseSha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+    }
+  ],
+  "faces": [
+    {
+      "file": "instrumentserif-400-subset.woff2",
+      "source": "instrumentserif",
+      "family": "Instrument Serif",
+      "weight": 400,
+      "cssWeight": "400",
+      "axes": {}
+    },
+    {
+      "file": "bricolage-400-subset.woff2",
+      "source": "bricolagegrotesque",
+      "family": "Bricolage Grotesque",
+      "weight": 400,
+      "cssWeight": "400 800",
+      "axes": {
+        "opsz": 14,
+        "wdth": 100,
+        "wght": [
+          400,
+          400,
+          800
+        ]
+      }
+    },
+    {
+      "file": "fraunces-400-subset.woff2",
+      "source": "fraunces",
+      "family": "Fraunces",
+      "weight": 400,
+      "cssWeight": "400",
+      "axes": {
+        "opsz": 14,
+        "SOFT": 0,
+        "WONK": 1,
+        "wght": 400
+      }
+    },
+    {
+      "file": "fraunces-600-subset.woff2",
+      "source": "fraunces",
+      "family": "Fraunces",
+      "weight": 600,
+      "cssWeight": "600",
+      "axes": {
+        "opsz": 14,
+        "SOFT": 0,
+        "WONK": 1,
+        "wght": 600
+      }
+    },
+    {
+      "file": "jetbrainsmono-400-subset.woff2",
+      "source": "jetbrainsmono",
+      "family": "JetBrains Mono",
+      "weight": 400,
+      "cssWeight": "400",
+      "axes": {
+        "wght": 400
+      }
+    },
+    {
+      "file": "jetbrainsmono-600-subset.woff2",
+      "source": "jetbrainsmono",
+      "family": "JetBrains Mono",
+      "weight": 600,
+      "cssWeight": "600",
+      "axes": {
+        "wght": 600
+      }
+    },
+    {
+      "file": "jetbrainsmono-700-subset.woff2",
+      "source": "jetbrainsmono",
+      "family": "JetBrains Mono",
+      "weight": 700,
+      "cssWeight": "700",
+      "axes": {
+        "wght": 700
+      }
+    }
+  ]
+}

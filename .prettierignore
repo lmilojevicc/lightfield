@@ -1,0 +1,20 @@
+node_modules/
+dist/
+artifacts/
+bun.lock
+THIRD_PARTY_NOTICES.md
+.svelte-check/
+
+# Byte-pinned source engines/fixtures and upstream asset provenance; hashes checked.
+src/vendor/neat/*.ts
+src/vendor/neat/current/*.ts
+src/vendor/neat/*.fixture
+src/vendor/neat/current/*.fixture
+src/vendor/neat/provenance.json
+src/vendor/neat/preset-provenance.json
+src/vendor/neat/NOTICE.md
+src/vendor/orbs/engine.js
+src/vendor/orbs/engine.d.ts
+public/fonts/README.md
+public/fonts/sources.json
+public/icon.svg

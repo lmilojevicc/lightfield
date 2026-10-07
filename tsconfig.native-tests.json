@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["bun", "vite/client"]
+  },
+  "include": [
+    "tests/domain/**/*.ts",
+    "tests/platform/**/*.ts",
+    "tests/services/**/*.ts"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "package": "@firecms/neat",
+  "version": "1.0.2",
+  "commit": "b9688dfeb491d510dc76443dd75a32543d6c0c97",
+  "files": [
+    {
+      "name": "NeatGradient.ts",
+      "upstreamSha256": "2381cb8e4e064ce421c2ce3cab34e2580fdc2eb06febb322f2d5981e5e9665f7",
+      "localSha256": "5628c66ea2e0097d5cdab9384b33f1b3f1119a265f394c2a2f51973cbfd77323"
+    },
+    {
+      "name": "license.ts",
+      "upstreamSha256": "c3b2092b9e931d389b9144ee0c857a0fea996611d762b518077c59d35ab5baf1",
+      "localSha256": "d5f2576e096a0ae8c48afd8588064954e068524fe3986f1a867fad2b7d938d60"
+    },
+    {
+      "name": "math.ts",
+      "upstreamSha256": "55c9707de80ff301b919deb0b8013d9f505558fafbbf10a1e83efb1bbbcc1ad0",
+      "localSha256": "6e417a56b9bc4e85b539333b6a0666b09cda45f2d50a73c887efb6c737beee33"
+    },
+    {
+      "name": "shaders.ts",
+      "upstreamSha256": "8392b1cf66b2ceb69ccab4b4dc5597fc0b11db7bf65ce532899ee88ab1ddb613",
+      "localSha256": "a90d92a7a1964c8c1fc07ce8cbfad244c7aeaeaca062fa87100606d83b24030b"
+    },
+    {
+      "name": "types.ts",
+      "upstreamSha256": "b2c73b7c13f68b84c08c23c999f36bb9191baff71b8f55532ca9e2717b479958",
+      "localSha256": "4a1af46822678102dca20755fae3fd23d486dfe7046dab70e0f3e18d0760c745"
+    },
+    {
+      "name": "version.ts",
+      "upstreamSha256": "b351eb7963c12da9f4eea942247a77a2aeb88a5053fb703a501f4a368e38b056",
+      "localSha256": "bf2f86b91c52469e911e0dd4347ed07c771b317c7279eac90d74da17c47c893e"
+    },
+    {
+      "name": "LICENSE",
+      "upstreamSha256": "7e193ea51a26d223e081774bd55a1b09cedff23c999320edc69dd9a87f2ce87d",
+      "localSha256": "7e193ea51a26d223e081774bd55a1b09cedff23c999320edc69dd9a87f2ce87d"
+    }
+  ],
+  "referenceOnlyFiles": [
+    {
+      "name": "index.ts",
+      "upstreamSha256": "c428adb6f4e77553fee10153cb43c2e91f4569e8a493c704a8a3dab6af58f7a6",
+      "localSha256": "118a6816860c25a18fd4981f9cf2611764980465d5bf0b9f467c8d3818da3457"
+    }
+  ]
+}

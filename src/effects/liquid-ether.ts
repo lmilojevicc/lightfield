@@ -347,7 +347,7 @@ export function createLiquidEther(
   let divergencePass!: Pass;
   let poissonPass!: Pass;
   let pressurePass!: Pass;
-  let outputPass!: Pass;
+  let outputPass: Pass | undefined;
   let advectionBoundary!: THREE.LineSegments<
     THREE.BufferGeometry,
     THREE.RawShaderMaterial
@@ -688,7 +688,9 @@ export function createLiquidEther(
     const previous = paletteTexture;
     paletteTexture = replacement;
     paletteSnapshot = snapshot;
-    requiredValue(outputPass.material.uniforms.palette).value = replacement;
+    // Initial palette creation precedes construction of the output pass.
+    if (outputPass)
+      requiredValue(outputPass.material.uniforms.palette).value = replacement;
     previous?.dispose();
   }
 
@@ -808,7 +810,7 @@ export function createLiquidEther(
       const outputSnapshot = outputProgramsAsserted
         ? null
         : threeProgramSnapshot(requiredValue(renderer));
-      renderPass(outputPass);
+      renderPass(requiredValue(outputPass));
       if (outputSnapshot) {
         const outputPrograms = threeProgramsSince(
           requiredValue(renderer),

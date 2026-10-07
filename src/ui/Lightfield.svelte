@@ -33,12 +33,15 @@
     report,
   });
   const services: AppServices = createServices({ consent });
-  let snapshot = $state(untrack(() => services.settings.current()));
-  let imageState = $state(untrack(() => services.images.current()));
-  let fontState = $state(untrack(() => services.fonts.current()));
-  let permissionState = $state(untrack(() => services.permissions.current()));
+  // Service snapshots are replacement-owned immutable data, not editable Svelte drafts.
+  let snapshot = $state.raw(untrack(() => services.settings.current()));
+  let imageState = $state.raw(untrack(() => services.images.current()));
+  let fontState = $state.raw(untrack(() => services.fonts.current()));
+  let permissionState = $state.raw(
+    untrack(() => services.permissions.current()),
+  );
   let controller: BackgroundController | undefined;
-  let backgroundStatus = $state({
+  let backgroundStatus = $state.raw({
     id: untrack(() => snapshot.settings.background),
     active: false,
     ready: false,

@@ -508,21 +508,21 @@ export class ShaderMount {
       // Update uniforms
       this.gl.useProgram(this.program);
 
-      // Update the time uniform
+      // Linked static shaders can optimize these uniforms out. WebGL null locations are no-ops.
       this.gl.uniform1f(
-        requiredValue(this.uniformLocations.u_time),
+        this.uniformLocations.u_time ?? null,
         this.currentFrame * 0.001,
       );
 
       // If the resolution has changed, we need to update the uniform
       if (this.resolutionChanged) {
         this.gl.uniform2f(
-          requiredValue(this.uniformLocations.u_resolution),
+          this.uniformLocations.u_resolution ?? null,
           this.gl.drawingBufferWidth,
           this.gl.drawingBufferHeight,
         );
         this.gl.uniform1f(
-          requiredValue(this.uniformLocations.u_pixelRatio),
+          this.uniformLocations.u_pixelRatio ?? null,
           this.renderScale,
         );
         this.resolutionChanged = false;

@@ -150,6 +150,7 @@
           }
         : {
             backgroundOverrides: {
+              ...current.backgroundOverrides,
               [current.background]: { ...controlValues(current), [key]: value },
             },
           };
@@ -185,7 +186,10 @@
     else
       save(
         services.settings.patch({
-          backgroundOverrides: { [current.background]: { ...defaults } },
+          backgroundOverrides: {
+            ...current.backgroundOverrides,
+            [current.background]: { ...defaults },
+          },
         }),
       );
   }

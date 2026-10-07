@@ -13,7 +13,13 @@ export function createManifest(target: Target) {
     manifest_version: 3,
     name: "lightfield",
     version: "0.1.0",
-    description: "lightfield new-tab extension — temporary tooling scaffold.",
+    description: "lightfield new-tab extension.",
+    icons: {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png",
+    },
     chrome_url_overrides: { newtab: "newtab.html" },
     // Native services use storage. Network/location prompts belong to explicit user gestures.
     permissions: ["storage"],

@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { applyTheme, readThemePalette } from "../../src/platform/theme";
+import {
+  applyTheme,
+  readThemeColors,
+  readThemePalette,
+} from "../../src/platform/theme";
 import { ISLAND_THEME_PALETTES, hexToRgb } from "../../src/shared/theme";
 test("DOM palette supplies active theme explicitly and clears custom tokens when switching to built-in CSS", () => {
   const originals = new Map<string, PropertyDescriptor | undefined>();
@@ -48,7 +52,17 @@ test("DOM palette supplies active theme explicitly and clears custom tokens when
     Object.defineProperty(globalThis, key, { configurable: true, value });
   }
   try {
+    values.set("--color-paper", "#102030");
+    values.set("--color-ink", "#f0f4f8");
+    values.set("--color-ink-2", "#8090a0");
+    values.set("--color-accent", "#00aacc");
+    expect(readThemeColors(root)).toEqual({
+      paper: "#102030",
+      ink: "#f0f4f8",
+      accent: "#00aacc",
+    });
     const palette = readThemePalette(root);
+    expect(palette.inkHex).toBe("#8090a0");
     const authored = ISLAND_THEME_PALETTES.midnight;
     if (!authored) throw new Error("Missing theme");
     expect(palette.shaderPalette).toEqual([

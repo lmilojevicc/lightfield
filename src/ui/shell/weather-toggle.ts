@@ -12,12 +12,12 @@ export function createWeatherToggle(port: {
     async set(enabled: boolean, automatic: boolean): Promise<void> {
       const mine = ++revision;
       ticket?.cancel();
-      const draft = port.settings.stage({ showWeather: enabled });
-      ticket = draft;
       // requestLocation is invoked synchronously within the original gesture, never a subscription.
       const permission =
         enabled && automatic ? port.requestLocation() : undefined;
       port.consent(enabled);
+      const draft = port.settings.stage({ showWeather: enabled });
+      ticket = draft;
       try {
         await permission;
         if (mine !== revision) return;

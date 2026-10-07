@@ -20,6 +20,7 @@
     services,
     snapshot,
     overlayOpen = false,
+    sceneHidden = false,
     busy = false,
     tuneAvailable = false,
     onOpenSettings,
@@ -31,6 +32,7 @@
     services: AppServices;
     snapshot: SettingsSnapshot;
     overlayOpen?: boolean;
+    sceneHidden?: boolean;
     busy?: boolean;
     tuneAvailable?: boolean;
     onOpenSettings: () => void;
@@ -57,7 +59,7 @@
     input: HTMLInputElement,
     clockElement: HTMLElement,
     clockButton: HTMLButtonElement;
-  let lifecycle: ReturnType<typeof createIslandLifecycle> | undefined;
+  let lifecycle = $state.raw<ReturnType<typeof createIslandLifecycle>>();
   let morph: ReturnType<typeof createSearchMorph> | undefined;
   let previous: HTMLElement | null = null;
   let alive = false;
@@ -106,6 +108,11 @@
         if (alive && !snapshot.settings.showSearch) collapse();
       });
   });
+  export function settingsOpener(): HTMLElement | null {
+    return island.querySelector<HTMLElement>(
+      searching ? "#search-settings-btn" : "#settings-open",
+    );
+  }
   /** Settings/tuner integration restores the source scene target, including Hidden mode's pill. */
   export function restoreSettingsFocus() {
     if (snapshot.settings.islandMode === "hidden" && !searching) {
@@ -375,12 +382,13 @@
       if (frame !== undefined) cancelAnimationFrame(frame);
       morph?.finish();
       lifecycle?.dispose();
+      lifecycle = undefined;
       delete document.documentElement.dataset.searchVisible;
     };
   });
 </script>
 
-<main class="page" inert={overlayOpen}>
+<main class="page" hidden={sceneHidden} inert={overlayOpen}>
   <button
     class="island-reveal"
     id="island-reveal"

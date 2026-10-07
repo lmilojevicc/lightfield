@@ -17,15 +17,31 @@
     services,
     snapshot,
     active = true,
+    sessionOpen = true,
     onThemePreview,
+    readThemeColors,
     onFocusReturn,
+    onEditorStateChange,
   }: {
     services: AppServices;
     snapshot: SettingsSnapshot;
     active?: boolean;
+    sessionOpen?: boolean;
     onThemePreview: (draft: CustomTheme | undefined) => void;
+    readThemeColors: () => Pick<CustomTheme, "paper" | "ink" | "accent">;
     onFocusReturn?: () => void;
+    onEditorStateChange?: (open: boolean, busy: boolean) => void;
   } = $props();
+  /** Return whether an editor consumed the close gesture (including an in-flight save). */
+  export function isCloseBlocked(): boolean {
+    return busy;
+  }
+  export function cancelEditor(): boolean {
+    if (!draft) return false;
+    if (!busy) cancel();
+    return true;
+  }
+  $effect(() => onEditorStateChange?.(draft !== null, busy));
   let themes = $state<readonly CustomTheme[]>([]);
   let query = $state("");
   let draft = $state<CustomTheme | null>(null);
@@ -96,7 +112,7 @@
     }
   });
   $effect(() => {
-    if (!active && draft && !busy) cancel(false);
+    if (!sessionOpen && draft && !busy) cancel(false);
   });
   async function run(action: () => Promise<unknown>, message = "") {
     if (busy) return false;
@@ -130,26 +146,27 @@
     );
     if (valid) onThemePreview(valid);
   }
-  async function open(theme?: CustomTheme) {
+  async function open(theme?: CustomTheme, invoker?: HTMLElement) {
+    const target = invoker ?? document.activeElement;
     returnFocus =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      target instanceof HTMLElement && section.contains(target)
+        ? target
+        : section.querySelector<HTMLElement>("#custom-create");
     editingId = theme?.id ?? null;
-    const style = getComputedStyle(section);
     change(
       theme
         ? { ...theme }
         : {
             id: services.themes.createId(),
             name: "",
-            paper: style.getPropertyValue("--color-paper").trim(),
-            ink: style.getPropertyValue("--color-ink").trim(),
-            accent: style.getPropertyValue("--color-accent").trim(),
+            ...readThemeColors(),
           },
     );
     await tick();
     section.querySelector<HTMLInputElement>("#custom-name")?.focus();
+  }
+  function restoreInvoker(invoker: HTMLElement) {
+    if (active && alive && invoker.isConnected) invoker.focus();
   }
   function cancel(focus = true) {
     preview = customThemePreviewTransition(preview, { type: "cancel" });
@@ -157,7 +174,14 @@
     editingId = null;
     onThemePreview(undefined);
     if (focus && active && alive) {
-      if (returnFocus?.isConnected) returnFocus.focus();
+      const invoker =
+        returnFocus?.isConnected && section.contains(returnFocus)
+          ? returnFocus
+          : section.querySelector<HTMLElement>("#custom-create");
+      if (invoker)
+        void tick().then(() => {
+          restoreInvoker(invoker);
+        });
       else onFocusReturn?.();
     }
   }
@@ -253,7 +277,7 @@
 
 <svelte:window
   onkeydown={(e: KeyboardEvent) => {
-    if (active && draft && e.key === "Escape" && !busy) {
+    if (!e.defaultPrevented && active && draft && e.key === "Escape" && !busy) {
       e.preventDefault();
       e.stopImmediatePropagation();
       cancel();
@@ -503,7 +527,8 @@
         hidden={draft !== null}
         type="button"
         disabled={busy}
-        onclick={() => open()}>Create theme</button
+        onclick={(event: MouseEvent & { currentTarget: HTMLButtonElement }) =>
+          open(undefined, event.currentTarget)}>Create theme</button
       >
     </div>
     <div class="custom-theme-actions">

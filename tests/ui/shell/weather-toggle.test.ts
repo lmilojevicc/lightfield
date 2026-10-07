@@ -33,17 +33,17 @@ test("auto-weather requests directly on gesture; a late grant cannot re-enable a
     },
   });
   const enable = toggle.set(true, true);
-  expect(events).toEqual(["stage:true", "request", "consent:true"]);
+  expect(events).toEqual(["request", "consent:true", "stage:true"]);
   await toggle.set(false, true);
   resolve?.(true);
   await enable;
   expect(events).toEqual([
-    "stage:true",
     "request",
     "consent:true",
+    "stage:true",
     "cancel:true",
-    "stage:false",
     "consent:false",
+    "stage:false",
     "commit:false",
   ]);
 });

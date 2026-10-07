@@ -45,6 +45,35 @@ function relativeLuminance01(hex: string): number {
   return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
 }
 
+/** Editor seeds use primary text ink; shader palettes deliberately use secondary ink. */
+export function readThemeColors(
+  root: HTMLElement,
+): Pick<CustomTheme, "paper" | "ink" | "accent"> {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  const style = getComputedStyle(root);
+  return {
+    paper: toHex(
+      cssColorToRgb(
+        style.getPropertyValue("--color-paper"),
+        "#11111b",
+        context,
+      ),
+    ),
+    ink: toHex(
+      cssColorToRgb(style.getPropertyValue("--color-ink"), "#f0f4f8", context),
+    ),
+    accent: toHex(
+      cssColorToRgb(
+        style.getPropertyValue("--color-accent"),
+        "#74c7ec",
+        context,
+      ),
+    ),
+  };
+}
+
 export function readThemePalette(root: HTMLElement): ThemePalette {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1;

@@ -53,7 +53,7 @@ async function fixture(target: Target = "chromium"): Promise<string> {
 
 describe("package inspection invariants", () => {
   test.each([...targets])(
-    "%s accepts only the expected local scaffold",
+    "%s accepts only the expected local package",
     async (target) => {
       expect(await inspectDirectory(await fixture(target), target)).toEqual([
         "SVELTE_LICENSE.txt",

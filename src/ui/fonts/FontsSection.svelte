@@ -14,21 +14,48 @@
     resolveFontFamily,
     fontPreset,
   } from "../../domain/fonts/font-pairings";
+  import {
+    createFontSaveBarrier,
+    fontSaveBlocksClose,
+    type FontSaveKind,
+  } from "./font-save-barrier";
   import { createFontPreviewOwner } from "./font-preview-owner";
   const {
     services,
     snapshot,
     active = true,
+    sessionOpen = true,
+    navigationRevision = 0,
     onRequestFontConsent,
     onFocusReturn,
+    onEditorStateChange,
   }: {
     services: AppServices;
     snapshot: SettingsSnapshot;
     active?: boolean;
+    sessionOpen?: boolean;
+    navigationRevision?: number;
     /** Starts permission request synchronously within the initiating gesture. */
     onRequestFontConsent?: () => boolean | Promise<boolean>;
     onFocusReturn?: () => void;
+    onEditorStateChange?: (open: boolean, busy: boolean) => void;
   } = $props();
+  export function isCloseBlocked(): boolean {
+    return fontSaveBlocksClose(saveKind, slowSave);
+  }
+  export function cancelEditor(): boolean {
+    if (!opened) return false;
+    // Submitted custom saves dismiss via Settings after the barrier, never via editor cancellation.
+    if (saving) return false;
+    cancel();
+    return true;
+  }
+  $effect(() =>
+    onEditorStateChange?.(
+      opened,
+      loading || fontSaveBlocksClose(saveKind, slowSave),
+    ),
+  );
   let section: HTMLElement;
   let openButton: HTMLButtonElement;
   let opened = $state(false);
@@ -42,7 +69,18 @@
   });
   let preview = $state<FontPreview | undefined>();
   let loading = $state(false);
-  let saving = $state(false);
+  let saveKind = $state<FontSaveKind>(null);
+  const saving = $derived(saveKind !== null);
+  let slowSave = $state(false);
+  const saveBarrier = createFontSaveBarrier({
+    schedule: (callback, ms) => setTimeout(callback, ms),
+    cancel: (timer) => {
+      clearTimeout(timer as ReturnType<typeof setTimeout>);
+    },
+    slow: (value) => {
+      slowSave = value;
+    },
+  });
   let error = $state("");
   let deferred = false;
   let request = 0;
@@ -91,12 +129,20 @@
       stop();
       activity();
       owner.clear();
-      services.fonts.cancel();
+      if (!saving) services.fonts.cancel();
+      saveBarrier.finish();
     };
   });
   $effect(() => {
-    if (!active && opened && !saving) cancel(false);
+    if (!sessionOpen && opened && (!saving || slowSave)) cancel(false);
   });
+  function ownsNavigation(navigation: number) {
+    return alive && active && sessionOpen && navigation === navigationRevision;
+  }
+  function focusDraft(navigation: number) {
+    if (opened && ownsNavigation(navigation))
+      section.querySelector<HTMLInputElement>("#custom-display-font")?.focus();
+  }
   async function open() {
     const values = [
       snapshot.settings.customDisplayFont,
@@ -106,8 +152,9 @@
     body = values[1] ?? "";
     opened = true;
     error = "";
+    const navigation = navigationRevision;
     await tick();
-    section.querySelector<HTMLInputElement>("#custom-display-font")?.focus();
+    focusDraft(navigation);
   }
   function edit(role: "display" | "body", value: string) {
     request++;
@@ -122,15 +169,42 @@
   function cancel(focus = true) {
     request++;
     owner.clear();
-    services.fonts.cancel();
+    if (!saving) services.fonts.cancel();
     preview = undefined;
     loading = false;
     deferred = false;
     error = "";
     opened = false;
-    if (focus && active && alive) {
-      if (openButton.isConnected) openButton.focus();
-      else onFocusReturn?.();
+    if (focus) {
+      const ticket = request;
+      const navigation = navigationRevision;
+      const focused = document.activeElement;
+      void tick()
+        .then(() => {
+          if (
+            !alive ||
+            !active ||
+            !sessionOpen ||
+            opened ||
+            ticket !== request ||
+            navigation !== navigationRevision
+          )
+            return;
+          if (
+            document.activeElement !== focused &&
+            document.activeElement !== document.body
+          )
+            return;
+          if (openButton.isConnected) openButton.focus();
+          else onFocusReturn?.();
+        })
+        .catch((reason: unknown) => {
+          if (alive)
+            error =
+              reason instanceof Error
+                ? reason.message
+                : "Couldn’t restore focus.";
+        });
     }
   }
   function authorization(): boolean | Promise<boolean> {
@@ -177,6 +251,7 @@
     if (saving || !preview || !opened) return;
     const invoker = document.activeElement;
     const ticket = request;
+    const navigation = navigationRevision;
     const ownsRequest = () => alive && ticket === request && opened;
     let grant: boolean | Promise<boolean>;
     try {
@@ -185,7 +260,7 @@
       error = reason instanceof Error ? reason.message : "Couldn’t load fonts.";
       return;
     }
-    saving = true;
+    saveKind = "custom";
     error = "";
     try {
       if (!(await grant))
@@ -193,18 +268,27 @@
           "Google Fonts permission is required. Included and system fonts work offline.",
         );
       if (!ownsRequest()) return;
+      saveBarrier.begin();
       await services.fonts.save(display, body);
-      if (ownsRequest()) cancel(active && document.activeElement === invoker);
+      if (ownsRequest())
+        cancel(
+          active &&
+            navigation === navigationRevision &&
+            document.activeElement === invoker,
+        );
     } catch (reason) {
-      error = reason instanceof Error ? reason.message : "Couldn’t save fonts.";
+      if (ownsRequest())
+        error =
+          reason instanceof Error ? reason.message : "Couldn’t save fonts.";
     } finally {
-      saving = false;
+      saveBarrier.finish();
+      saveKind = null;
     }
   }
   async function preset(id: (typeof FONT_PRESETS)[number]["id"]) {
     if (saving) return;
     cancel(false);
-    saving = true;
+    saveKind = "preset";
     try {
       await services.fonts.preset({
         fonts: id,
@@ -214,7 +298,7 @@
     } catch (reason) {
       error = reason instanceof Error ? reason.message : "Couldn’t save fonts.";
     } finally {
-      saving = false;
+      saveKind = null;
     }
   }
   function cardKey(event: KeyboardEvent, index: number) {
@@ -238,7 +322,13 @@
 
 <svelte:window
   onkeydown={(e: KeyboardEvent) => {
-    if (active && opened && e.key === "Escape" && !saving) {
+    if (
+      !e.defaultPrevented &&
+      active &&
+      opened &&
+      e.key === "Escape" &&
+      !saving
+    ) {
       e.preventDefault();
       e.stopImmediatePropagation();
       cancel();
@@ -442,7 +532,9 @@
       >
         {error ||
           (saving
-            ? "Saving fonts…"
+            ? slowSave
+              ? "Saving is taking longer than expected. You can close Settings; font changes will be available when saving finishes."
+              : "Saving fonts…"
             : loading
               ? "Loading draft fonts. Current fonts remain in use."
               : preview

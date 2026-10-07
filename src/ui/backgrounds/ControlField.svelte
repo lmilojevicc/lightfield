@@ -3,6 +3,7 @@
   import type { ImageFilterControl } from "../../shared/image-filter-metadata";
   import type { BackgroundControlValue } from "../../shared/background-metadata";
   import {
+    numericControlNeedsAdapter,
     numericControlKeyTransition,
     numericControlPointerValue,
     numericControlAriaValues,
@@ -42,20 +43,23 @@
     ),
   );
   // Off-lattice authored defaults must not be quantized by assigning a native range.
-  const adapter = untrack(
-    () =>
+  function needsAdapter() {
+    return (
       control.type === "number" &&
-      (Number(values[control.key]) < control.min ||
-        Number(values[control.key]) > control.max ||
-        (source.startsWith("neat-") &&
-          source !== "neat-gradient" &&
-          Math.abs(
-            (Number(values[control.key]) - control.min) / control.step -
-              Math.round(
-                (Number(values[control.key]) - control.min) / control.step,
-              ),
-          ) > 1e-8)),
-  );
+      numericControlNeedsAdapter(
+        Number(values[control.key]),
+        source,
+        control.min,
+        control.max,
+        control.step,
+      )
+    );
+  }
+  let adapter = $state(untrack(needsAdapter));
+  $effect(() => {
+    // Promote only once the focused draft relinquishes ownership; never replace a live slider.
+    if (!focused && needsAdapter()) adapter = true;
+  });
   function change(next: BackgroundControlValue) {
     draft = next;
     onchange(control.key, next);

@@ -84,3 +84,20 @@ export function numericControlKeyTransition(
   }
   return clamp(roundToStep(next, step, min), min, max);
 }
+
+/** Native ranges sanitize authored off-lattice Neat values; use the source bounded adapter instead. */
+export function numericControlNeedsAdapter(
+  value: number,
+  source: string,
+  min: number,
+  max: number,
+  step: number,
+): boolean {
+  return (
+    value < min ||
+    value > max ||
+    (source.startsWith("neat-") &&
+      source !== "neat-gradient" &&
+      Math.abs((value - min) / step - Math.round((value - min) / step)) > 1e-8)
+  );
+}

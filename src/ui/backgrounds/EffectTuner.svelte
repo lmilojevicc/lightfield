@@ -93,16 +93,17 @@
   });
 </script>
 
-<button
-  class="effect-shortcut"
-  id="effect-shortcut"
-  type="button"
-  hidden={!shortcutVisible ||
-    !snapshot.settings.showEffectShortcut ||
-    open ||
-    !tuningScope(snapshot.settings)}
-  onclick={onopen}>Effect settings</button
->
+{#if shortcutVisible}
+  <button
+    class="effect-shortcut"
+    id="effect-shortcut"
+    type="button"
+    hidden={!snapshot.settings.showEffectShortcut ||
+      open ||
+      !tuningScope(snapshot.settings)}
+    onclick={onopen}>Effect settings</button
+  >
+{/if}
 <div class="tuning-dock" id="tuning-dock" bind:this={dock} hidden={!open}></div>
 <aside
   class="effect-tuner control-surface"

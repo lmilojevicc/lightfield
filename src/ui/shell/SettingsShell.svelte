@@ -28,11 +28,25 @@
     onCategoryChange: (category: SettingsCategory) => void;
     content: Snippet;
     scene?: HTMLElement;
-    canClose?: () => boolean;
+    canClose?: (
+      reason: "escape" | "close",
+      owner?: SettingsCategory,
+    ) => boolean;
     onRestoreFocus?: () => void;
   } = $props();
   let sheet: HTMLDivElement;
   let scroll: HTMLDivElement;
+  export function tunerReturnScroll(): number {
+    return open ? scroll.scrollTop : 0;
+  }
+  export function restoreTunerReturn(top: number): void {
+    if (!open) return;
+    scroll.scrollTop = top;
+    (
+      sheet.querySelector<HTMLElement>("#effect-tune") ??
+      sheet.querySelector<HTMLElement>("#settings-close")
+    )?.focus({ preventScroll: true });
+  }
   const categories: {
     id: SettingsCategory;
     tab: string;
@@ -144,8 +158,11 @@
         previous.focus();
     };
   });
-  function close() {
-    if (canClose()) onOpenChange(false);
+  function close(
+    reason: "escape" | "close" = "close",
+    owner?: SettingsCategory,
+  ) {
+    if (canClose(reason, owner)) onOpenChange(false);
   }
   function select(next: SettingsCategory) {
     onCategoryChange(next);
@@ -166,7 +183,13 @@
     if (!open || event.defaultPrevented) return;
     if (event.key === "Escape") {
       event.preventDefault();
-      close();
+      const target =
+        event.target instanceof HTMLElement
+          ? event.target.closest<HTMLElement>("[data-settings-category]")
+              ?.dataset.settingsCategory
+          : undefined;
+      const owner = categories.find((item) => item.id === target)?.id;
+      close("escape", owner);
       return;
     }
     if (event.key !== "Tab") return;
@@ -238,7 +261,9 @@
           class="sheet__close icon-close modal__close-btn drawer__close-btn"
           id="settings-close"
           type="button"
-          onclick={close}
+          onclick={() => {
+            close();
+          }}
           aria-label="Close settings"
           title="Close (Esc)"
         >

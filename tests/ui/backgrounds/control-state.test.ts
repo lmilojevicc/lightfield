@@ -1,3 +1,4 @@
+import { numericControlNeedsAdapter } from "../../../src/ui/backgrounds/numeric-control";
 import { describe, test, expect } from "bun:test";
 import { DEFAULT_SETTINGS } from "../../../src/domain/settings/schema";
 import {
@@ -124,4 +125,22 @@ describe("Numeric control bounded interaction", () => {
     expect(numericControlPointerValue(50, 100, 100, 0, 1, 0.1)).toBe(0);
     expect(numericControlPointerValue(300, 100, 100, 0, 1, 0.1)).toBe(1);
   });
+});
+
+test("same-scope external Neat reset requires an adapter for the exact authored speed", () => {
+  expect(numericControlNeedsAdapter(1, "neat-alejandra", 0, 10, 0.1)).toBe(
+    false,
+  );
+  expect(
+    numericControlNeedsAdapter(
+      0.14868691165357314,
+      "neat-alejandra",
+      0,
+      10,
+      0.1,
+    ),
+  ).toBe(true);
+  expect(numericControlNeedsAdapter(1, "neat-alejandra", 0, 10, 0.1)).toBe(
+    false,
+  );
 });

@@ -1,3 +1,6 @@
+import { createWeatherToggle } from "../../src/ui/shell/weather-toggle";
+import { createNetworkConsent } from "../../src/app/network-consent";
+import type { AppServices } from "../../src/services/contracts";
 import { deferred, waitUntil } from "./deferred";
 import { createPageVisibility } from "../../src/platform/page-visibility";
 import type { PreparedLocalImage } from "../../src/platform/images/local-image-loading";
@@ -580,4 +583,119 @@ test("validated transient theme preview never writes settings/themes; cancel app
       Object.defineProperty(globalThis, "getComputedStyle", originalStyle);
     else Reflect.deleteProperty(globalThis, "getComputedStyle");
   }
+});
+
+function weatherToggleFixture() {
+  const h = fixture();
+  h.values.set(
+    STORAGE_KEY,
+    normalize({ weatherLocation: "London", showWeather: false }),
+  );
+  const events: string[] = [];
+  const consent = createNetworkConsent({
+    durable: () => services.settings.current().durable,
+    weatherEnabled: () => services.settings.current().settings.showWeather,
+    requestFonts: () => services.permissions.request("fonts"),
+    notify: () => {
+      services.notifyConsentChanged();
+    },
+    alive: () => true,
+    report: () => {},
+  });
+  h.deps.weatherEnvironment.allowed = () => consent.weather();
+  h.deps.weatherEnvironment.fetch = (url) => {
+    events.push(url.includes("/search?") ? "geocode" : "forecast");
+    return Promise.resolve(
+      new Response(
+        JSON.stringify(
+          url.includes("/search?")
+            ? {
+                results: [
+                  {
+                    name: "London",
+                    country: "United Kingdom",
+                    latitude: 51.5,
+                    longitude: -0.12,
+                  },
+                ],
+              }
+            : {
+                current: {
+                  temperature_2m: 20.6,
+                  apparent_temperature: 19.4,
+                  relative_humidity_2m: 50.4,
+                  weather_code: 3,
+                  wind_speed_10m: 3.7,
+                  wind_direction_10m: 359.5,
+                },
+              },
+        ),
+      ),
+    );
+  };
+  const services: AppServices = createServices({ dependencies: h.deps });
+  const toggle = createWeatherToggle({
+    settings: services.settings,
+    requestLocation: () => {
+      throw new Error("Manual city must not request location");
+    },
+    consent: () => {
+      events.push("notify");
+      services.notifyConsentChanged();
+    },
+  });
+  return { h, services, consent, toggle, events };
+}
+test("composed manual-city opt-in authorizes/resets before synchronous stage and fetches from enable alone", async () => {
+  const f = weatherToggleFixture();
+  await f.services.ready;
+  expect(f.events).toEqual([]);
+  expect(f.consent.weather()).toBe(false);
+  const stop = f.services.settings.subscribe((value) => {
+    if (value.settings.showWeather) f.events.push("enabled");
+  });
+  await f.toggle.set(true, false);
+  await waitUntil(() =>
+    f.services.weather.current().temperature.includes("21"),
+  );
+  expect(f.events.indexOf("notify")).toBeLessThan(f.events.indexOf("enabled"));
+  expect(f.events).toContain("geocode");
+  expect(f.events).toContain("forecast");
+  expect(f.services.weather.current().temperature).toContain("21");
+  stop();
+  f.toggle.dispose();
+  f.services.dispose();
+});
+test("composed weather opt-ins follow external off/on and failed user writes without a local lifetime veto", async () => {
+  const f = weatherToggleFixture();
+  await f.services.ready;
+  await f.toggle.set(true, false);
+  await waitUntil(() => f.events.includes("forecast"));
+  await f.toggle.set(false, false);
+  expect(f.consent.weather()).toBe(false);
+  f.h.external(
+    STORAGE_KEY,
+    normalize({ weatherLocation: "London", showWeather: true }),
+  );
+  await waitUntil(() => f.services.settings.current().settings.showWeather);
+  expect(f.consent.weather()).toBe(true);
+  await waitUntil(() =>
+    f.services.weather.current().temperature.includes("21"),
+  );
+  f.h.fail(true);
+  await expectRejected(f.toggle.set(false, false), /quota denied/);
+  expect(f.consent.weather()).toBe(false); // failed owned off intent remains the real UI view
+  expect(f.services.settings.current().durable.showWeather).toBe(true);
+  f.h.fail(false);
+  await f.services.settings.retry();
+  expect(f.consent.weather()).toBe(false);
+  f.h.fail(true);
+  await expectRejected(f.toggle.set(true, false), /quota denied/);
+  expect(f.consent.weather()).toBe(true);
+  expect(f.services.settings.current().durable.showWeather).toBe(false);
+  f.h.fail(false);
+  await f.services.settings.retry();
+  expect(f.consent.weather()).toBe(true);
+  f.toggle.dispose();
+  f.services.dispose();
 });

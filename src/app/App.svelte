@@ -1,8 +1,6 @@
-<svelte:head><title>lightfield</title></svelte:head>
+<script lang="ts">
+  import Lightfield from "../ui/Lightfield.svelte";
+  import "../styles/index.css";
+</script>
 
-<main aria-label="lightfield temporary scaffold">
-  <h1>lightfield</h1>
-  <p>
-    Temporary tooling scaffold. The original UI and effects are not ported yet.
-  </p>
-</main>
+<Lightfield />

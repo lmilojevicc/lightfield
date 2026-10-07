@@ -1,0 +1,288 @@
+/* ---------------------------------------------------------------- Font Grid & Specimen */
+
+.font-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.font-pairing-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-input);
+  border: 1.5px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 10%, transparent);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+  text-align: left;
+  gap: 3px;
+  width: 100%;
+}
+
+.font-pairing-card:hover {
+  background: var(--surface-hover);
+  border-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 22%,
+    transparent
+  );
+  transform: translateY(-1px);
+}
+
+.font-pairing-card.is-active {
+  border-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  background: var(--surface-selected);
+  box-shadow: 0 0 0 1px var(--ui-accent-boundary, var(--color-accent-boundary));
+}
+
+.font-card__header {
+  min-width: 0;
+  gap: 4px;
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.font-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.font-card__badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 10%,
+    transparent
+  );
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+
+.font-card__sub {
+  font-size: 10px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+
+.font-card__preview-sample {
+  font-size: 14px;
+  margin-top: 4px;
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.specimen-card {
+  padding: 14px 16px;
+  /* Declared so the card's own role tokens preview a draft instead of inheriting body's computed font. */
+  font-family: var(--font-body);
+  border-radius: 12px;
+  background: var(--surface-specimen);
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 10%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.specimen-clock {
+  font-size: 30px;
+  font-weight: var(--font-display-weight, 500);
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-ink, var(--color-ink));
+  line-height: 1.1;
+  font-family: var(--font-display, var(--font-body));
+}
+
+.specimen-date {
+  font-size: 11px;
+  color: var(--ui-accent-text, var(--color-accent-text));
+  font-weight: 500;
+}
+
+.specimen-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+
+.specimen-caption {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ui-muted, var(--color-muted));
+}
+
+/* ---------------------------------------------------------------- Drawer & Modal Form Rows & Sliders */
+
+.drawer__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.drawer__control-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.drawer__control-sub {
+  font-size: 10px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+
+.drawer__range-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+
+.drawer__range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawer__range {
+  flex: 1;
+  height: 32px;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  border-radius: 4px;
+}
+.drawer__range:focus-visible {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 6px;
+}
+
+.drawer__range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--surface-active);
+}
+.drawer__range::-webkit-slider-thumb {
+  margin-top: -5px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.drawer__range-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  width: 36px;
+  text-align: right;
+}
+
+.modal__option-row {
+  padding: 6px 0;
+  margin-bottom: 18px;
+}
+
+.panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 2px;
+}
+
+.panel__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.panel__desc {
+  font-size: 11px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  line-height: 1.4;
+}
+
+.panel__subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 12%, transparent);
+}
+
+.panel__subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.modal__tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.modal__tab-btn:hover {
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 6%,
+    transparent
+  );
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.modal__tab-btn.is-active {
+  background: var(--color-accent);
+  color: var(--ui-accent-ink, var(--color-accent-ink));
+  font-weight: 600;
+}
+
+.modal__tab-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal__tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

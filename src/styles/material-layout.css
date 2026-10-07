@@ -1,0 +1,168 @@
+/* Material tone is independent of the selected background palette. */
+:root {
+  --glass-blur: 28px;
+  --surface-color-scheme: dark;
+  --surface-bg: rgb(15 18 28 / 0.88);
+  --surface-solid: #0f121c;
+  --surface-fg: #f0f4f8;
+  --surface-muted: #b1b7c2;
+  --surface-border: rgb(255 255 255 / 0.16);
+  --surface-border-top: rgb(255 255 255 / 0.28);
+  --surface-scrollbar: rgb(255 255 255 / 0.22);
+  --surface-input: rgb(255 255 255 / 0.08);
+  --surface-hover: rgb(255 255 255 / 0.12);
+  --surface-active: rgb(255 255 255 / 0.22);
+  --surface-selected: rgb(255 255 255 / 0.15);
+  --surface-specimen: rgb(0 0 0 / 0.24);
+  --surface-nav: rgb(0 0 0 / 0.12);
+  --capsule-bg: rgb(18 24 38 / 0.74);
+  --capsule-hover: rgb(26 34 52 / 0.85);
+}
+:root[data-ui-tone-resolved="light"] {
+  --surface-color-scheme: light;
+  --surface-bg: rgb(255 255 255 / 0.92);
+  --surface-solid: #ffffff;
+  --surface-fg: #0f172a;
+  --surface-muted: #505d70;
+  --surface-border: rgb(15 23 42 / 0.16);
+  --surface-border-top: rgb(255 255 255 / 0.95);
+  --surface-scrollbar: rgb(15 23 42 / 0.28);
+  --surface-input: rgb(15 23 42 / 0.06);
+  --surface-hover: rgb(15 23 42 / 0.1);
+  --surface-active: rgb(15 23 42 / 0.16);
+  --surface-selected: rgb(15 23 42 / 0.12);
+  --surface-specimen: rgb(15 23 42 / 0.06);
+  --surface-nav: rgb(15 23 42 / 0.03);
+  --capsule-bg: rgb(255 255 255 / 0.82);
+  --capsule-hover: rgb(255 255 255 / 0.94);
+}
+/* Resolve aliases where preview snapshots are stored, not on their ancestor. */
+:is(.sheet__panel, .effect-tuner, .island, .tuning-dock, .effect-shortcut) {
+  --ui-ink: var(--surface-fg);
+  --ui-ink-2: var(--surface-muted);
+  --ui-muted: var(--surface-muted);
+  --ui-paper-2: var(--surface-solid);
+  --ui-paper-3: var(--surface-input);
+  --ui-rule: var(--surface-border);
+  --ui-rule-2: var(--surface-border);
+  --ui-control: var(--surface-active);
+  --ui-focus: var(--surface-accent-focus);
+  --ui-accent-text: var(--surface-accent-text);
+  --ui-accent-boundary: var(--surface-accent-boundary);
+  --ui-accent-ink: var(--surface-accent-ink);
+  color-scheme: var(--surface-color-scheme);
+  color: var(--surface-fg);
+}
+/* Preview colours are local; never recolour the settings controller from a draft. */
+.custom-theme-specimen {
+  --ui-accent-ink: var(--color-accent-ink);
+  --ui-focus: var(--color-focus);
+  --ui-ink: var(--color-ink);
+  --ui-ink-2: var(--color-ink-2);
+  --ui-muted: var(--color-muted);
+}
+[hidden] {
+  display: none !important;
+}
+:is(.sheet, .effect-tuner, .island) :focus-visible {
+  outline-color: var(--ui-focus, var(--color-focus));
+}
+
+/* ---------------------------------------------------------------- layout */
+
+:root {
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Segoe UI",
+    Roboto, "Helvetica Neue", sans-serif;
+  --font-display-weight: 500;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco,
+    Consolas, monospace;
+  --island-rest-line: calc(28px + env(safe-area-inset-bottom));
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Baseline theme's motion curve, for the Hidden-mode drawer morph. */
+  --motion-drawer: cubic-bezier(0.1, 0, 0.1, 1.25);
+}
+
+html,
+body {
+  transition:
+    background-color 0.4s var(--spring-smooth),
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.booting .page {
+  visibility: hidden;
+  animation: bootstrap-fallback 0s 1500ms forwards;
+}
+
+@keyframes bootstrap-fallback {
+  to {
+    visibility: visible;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.background-host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-paper);
+}
+
+.background-host::after {
+  content: attr(data-error);
+  position: absolute;
+  inset: auto var(--page-gutter) var(--space-md);
+  color: var(--ui-muted, var(--color-muted));
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  text-align: center;
+  z-index: 2;
+}
+
+.background-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--color-paper);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.background-mount,
+.background-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.page {
+  position: relative;
+  z-index: var(--z-raised);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--page-gutter);
+  padding-block: var(--space-lg) var(--space-md);
+}
+
+/* ---------------------------------------------------------------- engineering furniture */

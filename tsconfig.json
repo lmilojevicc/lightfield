@@ -18,6 +18,9 @@
     },
     {
       "path": "./tsconfig.effects-tests.json"
+    },
+    {
+      "path": "./tsconfig.ui-tests.json"
     }
   ]
 }

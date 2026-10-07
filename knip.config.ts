@@ -8,9 +8,9 @@ export default {
   project: [
     "src/**/*.{ts,svelte}",
     "tooling/**/*.ts",
-    "tests/{shared,domain,platform,services,effects}/**/*.ts",
+    "tests/{shared,domain,platform,services,effects,ui}/**/*.ts",
   ],
-  // Bun discovers tooling and all four real shared/native test directories from package.json.
+  // Bun discovers tooling and all real shared/native/effects/UI test directories from package.json.
   // Plugins discover Vite/Svelte/ESLint/Prettier configs and Bun test roots.
   // Never make all effects entries: literal lazy imports must prove reachability.
 } satisfies KnipConfig;

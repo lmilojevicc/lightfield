@@ -37,6 +37,7 @@ export default ts.config(
           "./tsconfig.native-tests.json",
           "./tsconfig.worker.json",
           "./tsconfig.effects-tests.json",
+          "./tsconfig.ui-tests.json",
         ],
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".svelte"],

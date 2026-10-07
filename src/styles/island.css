@@ -1,0 +1,650 @@
+/* ---------------------------------------------------------------- Island Container & Capsule */
+
+.island-container {
+  position: fixed;
+  inset: 0;
+  padding-bottom: var(--island-rest-line);
+  overflow: clip;
+  justify-content: flex-end;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.island {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  --capsule-height: 48px;
+  height: var(--capsule-height);
+  padding: 0 12px 0 14px;
+  border-radius: 9999px;
+  background: var(--capsule-bg);
+  color: var(--ui-ink, var(--color-ink));
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 14%, transparent);
+  border-top-color: var(--surface-border-top);
+  box-shadow:
+    0 20px 48px -10px rgba(0, 0, 0, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%) invert(0)
+    brightness(1) hue-rotate(0deg);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%)
+    invert(0) brightness(1) hue-rotate(0deg);
+  transition:
+    transform 0.55s var(--spring-smooth),
+    opacity 0.35s ease,
+    background 0.32s ease,
+    border-color 0.32s ease,
+    box-shadow 0.32s var(--motion-drawer),
+    color 0.3s ease,
+    width 0.4s var(--spring-smooth),
+    min-width 0.4s var(--spring-smooth),
+    max-width 0.32s var(--motion-drawer),
+    height 0.32s var(--motion-drawer),
+    padding 0.32s var(--motion-drawer),
+    backdrop-filter 0.32s var(--motion-drawer),
+    -webkit-backdrop-filter 0.32s var(--motion-drawer);
+  max-width: calc(100vw - 24px);
+  min-width: 0;
+  will-change: transform, width;
+}
+
+.island:hover {
+  background: var(--capsule-hover);
+}
+
+/* Idle State: Slides 70% off-screen leaving a peek handle */
+.island.is-idle {
+  transform: translateY(calc(100% - 14px));
+  opacity: 0.72;
+}
+
+.island.is-idle:hover {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Hidden mode's drawer: the capsule collapses into the pill it morphs back out of. It keeps its
+   resting bottom line instead of sliding off-screen, and only the fill and inner content change. */
+.island.is-hidden {
+  height: 4px;
+  max-width: min(160px, calc(100vw - 24px));
+  padding-inline: 0;
+  transform: none;
+  opacity: 1;
+  /* Luminance-inverting glass: a light backdrop reads as a dark pill and a dark one as a light pill,
+     so the drawer survives bright wallpapers instead of washing out. The inversion is deliberately
+     desaturated (the wallpaper's per-frame motion reaches the pill through the backdrop, and chroma
+     swings are what makes that read as flicker), while the ink wash and rim stay as a theme frost. */
+  background-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 8%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 16%,
+    transparent
+  );
+  /* Flipping brightness moves the one luminance an inversion cannot separate away from mid-greys;
+     the dark outer ring and light inner line keep the edge readable right at that crossover. */
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.3),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.22);
+  backdrop-filter: blur(14px) saturate(40%) invert(1) brightness(1.4)
+    hue-rotate(180deg);
+  -webkit-backdrop-filter: blur(14px) saturate(40%) invert(1) brightness(1.4)
+    hue-rotate(180deg);
+  overflow: clip;
+  pointer-events: none;
+}
+
+/* The content keeps the expanded extents so the drawer's approach zone never shrinks with the pill. */
+.island.is-hidden .island__content {
+  height: var(--capsule-height);
+  flex-shrink: 0;
+  opacity: 0;
+  filter: blur(16px);
+  transform: scale(0.9);
+}
+
+/* Hidden mode's pill is the capsule itself, so the button is transparent: it only carries the
+   keyboard/tap target on the same bottom line, with the theme's 10x-tall invisible hover area. */
+.island-reveal {
+  position: fixed;
+  z-index: 51;
+  left: 50%;
+  bottom: var(--island-rest-line);
+  transform: translateX(-50%);
+  width: min(
+    160px,
+    calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 24px)
+  );
+  height: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--surface-fg);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.island-reveal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: scaleY(10);
+  border-radius: inherit;
+}
+.island-reveal[hidden] {
+  display: none;
+}
+/* A revealed capsule owns its own bottom strip; the target must not intercept it. */
+.island-reveal[aria-expanded="true"] {
+  pointer-events: none;
+}
+.island-reveal:focus-visible {
+  outline: 2px solid var(--surface-accent-focus, var(--color-focus));
+  outline-offset: 3px;
+}
+
+/* Subtle peek handle bar on top edge of capsule */
+.island__handle {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 25%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.island.is-idle .island__handle {
+  opacity: 0.9;
+}
+
+/* Collapsed / Default State Content */
+.island__content {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 10px;
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.32s ease,
+    filter 0.32s ease,
+    transform 0.32s var(--motion-drawer),
+    gap 0.3s var(--spring-smooth),
+    visibility 0.25s;
+}
+
+.island.is-searching .island__content {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.92);
+  position: absolute;
+  max-width: calc(100% - 24px);
+  visibility: hidden;
+}
+
+/* Time & Date Group */
+.island__time-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 4px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.island__time-btn:hover {
+  opacity: 0.9;
+}
+
+.island__time-btn:active {
+  transform: scale(0.97);
+}
+
+.island__time-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.island__time {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 19px;
+  font-weight: var(--font-display-weight, 500);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.island__date {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  transform: translateX(-4px);
+  margin-left: 0;
+  transition:
+    max-width 0.35s var(--spring-smooth),
+    opacity 0.25s ease,
+    transform 0.35s var(--spring-smooth),
+    margin-left 0.35s var(--spring-smooth);
+}
+
+.island:hover .island__date,
+.island:focus-within .island__date,
+:root[data-date-expanded="true"] .island__date {
+  max-width: 140px;
+  opacity: 0.85;
+  transform: translateX(0);
+  margin-left: 8px;
+}
+
+/* Hairline Dividers */
+.island__divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--ui-ink-2, var(--color-ink-2));
+  opacity: 0.25;
+  flex-shrink: 0;
+  transition:
+    opacity 0.25s ease,
+    width 0.25s ease;
+}
+
+.island__divider--action {
+  height: 20px;
+  opacity: 0.35;
+  margin: 0 1px;
+}
+
+/* Permanent Search Hint Button */
+.island__search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px 0 8px;
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 6%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 12%, transparent);
+  color: var(--ui-ink-2, var(--color-ink-2));
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.island__search-hint[hidden] {
+  display: none !important;
+}
+
+.island__search-hint:hover {
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 12%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 24%,
+    transparent
+  );
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.island__search-hint:active {
+  transform: scale(0.96);
+}
+
+.island__search-hint:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.search-hint__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  transition: color 0.2s ease;
+}
+
+.island__search-hint:hover .search-hint__icon {
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.search-hint__text {
+  color: inherit;
+}
+
+.search-hint__kbd {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 8%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 12%, transparent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+
+/* In-Capsule Weather Chip */
+.island__weather,
+.island__chip--weather,
+.island__weather-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ui-ink, var(--color-ink));
+  overflow: hidden;
+  max-width: 120px;
+  opacity: 1;
+  transition:
+    max-width 0.35s var(--spring-smooth),
+    opacity 0.25s ease,
+    padding 0.35s var(--spring-smooth),
+    margin 0.35s var(--spring-smooth);
+}
+
+.weather__icon-wrap,
+.weather__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  line-height: 1;
+}
+
+.weather__temp {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.weather__spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--ui-ink-2, var(--color-ink-2));
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.island__weather.is-loading .weather__icon {
+  display: none;
+}
+
+.island__weather.is-loading .weather__spinner {
+  display: inline-block;
+}
+
+.island__weather[hidden],
+.island__weather-chip[hidden],
+.island__chip--weather[hidden],
+.island__weather.is-disabled {
+  display: none !important;
+}
+
+/* Action Gear Button */
+.island__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 8%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 12%, transparent);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.25s var(--spring-smooth);
+  flex-shrink: 0;
+}
+
+.island__btn:hover {
+  color: var(--ui-ink, var(--color-ink));
+  background-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 16%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 24%,
+    transparent
+  );
+  transform: rotate(32deg);
+}
+
+.island__btn:active {
+  transform: rotate(32deg) scale(0.92);
+}
+
+.island__btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Expanded In-Place Search */
+
+.island.is-searching {
+  width: min(620px, calc(100vw - 32px));
+  min-width: 0;
+  padding: 0 10px 0 12px;
+}
+
+.island__search-expanded {
+  display: flex;
+  position: absolute;
+  left: 12px;
+  right: 10px;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.96);
+  transition:
+    opacity 0.25s var(--ease-out),
+    transform 0.3s var(--spring-smooth),
+    visibility 0.25s;
+}
+.island.is-searching .island__search-expanded {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+.search__form {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px 0 6px;
+  gap: 8px;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface-input);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.search__form:focus-within {
+  border-color: var(--ui-focus, var(--color-focus));
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--ui-focus, var(--color-focus)) 25%, transparent);
+}
+
+.search__time-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 8%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--ui-ink, var(--color-ink)) 14%, transparent);
+  color: var(--ui-ink-2, var(--color-ink-2));
+  font-family: var(--font-display, var(--font-body));
+  font-size: 13px;
+  font-weight: var(--font-display-weight, 500);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.search__time-chip:hover {
+  color: var(--ui-ink, var(--color-ink));
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 14%,
+    transparent
+  );
+}
+
+.search__time-chip:active {
+  transform: scale(0.95);
+}
+
+.search__divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--ui-ink-2, var(--color-ink-2));
+  opacity: 0.25;
+  flex-shrink: 0;
+}
+
+.search__input {
+  flex: 1;
+  height: 36px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ui-ink, var(--color-ink));
+  background: transparent;
+  border: none;
+  outline: none;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+.search__input::placeholder {
+  color: var(--ui-muted, var(--color-muted));
+}
+
+.search__clear-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 8%,
+    transparent
+  );
+  border: 0;
+  color: var(--ui-ink-2, var(--color-ink-2));
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.search__clear-btn:hover {
+  background: color-mix(
+    in srgb,
+    var(--ui-ink, var(--color-ink)) 16%,
+    transparent
+  );
+  color: var(--ui-ink, var(--color-ink));
+}
+
+.search__clear-btn[hidden] {
+  display: none !important;
+}

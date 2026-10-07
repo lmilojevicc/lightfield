@@ -1,0 +1,1074 @@
+/* ---------------------------------------------------------------- fonts */
+
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrumentserif-400-subset.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Historical filename retained; genuine wght 400–800, opsz pinned to 14pt. */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/fonts/bricolage-400-subset.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrainsmono-400-subset.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrainsmono-600-subset.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrainsmono-700-subset.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-400-subset.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-600-subset.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------- defaults */
+
+:root {
+  /* Midnight defaults */
+  --color-paper: oklch(13% 0.012 260);
+  --color-paper-2: oklch(17% 0.014 260);
+  --color-paper-3: oklch(22% 0.014 260);
+  --color-ink: oklch(94% 0.008 240);
+  --color-ink-2: oklch(72% 0.01 240);
+  --color-muted: #767e83;
+  --color-rule: oklch(30% 0.014 260);
+  --color-rule-2: oklch(24% 0.012 260);
+  --color-accent: oklch(76% 0.14 220);
+  --color-accent-ink: oklch(16% 0.02 260);
+  --color-focus: oklch(78% 0.2 220);
+  --color-accent-text: var(--color-accent);
+  --color-accent-boundary: var(--color-focus);
+  --color-control: var(--color-muted);
+  --color-scrim: oklch(10% 0.01 260 / 0.55);
+  color-scheme: dark;
+
+  /* Editorial defaults */
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display-weight: 400;
+  --font-body-weight: 400;
+  --font-body-emphasis: 600;
+  --control-check-size: 18px;
+  --state-disabled-opacity: 0.62;
+  --text-ui-heading: 1.125rem;
+  --text-ui-label: 0.875rem;
+  --text-ui-help: 0.8125rem;
+  --text-ui-meta: 0.75rem;
+  --preview-runtime-swatch: var(--color-rule);
+
+  /* type scale — major third */
+  --text-xs: 0.64rem;
+  --text-sm: 0.8rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.9531rem;
+  --text-2xl: 2.4414rem;
+  --text-3xl: 3.0518rem;
+  --text-display: clamp(3rem, 11vw + 0.5rem, 9rem);
+
+  /* spacing — 4pt scale */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  /* page gutter */
+  --page-gutter: clamp(1rem, 4vw, 3.5rem);
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  /* z scale */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}
+
+/* Family role maps are owned by font-pairings.ts, shared with specimens. */
+
+/* ---------------------------------------------------------------- color themes */
+
+[data-theme="midnight"] {
+  --color-paper: oklch(13% 0.012 260);
+  --color-paper-2: oklch(17% 0.014 260);
+  --color-paper-3: oklch(22% 0.014 260);
+  --color-ink: oklch(94% 0.008 240);
+  --color-ink-2: oklch(72% 0.01 240);
+  --color-muted: #767e83;
+  --color-rule: oklch(30% 0.014 260);
+  --color-rule-2: oklch(24% 0.012 260);
+  --color-accent: oklch(76% 0.14 220);
+  --color-accent-ink: oklch(16% 0.02 260);
+  --color-focus: oklch(78% 0.2 220);
+  --color-scrim: oklch(10% 0.01 260 / 0.55);
+}
+
+/* Monochrome — pure minimalist grayscale, high-contrast crisp ink */
+[data-theme="monochrome"] {
+  --color-paper: oklch(12% 0 0);
+  --color-paper-2: oklch(16% 0 0);
+  --color-paper-3: oklch(22% 0 0);
+  --color-ink: oklch(96% 0 0);
+  --color-ink-2: oklch(76% 0 0);
+  --color-muted: #7c7c7c;
+  --color-rule: oklch(28% 0 0);
+  --color-rule-2: oklch(20% 0 0);
+  --color-accent: oklch(88% 0 0);
+  --color-accent-ink: oklch(12% 0 0);
+  --color-focus: oklch(85% 0 0);
+  --color-scrim: oklch(10% 0 0 / 0.55);
+}
+
+/* Ivory — warm near-white paper, ink-amber accent */
+[data-theme="ivory"] {
+  --color-paper: oklch(96% 0.012 80);
+  --color-paper-2: oklch(93% 0.014 80);
+  --color-paper-3: oklch(89% 0.016 80);
+  --color-ink: oklch(22% 0.014 60);
+  --color-ink-2: oklch(32% 0.02 75);
+  --color-muted: oklch(44% 0.02 75);
+  --color-rule: oklch(82% 0.012 80);
+  --color-rule-2: oklch(88% 0.01 80);
+  --color-accent: oklch(50% 0.16 45);
+  --color-accent-ink: oklch(96% 0.012 80);
+  --color-focus: oklch(56% 0.2 45);
+  --color-scrim: oklch(40% 0.01 60 / 0.4);
+}
+
+/* Slate — cool mid-grey paper, steel-blue accent */
+[data-theme="slate"] {
+  --color-paper: oklch(30% 0.01 250);
+  --color-paper-2: oklch(35% 0.012 250);
+  --color-paper-3: oklch(41% 0.012 250);
+  --color-ink: oklch(94% 0.008 240);
+  --color-ink-2: oklch(76% 0.01 240);
+  --color-muted: #a1a7aa;
+  --color-rule: oklch(46% 0.012 250);
+  --color-rule-2: oklch(40% 0.01 250);
+  --color-accent: oklch(72% 0.14 240);
+  --color-accent-ink: oklch(20% 0.02 260);
+  --color-focus: oklch(76% 0.18 240);
+  --color-scrim: oklch(15% 0.01 250 / 0.5);
+}
+
+/* Moss — deep green-black paper, pale-green accent */
+[data-theme="moss"] {
+  --color-paper: oklch(14% 0.02 150);
+  --color-paper-2: oklch(18% 0.022 150);
+  --color-paper-3: oklch(23% 0.022 150);
+  --color-ink: oklch(94% 0.012 145);
+  --color-ink-2: oklch(74% 0.014 145);
+  --color-muted: #798179;
+  --color-rule: oklch(32% 0.02 150);
+  --color-rule-2: oklch(26% 0.018 150);
+  --color-accent: oklch(78% 0.13 145);
+  --color-accent-ink: oklch(16% 0.02 150);
+  --color-focus: oklch(80% 0.18 145);
+  --color-scrim: oklch(10% 0.015 150 / 0.55);
+}
+
+/* Catppuccin Latte — light lavender paper, peach accent */
+[data-theme="catppuccin-latte"] {
+  --color-paper: #eff1f5;
+  --color-paper-2: #e6e9ef;
+  --color-paper-3: #ccd0da;
+  --color-ink: #4c4f69;
+  --color-ink-2: #5c5f77;
+  --color-muted: #575a6e;
+  --color-rule: #bcc0cc;
+  --color-rule-2: #ccd0da;
+  --color-accent: #fe640b;
+  --color-accent-ink: #2d2d2d;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #b67518;
+  --color-scrim: rgb(76 79 105 / 0.35);
+}
+
+/* Catppuccin Frappé — mid-dark, softened peach accent */
+[data-theme="catppuccin-frappe"] {
+  --color-paper: #303446;
+  --color-paper-2: #292c3c;
+  --color-paper-3: #414559;
+  --color-ink: #c6d0f5;
+  --color-ink-2: #b5bfe2;
+  --color-muted: #a5adce;
+  --color-rule: #51576d;
+  --color-rule-2: #414559;
+  --color-accent: #ef9f76;
+  --color-accent-ink: #232634;
+  --color-focus: #eebebe;
+  --color-scrim: rgb(35 38 52 / 0.6);
+}
+
+/* Catppuccin Macchiato — dark, warm peach accent */
+[data-theme="catppuccin-macchiato"] {
+  --color-paper: #24273a;
+  --color-paper-2: #1e2030;
+  --color-paper-3: #363a4f;
+  --color-ink: #cad3f5;
+  --color-ink-2: #b8c0e0;
+  --color-muted: #a5adcb;
+  --color-rule: #494d64;
+  --color-rule-2: #363a4f;
+  --color-accent: #f5a97f;
+  --color-accent-ink: #181926;
+  --color-focus: #c6a0f6;
+  --color-scrim: rgb(24 25 38 / 0.6);
+}
+
+/* Catppuccin Mocha — darkest, mauve accent */
+[data-theme="catppuccin-mocha"] {
+  --color-paper: #1e1e2e;
+  --color-paper-2: #181825;
+  --color-paper-3: #313244;
+  --color-ink: #cdd6f4;
+  --color-ink-2: #bac2de;
+  --color-muted: #a6adc8;
+  --color-rule: #45475a;
+  --color-rule-2: #313244;
+  --color-accent: #cba6f7;
+  --color-accent-ink: #11111b;
+  --color-focus: #b4befe;
+  --color-scrim: rgb(17 17 27 / 0.6);
+}
+
+/* Gruvbox — warm dark, burnt-orange accent */
+[data-theme="gruvbox"] {
+  --color-paper: #282828;
+  --color-paper-2: #3c3836;
+  --color-paper-3: #504945;
+  --color-ink: #ebdbb2;
+  --color-ink-2: #d5c4a1;
+  --color-muted: #bdae93;
+  --color-rule: #665c54;
+  --color-rule-2: #504945;
+  --color-accent: #fe8019;
+  --color-accent-ink: #1d2021;
+  --color-focus: #fabd2f;
+  --color-scrim: rgb(29 32 33 / 0.6);
+}
+
+/* Tokyo Night — deep blue-black, soft blue accent */
+[data-theme="tokyonight"] {
+  --color-paper: #1a1b26;
+  --color-paper-2: #16161e;
+  --color-paper-3: #292e42;
+  --color-ink: #c0caf5;
+  --color-ink-2: #a9b1d6;
+  --color-muted: #7a88cf;
+  --color-rule: #3b4261;
+  --color-rule-2: #292e42;
+  --color-accent: #7aa2f7;
+  --color-accent-ink: #16161e;
+  --color-focus: #bb9af7;
+  --color-scrim: rgb(22 22 30 / 0.6);
+}
+
+/* Rosé Pine — muted dark rose, soft pink accent */
+[data-theme="rosepine"] {
+  --color-paper: #191724;
+  --color-paper-2: #1f1d2e;
+  --color-paper-3: #26233a;
+  --color-ink: #e0def4;
+  --color-ink-2: #c7c3e0;
+  --color-muted: #908caa;
+  --color-rule: #403d52;
+  --color-rule-2: #26233a;
+  --color-accent: #ebbcba;
+  --color-accent-ink: #191724;
+  --color-focus: #c4a7e7;
+  --color-scrim: rgb(25 23 36 / 0.6);
+}
+
+/* Rosé Pine Dawn — light muted rose, dusty coral accent */
+[data-theme="rosepine-dawn"] {
+  --color-paper: #faf4ed;
+  --color-paper-2: #fffaf3;
+  --color-paper-3: #f2e9e1;
+  --color-ink: #575279;
+  --color-ink-2: #6e6a86;
+  --color-muted: #676378;
+  --color-rule: #dfdad9;
+  --color-rule-2: #f2e9e1;
+  --color-accent: #d7827e;
+  --color-accent-ink: #31302f;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #bd7e2a;
+  --color-scrim: rgb(87 82 121 / 0.3);
+}
+
+/* Nord — polar blue-grey, frost cyan accent */
+[data-theme="nord"] {
+  --color-paper: #2e3440;
+  --color-paper-2: #3b4252;
+  --color-paper-3: #434c5e;
+  --color-ink: #d8dee9;
+  --color-ink-2: #9eb2c6;
+  --color-muted: #a1b1c4;
+  --color-rule: #4c566a;
+  --color-rule-2: #434c5d;
+  --color-accent: #88c0d0;
+  --color-accent-ink: #2e3440;
+  --color-focus: #88c0d0;
+  --color-scrim: rgb(46 52 64 / 0.6);
+}
+
+/* Solarized Dark — deep blue-green, scientific cyan accent */
+[data-theme="solarized-dark"] {
+  --color-paper: #002b36;
+  --color-paper-2: #073642;
+  --color-paper-3: #0d4954;
+  --color-ink: #8d9d9f;
+  --color-ink-2: #8d9d9d;
+  --color-muted: #8d9d9f;
+  --color-rule: #2a4a52;
+  --color-rule-2: #1d3a41;
+  --color-accent: #268bd2;
+  --color-accent-ink: #002029;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #268bd2;
+  --color-scrim: rgb(0 43 54 / 0.6);
+}
+
+/* Kanagawa — ink wash dark, wave blue accent */
+[data-theme="kanagawa"] {
+  --color-paper: #16161d;
+  --color-paper-2: #1f1f28;
+  --color-paper-3: #2b2b37;
+  --color-ink: #dcd7ba;
+  --color-ink-2: #9a998c;
+  --color-muted: #8e8d82;
+  --color-rule: #363646;
+  --color-rule-2: #2c2c3a;
+  --color-accent: #7e9cd8;
+  --color-accent-ink: #16161d;
+  --color-focus: #7e9cd8;
+  --color-scrim: rgb(22 22 29 / 0.6);
+}
+
+/* Everforest — muted green-grey, sage accent */
+[data-theme="everforest"] {
+  --color-paper: #2d353b;
+  --color-paper-2: #343f44;
+  --color-paper-3: #394449;
+  --color-ink: #d3c6aa;
+  --color-ink-2: #a2aca1;
+  --color-muted: #a2aca2;
+  --color-rule: #3d484d;
+  --color-rule-2: #384248;
+  --color-accent: #a7c080;
+  --color-accent-ink: #2d353b;
+  --color-focus: #a7c080;
+  --color-scrim: rgb(45 53 59 / 0.6);
+}
+
+/* Night Owl — deep navy, electric blue accent */
+[data-theme="night-owl"] {
+  --color-paper: #011627;
+  --color-paper-2: #0b2942;
+  --color-paper-3: #0f2b42;
+  --color-ink: #d6deeb;
+  --color-ink-2: #859e9e;
+  --color-muted: #7c9497;
+  --color-rule: #122d42;
+  --color-rule-2: #0d263a;
+  --color-accent: #82aaff;
+  --color-accent-ink: #011627;
+  --color-focus: #82aaff;
+  --color-scrim: rgb(1 22 39 / 0.6);
+}
+
+/* GitHub Dark — neutral graphite, link blue accent */
+[data-theme="github-dark"] {
+  --color-paper: #0d1117;
+  --color-paper-2: #161b22;
+  --color-paper-3: #232930;
+  --color-ink: #e6edf3;
+  --color-ink-2: #848d97;
+  --color-muted: #7d8590;
+  --color-rule: #30363d;
+  --color-rule-2: #262b32;
+  --color-accent: #2f81f7;
+  --color-accent-ink: #0d1117;
+  --color-focus: #2f81f7;
+  --color-scrim: rgb(13 17 23 / 0.6);
+}
+
+/* One Dark Pro — atom graphite, soft blue accent */
+[data-theme="onedark"] {
+  --color-paper: #282c34;
+  --color-paper-2: #2c313c;
+  --color-paper-3: #343942;
+  --color-ink: #abb2bf;
+  --color-ink-2: #989ea9;
+  --color-muted: #959aa4;
+  --color-rule: #3b4048;
+  --color-rule-2: #353a42;
+  --color-accent: #61afef;
+  --color-accent-ink: #282c34;
+  --color-focus: #61afef;
+  --color-scrim: rgb(40 44 52 / 0.6);
+}
+
+/* Ayu Mirage — desaturated charcoal, warm gold accent */
+[data-theme="ayu-mirage"] {
+  --color-paper: #212733;
+  --color-paper-2: #272d38;
+  --color-paper-3: #323a45;
+  --color-ink: #d9d7ce;
+  --color-ink-2: #8a97a6;
+  --color-muted: #8a97a4;
+  --color-rule: #3d4751;
+  --color-rule-2: #353d48;
+  --color-accent: #ffcc66;
+  --color-accent-ink: #212733;
+  --color-focus: #ffcc66;
+  --color-scrim: rgb(33 39 51 / 0.6);
+}
+
+/* Dracula — vampire slate, purple accent */
+[data-theme="dracula"] {
+  --color-paper: #282a36;
+  --color-paper-2: #363948;
+  --color-paper-3: #44475a;
+  --color-ink: #f8f8f2;
+  --color-ink-2: #95a3d3;
+  --color-muted: #96a4cd;
+  --color-rule: #363948;
+  --color-rule-2: #21222c;
+  --color-accent: #bd93f9;
+  --color-accent-ink: #282a36;
+  --color-focus: #bd93f9;
+  --color-scrim: rgb(40 42 54 / 0.6);
+}
+
+/* Monokai — warm grey, hot pink accent */
+[data-theme="monokai"] {
+  --color-paper: #272822;
+  --color-paper-2: #3e3d32;
+  --color-paper-3: #404036;
+  --color-ink: #f8f8f2;
+  --color-ink-2: #aca994;
+  --color-muted: #aca997;
+  --color-rule: #414339;
+  --color-rule-2: #393b32;
+  --color-accent: #f92672;
+  --color-accent-ink: #1a1a17;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #f93b7f;
+  --color-scrim: rgb(39 40 34 / 0.6);
+}
+
+/* Monokai Dimmed — near-black, muted pink accent */
+[data-theme="monokai-dimmed"] {
+  --color-paper: #1e1e1e;
+  --color-paper-2: #272727;
+  --color-paper-3: #353535;
+  --color-ink: #c5c8c6;
+  --color-ink-2: #949494;
+  --color-muted: #9a9b99;
+  --color-rule: #303030;
+  --color-rule-2: #272727;
+  --color-accent: #f92672;
+  --color-accent-ink: #191919;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #f92672;
+  --color-scrim: rgb(30 30 30 / 0.6);
+}
+
+/* Kanagawa Dragon — midnight ink, same wave blue */
+[data-theme="kanagawa-dragon"] {
+  --color-paper: #16161d;
+  --color-paper-2: #181820;
+  --color-paper-3: #1a1a22;
+  --color-ink: #dcd7ba;
+  --color-ink-2: #c8c093;
+  --color-muted: #8e8d82;
+  --color-rule: #54546d;
+  --color-rule-2: #2c2c3a;
+  --color-accent: #7e9cd8;
+  --color-accent-ink: #16161d;
+  --color-focus: #7e9cd8;
+  --color-scrim: rgb(22 22 29 / 0.6);
+}
+
+/* Kanagawa Lotus — warm paper, deeper wave blue */
+[data-theme="kanagawa-lotus"] {
+  --color-paper: #f2ecbc;
+  --color-paper-2: #e7dba0;
+  --color-paper-3: #d5cea3;
+  --color-ink: #545464;
+  --color-ink-2: #43436c;
+  --color-muted: #5f5e57;
+  --color-rule: #716e61;
+  --color-rule-2: #d5cea3;
+  --color-accent: #4d699b;
+  --color-accent-ink: #f2edbe;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #4d699b;
+  --color-scrim: rgb(84 84 100 / 0.3);
+}
+
+/* Everforest Light — warm paper, fresh lime accent */
+[data-theme="everforest-light"] {
+  --color-paper: #fdf6e3;
+  --color-paper-2: #f4f0d9;
+  --color-paper-3: #efebd4;
+  --color-ink: #5c6a72;
+  --color-ink-2: #5e6c5d;
+  --color-muted: #636f62;
+  --color-rule: #829181;
+  --color-rule-2: #efebd4;
+  --color-accent: #8da101;
+  --color-accent-ink: #302f2c;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #7e9001;
+  --color-scrim: rgb(92 106 114 / 0.3);
+}
+
+/* Ayu Dark — pitch black, burnt orange accent */
+[data-theme="ayu-dark"] {
+  --color-paper: #0f1419;
+  --color-paper-2: #14191f;
+  --color-paper-3: #253340;
+  --color-ink: #e6e1cf;
+  --color-ink-2: #8496ab;
+  --color-muted: #7a8c9e;
+  --color-rule: #2d3640;
+  --color-rule-2: #253340;
+  --color-accent: #f29718;
+  --color-accent-ink: #0f1419;
+  --color-focus: #f29718;
+  --color-scrim: rgb(15 20 25 / 0.6);
+}
+
+/* Ayu Light — pure white, vivid orange accent */
+[data-theme="ayu-light"] {
+  --color-paper: #fafafa;
+  --color-paper-2: #ffffff;
+  --color-paper-3: #f0eee4;
+  --color-ink: #5c6773;
+  --color-ink-2: #55606c;
+  --color-muted: #66707c;
+  --color-rule: #d9d8d7;
+  --color-rule-2: #f0eee4;
+  --color-accent: #ff6a00;
+  --color-accent-ink: #2f2f2f;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #ef6300;
+  --color-scrim: rgb(92 103 115 / 0.3);
+}
+
+/* Night Owl Light — soft white, calm blue accent */
+[data-theme="night-owl-light"] {
+  --color-paper: #fbfbfb;
+  --color-paper-2: #f0f0f0;
+  --color-paper-3: #f6f6f6;
+  --color-ink: #403f53;
+  --color-ink-2: #4f6670;
+  --color-muted: #576775;
+  --color-rule: #d9d9d9;
+  --color-rule-2: #f0f0f0;
+  --color-accent: #4876d6;
+  --color-accent-ink: #080808;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #4876d6;
+  --color-scrim: rgb(64 63 83 / 0.3);
+}
+
+/* Solarized Light — warm paper, same scientific cyan */
+[data-theme="solarized-light"] {
+  --color-paper: #fdf6e3;
+  --color-paper-2: #eee8d5;
+  --color-paper-3: #e4dcc8;
+  --color-ink: #576a71;
+  --color-ink-2: #566a71;
+  --color-muted: #566a71;
+  --color-rule: #d5c9b3;
+  --color-rule-2: #eee8d5;
+  --color-accent: #268bd2;
+  --color-accent-ink: #1d1c1b;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #2588ce;
+  --color-scrim: rgb(101 123 131 / 0.3);
+}
+
+/* Gruvbox Light — cream paper, dark orange accent */
+[data-theme="gruvbox-light"] {
+  --color-paper: #fbf1c7;
+  --color-paper-2: #ebdbb2;
+  --color-paper-3: #d5c4a1;
+  --color-ink: #3c3836;
+  --color-ink-2: #504945;
+  --color-muted: #685a4c;
+  --color-rule: #bdae93;
+  --color-rule-2: #d5c4a1;
+  --color-accent: #af3a03;
+  --color-accent-ink: #fbf1c7;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #a96e13;
+  --color-scrim: rgb(60 56 54 / 0.3);
+}
+
+/* Nord Light — snow storm paper, polar ink */
+[data-theme="nord-light"] {
+  --color-paper: #eceff4;
+  --color-paper-2: #e5e9f0;
+  --color-paper-3: #d8dee9;
+  --color-ink: #2e3440;
+  --color-ink-2: #4c566a;
+  --color-muted: #4c566a;
+  --color-rule: #d8dee9;
+  --color-rule-2: #e5e9f0;
+  --color-accent: #5e81ac;
+  --color-accent-ink: #131314;
+  --color-accent-text: var(--color-ink);
+  --color-focus: #5e81ac;
+  --color-scrim: rgb(46 52 64 / 0.3);
+}
+
+/* Tokyo Night Storm — brighter base, same blues */
+[data-theme="tokyonight-storm"] {
+  --color-paper: #24283b;
+  --color-paper-2: #1f2335;
+  --color-paper-3: #292e42;
+  --color-ink: #c0caf5;
+  --color-ink-2: #a9b1d6;
+  --color-muted: #8790be;
+  --color-rule: #414868;
+  --color-rule-2: #292e42;
+  --color-accent: #7aa2f7;
+  --color-accent-ink: #24283b;
+  --color-focus: #bb9af7;
+  --color-scrim: rgb(36 40 59 / 0.6);
+}
+
+/* Tokyo Night Moon — darker base, brighter blue */
+[data-theme="tokyonight-moon"] {
+  --color-paper: #222436;
+  --color-paper-2: #1e2030;
+  --color-paper-3: #2f334d;
+  --color-ink: #c8d3f5;
+  --color-ink-2: #b4c2f0;
+  --color-muted: #7a88cf;
+  --color-rule: #444a73;
+  --color-rule-2: #2f334d;
+  --color-accent: #82aaff;
+  --color-accent-ink: #222436;
+  --color-focus: #c099ff;
+  --color-scrim: rgb(34 36 54 / 0.6);
+}
+
+/* Rosé Pine Moon — deeper base, same rose accents */
+[data-theme="rosepine-moon"] {
+  --color-paper: #232136;
+  --color-paper-2: #2a273f;
+  --color-paper-3: #393552;
+  --color-ink: #e0def4;
+  --color-ink-2: #c7c3e0;
+  --color-muted: #938fac;
+  --color-rule: #44415a;
+  --color-rule-2: #393552;
+  --color-accent: #ebbcba;
+  --color-accent-ink: #232136;
+  --color-focus: #c4a7e7;
+  --color-scrim: rgb(35 33 54 / 0.6);
+}
+
+/* Native controls follow the active built-in surface. Custom themes set this inline. */
+[data-theme="ivory"],
+[data-theme="catppuccin-latte"],
+[data-theme="rosepine-dawn"],
+[data-theme="kanagawa-lotus"],
+[data-theme="everforest-light"],
+[data-theme="ayu-light"],
+[data-theme="night-owl-light"],
+[data-theme="solarized-light"],
+[data-theme="gruvbox-light"],
+[data-theme="nord-light"] {
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------- theme preview tokens */
+
+[data-theme-card="midnight"] {
+  --preview-card-swatch-1: oklch(13% 0.012 260);
+  --preview-card-swatch-2: oklch(17% 0.014 260);
+  --preview-card-swatch-3: oklch(30% 0.014 260);
+  --preview-card-swatch-4: oklch(76% 0.14 220);
+}
+
+[data-theme-card="monochrome"] {
+  --preview-card-swatch-1: oklch(12% 0 0);
+  --preview-card-swatch-2: oklch(16% 0 0);
+  --preview-card-swatch-3: oklch(28% 0 0);
+  --preview-card-swatch-4: oklch(88% 0 0);
+}
+
+[data-theme-card="ivory"] {
+  --preview-card-swatch-1: oklch(96% 0.012 80);
+  --preview-card-swatch-2: oklch(93% 0.014 80);
+  --preview-card-swatch-3: oklch(82% 0.012 80);
+  --preview-card-swatch-4: oklch(58% 0.16 45);
+}
+
+[data-theme-card="slate"] {
+  --preview-card-swatch-1: oklch(30% 0.01 250);
+  --preview-card-swatch-2: oklch(35% 0.012 250);
+  --preview-card-swatch-3: oklch(46% 0.012 250);
+  --preview-card-swatch-4: oklch(72% 0.14 240);
+}
+
+[data-theme-card="moss"] {
+  --preview-card-swatch-1: oklch(14% 0.02 150);
+  --preview-card-swatch-2: oklch(18% 0.022 150);
+  --preview-card-swatch-3: oklch(32% 0.02 150);
+  --preview-card-swatch-4: oklch(78% 0.13 145);
+}
+
+[data-theme-card="catppuccin-latte"] {
+  --preview-card-swatch-1: #eff1f5;
+  --preview-card-swatch-2: #e6e9ef;
+  --preview-card-swatch-3: #bcc0cc;
+  --preview-card-swatch-4: #fe640b;
+}
+
+[data-theme-card="catppuccin-frappe"] {
+  --preview-card-swatch-1: #303446;
+  --preview-card-swatch-2: #292c3c;
+  --preview-card-swatch-3: #51576d;
+  --preview-card-swatch-4: #ef9f76;
+}
+
+[data-theme-card="catppuccin-macchiato"] {
+  --preview-card-swatch-1: #24273a;
+  --preview-card-swatch-2: #1e2030;
+  --preview-card-swatch-3: #494d64;
+  --preview-card-swatch-4: #f5a97f;
+}
+
+[data-theme-card="catppuccin-mocha"] {
+  --preview-card-swatch-1: #1e1e2e;
+  --preview-card-swatch-2: #181825;
+  --preview-card-swatch-3: #45475a;
+  --preview-card-swatch-4: #cba6f7;
+}
+
+[data-theme-card="gruvbox"] {
+  --preview-card-swatch-1: #282828;
+  --preview-card-swatch-2: #3c3836;
+  --preview-card-swatch-3: #665c54;
+  --preview-card-swatch-4: #fe8019;
+}
+
+[data-theme-card="tokyonight"] {
+  --preview-card-swatch-1: #1a1b26;
+  --preview-card-swatch-2: #16161e;
+  --preview-card-swatch-3: #3b4261;
+  --preview-card-swatch-4: #7aa2f7;
+}
+
+[data-theme-card="rosepine"] {
+  --preview-card-swatch-1: #191724;
+  --preview-card-swatch-2: #1f1d2e;
+  --preview-card-swatch-3: #403d52;
+  --preview-card-swatch-4: #ebbcba;
+}
+
+[data-theme-card="rosepine-dawn"] {
+  --preview-card-swatch-1: #faf4ed;
+  --preview-card-swatch-2: #fffaf3;
+  --preview-card-swatch-3: #dfdad9;
+  --preview-card-swatch-4: #d7827e;
+}
+
+[data-theme-card="nord"] {
+  --preview-card-swatch-1: #2e3440;
+  --preview-card-swatch-2: #3b4252;
+  --preview-card-swatch-3: #4c566a;
+  --preview-card-swatch-4: #88c0d0;
+}
+
+[data-theme-card="solarized-dark"] {
+  --preview-card-swatch-1: #002b36;
+  --preview-card-swatch-2: #073642;
+  --preview-card-swatch-3: #2a4a52;
+  --preview-card-swatch-4: #268bd2;
+}
+
+[data-theme-card="kanagawa"] {
+  --preview-card-swatch-1: #16161d;
+  --preview-card-swatch-2: #1f1f28;
+  --preview-card-swatch-3: #363646;
+  --preview-card-swatch-4: #7e9cd8;
+}
+
+[data-theme-card="everforest"] {
+  --preview-card-swatch-1: #2d353b;
+  --preview-card-swatch-2: #343f44;
+  --preview-card-swatch-3: #3d484d;
+  --preview-card-swatch-4: #a7c080;
+}
+
+[data-theme-card="night-owl"] {
+  --preview-card-swatch-1: #011627;
+  --preview-card-swatch-2: #0b2942;
+  --preview-card-swatch-3: #122d42;
+  --preview-card-swatch-4: #82aaff;
+}
+
+[data-theme-card="github-dark"] {
+  --preview-card-swatch-1: #0d1117;
+  --preview-card-swatch-2: #161b22;
+  --preview-card-swatch-3: #30363d;
+  --preview-card-swatch-4: #2f81f7;
+}
+
+[data-theme-card="onedark"] {
+  --preview-card-swatch-1: #282c34;
+  --preview-card-swatch-2: #2c313c;
+  --preview-card-swatch-3: #3b4048;
+  --preview-card-swatch-4: #61afef;
+}
+
+[data-theme-card="ayu-mirage"] {
+  --preview-card-swatch-1: #212733;
+  --preview-card-swatch-2: #272d38;
+  --preview-card-swatch-3: #3d4751;
+  --preview-card-swatch-4: #ffcc66;
+}
+
+[data-theme-card="dracula"] {
+  --preview-card-swatch-1: #282a36;
+  --preview-card-swatch-2: #363948;
+  --preview-card-swatch-3: #44475a;
+  --preview-card-swatch-4: #bd93f9;
+}
+
+[data-theme-card="monokai"] {
+  --preview-card-swatch-1: #272822;
+  --preview-card-swatch-2: #3e3d32;
+  --preview-card-swatch-3: #414339;
+  --preview-card-swatch-4: #f92672;
+}
+
+[data-theme-card="monokai-dimmed"] {
+  --preview-card-swatch-1: #1e1e1e;
+  --preview-card-swatch-2: #272727;
+  --preview-card-swatch-3: #303030;
+  --preview-card-swatch-4: #f92672;
+}
+
+[data-theme-card="kanagawa-dragon"] {
+  --preview-card-swatch-1: #16161d;
+  --preview-card-swatch-2: #181820;
+  --preview-card-swatch-3: #54546d;
+  --preview-card-swatch-4: #7e9cd8;
+}
+
+[data-theme-card="kanagawa-lotus"] {
+  --preview-card-swatch-1: #f2ecbc;
+  --preview-card-swatch-2: #e7dba0;
+  --preview-card-swatch-3: #716e61;
+  --preview-card-swatch-4: #4d699b;
+}
+
+[data-theme-card="everforest-light"] {
+  --preview-card-swatch-1: #fdf6e3;
+  --preview-card-swatch-2: #f4f0d9;
+  --preview-card-swatch-3: #829181;
+  --preview-card-swatch-4: #8da101;
+}
+
+[data-theme-card="ayu-dark"] {
+  --preview-card-swatch-1: #0f1419;
+  --preview-card-swatch-2: #14191f;
+  --preview-card-swatch-3: #2d3640;
+  --preview-card-swatch-4: #f29718;
+}
+
+[data-theme-card="ayu-light"] {
+  --preview-card-swatch-1: #fafafa;
+  --preview-card-swatch-2: #ffffff;
+  --preview-card-swatch-3: #d9d8d7;
+  --preview-card-swatch-4: #ff6a00;
+}
+
+[data-theme-card="night-owl-light"] {
+  --preview-card-swatch-1: #fbfbfb;
+  --preview-card-swatch-2: #f0f0f0;
+  --preview-card-swatch-3: #d9d9d9;
+  --preview-card-swatch-4: #4876d6;
+}
+
+[data-theme-card="solarized-light"] {
+  --preview-card-swatch-1: #fdf6e3;
+  --preview-card-swatch-2: #eee8d5;
+  --preview-card-swatch-3: #d5c9b3;
+  --preview-card-swatch-4: #268bd2;
+}
+
+[data-theme-card="gruvbox-light"] {
+  --preview-card-swatch-1: #fbf1c7;
+  --preview-card-swatch-2: #ebdbb2;
+  --preview-card-swatch-3: #bdae93;
+  --preview-card-swatch-4: #af3a03;
+}
+
+[data-theme-card="nord-light"] {
+  --preview-card-swatch-1: #eceff4;
+  --preview-card-swatch-2: #e5e9f0;
+  --preview-card-swatch-3: #d8dee9;
+  --preview-card-swatch-4: #5e81ac;
+}
+
+[data-theme-card="tokyonight-storm"] {
+  --preview-card-swatch-1: #24283b;
+  --preview-card-swatch-2: #1f2335;
+  --preview-card-swatch-3: #414868;
+  --preview-card-swatch-4: #7aa2f7;
+}
+
+[data-theme-card="tokyonight-moon"] {
+  --preview-card-swatch-1: #222436;
+  --preview-card-swatch-2: #1e2030;
+  --preview-card-swatch-3: #444a73;
+  --preview-card-swatch-4: #82aaff;
+}
+
+[data-theme-card="rosepine-moon"] {
+  --preview-card-swatch-1: #232136;
+  --preview-card-swatch-2: #2a273f;
+  --preview-card-swatch-3: #44415a;
+  --preview-card-swatch-4: #ebbcba;
+}
+
+/* ---------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: clip;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: var(--font-body-weight);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+  transition:
+    background-color var(--dur-long) var(--ease-out),
+    color var(--dur-long) var(--ease-out);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-body);
+  font-weight: var(--font-body-emphasis);
+  line-height: 1.3;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}

@@ -1,0 +1,843 @@
+/* ---------------------------------------------------------------- background picker */
+
+.bg-picker {
+  margin-top: var(--space-sm);
+}
+
+.bg-card {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  border: 1.5px solid var(--surface-border);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--surface-input);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.bg-card[hidden],
+.bg-collection[hidden],
+.bg-collection__body[hidden] {
+  display: none;
+}
+
+.bg-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--ui-muted, var(--color-muted));
+}
+
+.bg-card:has(input:checked) {
+  border-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  box-shadow: 0 0 0 1px var(--ui-accent-boundary, var(--color-accent-boundary));
+}
+
+.bg-card input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bg-card input:focus-visible + .bg-card__body {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: -2px;
+}
+
+.bg-card__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.bg-card__preview {
+  display: block;
+  aspect-ratio: 16 / 9;
+  background: var(--ui-paper-2, var(--color-paper-2));
+  border-bottom: 1px solid var(--ui-rule-2, var(--color-rule-2));
+  overflow: hidden;
+}
+
+.bg-none-row {
+  height: 44px;
+}
+
+.bg-none-row .bg-card__body {
+  height: 100%;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-inline: var(--space-sm);
+}
+
+.bg-none-row .bg-card__body::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid var(--ui-control, var(--color-control));
+  border-radius: 50%;
+}
+
+.bg-none-row input:checked + .bg-card__body::before {
+  background: var(--ui-accent-boundary, var(--color-accent-boundary));
+  border-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  box-shadow: inset 0 0 0 3px var(--ui-paper-2, var(--color-paper-2));
+}
+
+.bg-none-row .bg-card__name {
+  padding: 0;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bg-card__name {
+  display: block;
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ui-ink, var(--color-ink));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bg-card__selected {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  display: none;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font: 500 9px var(--font-body);
+  color: var(--ui-accent-ink, var(--color-accent-ink));
+  background: var(--color-accent);
+}
+
+.bg-card input:checked + .bg-card__body .bg-card__selected {
+  display: block;
+}
+
+.bg-card__preview-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bg-collection {
+  margin-top: 14px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.bg-collection__head {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bg-collection__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  font: 600 12px var(--font-body);
+  color: var(--ui-ink, var(--color-ink));
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.bg-collection__toggle::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s var(--spring-smooth);
+}
+
+.bg-collection__toggle[aria-expanded="false"]::before {
+  transform: rotate(-45deg);
+}
+
+.bg-collection__toggle:hover {
+  color: var(--ui-accent-text, var(--color-accent-text));
+  background: transparent;
+}
+
+.bg-collection__toggle:disabled {
+  cursor: not-allowed;
+  opacity: var(--state-disabled-opacity);
+}
+
+.bg-collection__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 4px;
+  font: 400 11px var(--font-body);
+  color: var(--ui-muted, var(--color-muted));
+  white-space: nowrap;
+}
+
+.bg-collection__link:hover {
+  color: var(--ui-accent-text, var(--color-accent-text));
+}
+
+.bg-collection__body {
+  margin-top: 8px;
+}
+
+.bg-collection__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Search and its compact None choice share a stable field inset. */
+.filter-status {
+  margin: 0 0 var(--space-xs);
+  font-size: 11px;
+  color: var(--ui-muted, var(--color-muted));
+}
+.filter-status:empty {
+  display: none;
+}
+.filter-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.filter-feedback .filter-status {
+  flex: 1;
+  margin: 0;
+}
+.filter-feedback:has(.filter-status:empty) {
+  display: none;
+}
+.control__field-label:has(+ .settings-filter) {
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+.bg-picker > .filter-status,
+.bg-picker > #background-picker-options {
+  margin-top: var(--space-xs);
+}
+
+/* Shared search geometry; neighboring labels/pickers own vertical spacing. */
+.settings-filter {
+  font: 500 12px var(--font-body);
+  color: var(--ui-ink, var(--color-ink));
+  background: var(--surface-input);
+  border: 1px solid var(--surface-border);
+  padding: 0 10px;
+  height: 32px;
+  min-height: 32px;
+  width: 100%;
+  margin: 0;
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.settings-filter:focus {
+  border-color: var(--ui-focus, var(--color-focus));
+}
+
+/* One named entry action; the original fields are parked until tuning opens. */
+#effect-tune {
+  width: fit-content;
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 32px;
+  margin-top: 12px;
+  padding: 0 10px;
+  font: 500 11px/1.4 var(--font-body);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+#effect-tune:focus-visible {
+  outline-offset: -2px;
+}
+
+.background-controls {
+  min-inline-size: 0;
+  margin-top: var(--space-md);
+}
+
+/* toggle */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  position: absolute;
+  inset: 0;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggle__track {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 22px;
+  background: var(--ui-control, var(--color-control));
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+  pointer-events: none;
+}
+
+.toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ui-ink, var(--color-ink));
+  transition: transform 0.2s var(--spring-smooth);
+  pointer-events: none;
+}
+
+.toggle input:checked + .toggle__track {
+  background: var(--ui-accent-boundary, var(--color-accent-boundary));
+}
+
+.toggle input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(18px);
+}
+
+.toggle input:focus-visible + .toggle__track {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 2px;
+}
+
+/* select */
+.select {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ui-ink, var(--color-ink));
+  appearance: none;
+  /* Two short strokes form one chevron, using the current theme's ink. */
+  background-color: var(--ui-paper-3, var(--color-paper-3));
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 40%,
+      var(--ui-ink, var(--color-ink)) 40% 60%,
+      transparent 60%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 40%,
+      var(--ui-ink, var(--color-ink)) 40% 60%,
+      transparent 60%
+    );
+  background-size: 6px 6px;
+  background-position:
+    right 17px center,
+    right 12px center;
+  background-repeat: no-repeat;
+  border: 1px solid var(--ui-control, var(--color-control));
+  border-radius: 8px;
+  min-height: 32px;
+  padding-block: 0;
+  padding-inline: 10px 32px;
+  transition: border-color 0.15s ease;
+  max-width: 100%;
+  cursor: pointer;
+}
+.select:dir(rtl) {
+  background-position:
+    left 12px center,
+    left 17px center;
+}
+/* Let narrow rows wrap instead of shrinking selected values. */
+.control__row:has(> .select) {
+  flex-wrap: wrap;
+}
+.control__row > .select {
+  max-inline-size: 100%;
+}
+@media (forced-colors: active) {
+  .select {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
+/* generated background controls */
+.background-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.background-field__label,
+.background-field__value {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--ui-muted, var(--color-muted));
+}
+
+.background-field input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  margin: 0;
+}
+
+.background-field:has(input[type="checkbox"]) {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.background-field input[type="checkbox"] {
+  width: var(--control-check-size);
+  height: var(--control-check-size);
+  accent-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  margin: 0;
+}
+.background-field input[type="checkbox"] {
+  justify-self: end;
+}
+
+.background-range-adapter {
+  position: relative;
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 44px;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.background-range-adapter__rail {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--ui-muted, var(--color-muted)) 20%,
+    transparent
+  );
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.background-range-adapter:focus-visible {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 2px;
+}
+
+.background-range-adapter[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.background-range-adapter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ui-accent-boundary, var(--color-accent-boundary));
+  opacity: 0.45;
+}
+
+.background-range-adapter__thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--ui-accent-boundary, var(--color-accent-boundary));
+  transform: translate(-50%, -50%);
+}
+
+.background-field:has(:disabled),
+.background-field:has([aria-disabled="true"]) {
+  opacity: var(--state-disabled-opacity);
+}
+/* Dim the owning row once, not both row and child. Hidden theme radios need no dim. */
+.background-field :disabled,
+.background-field [aria-disabled="true"] {
+  opacity: 1;
+}
+.picker--themes input:disabled {
+  opacity: 0;
+}
+
+.background-reset {
+  min-height: 44px;
+  margin-top: var(--space-md);
+}
+
+/* Two-column native theme cards, including saved custom themes. */
+.picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 10px;
+}
+.pick-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 44px;
+  cursor: pointer;
+  padding: 10px;
+  border: 1.5px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-input);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+.pick-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--surface-border-top);
+  transform: translateY(-1px);
+}
+.pick-card:has(input:checked) {
+  border-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  background: var(--surface-selected);
+  box-shadow:
+    0 0 0 1px var(--ui-accent-boundary, var(--color-accent-boundary)),
+    0 4px 14px -2px rgb(0 0 0 / 0.35);
+}
+.pick-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+.pick-card:has(input:focus-visible) {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: -3px;
+}
+.pick-card:has(input:disabled) {
+  opacity: var(--state-disabled-opacity);
+  cursor: not-allowed;
+}
+.pick-card__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pick-card__select {
+  min-width: 0;
+}
+.pick-card__swatches {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.pick-card__swatches i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--preview-runtime-swatch);
+  border: 1px solid var(--surface-border);
+}
+.pick-card__info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: space-between;
+  min-width: 0;
+}
+.pick-card__name {
+  font: 600 12px var(--font-body);
+  color: var(--ui-ink, var(--color-ink));
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.theme-card__tone-badge {
+  font: 500 9px var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface-input);
+  color: var(--ui-muted, var(--color-muted));
+}
+#custom-theme-editor[hidden] {
+  display: none;
+}
+
+/* Real custom editor, not the demo's static example controls. */
+.custom-theme-editor,
+.custom-theme-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.custom-theme-editor {
+  margin-top: 12px;
+}
+.custom-theme-editor__heading {
+  font: 600 12px var(--font-body);
+}
+.custom-theme-actions,
+.custom-theme-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.custom-theme-field {
+  min-width: 0;
+}
+.custom-theme-field__label {
+  font-size: 10px;
+}
+.custom-theme-color-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.custom-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.custom-color-label {
+  font: 600 10px var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.custom-color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  background: var(--surface-input);
+}
+.custom-color-picker-wrap input[type="color"] {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.custom-color-hex {
+  width: 8ch;
+  min-width: 0;
+  font: 400 11px var(--font-mono);
+}
+.custom-color-hex[aria-invalid="true"] {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+}
+.custom-theme-specimen {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--color-paper);
+  color: var(--ui-ink, var(--color-ink));
+}
+.custom-theme-specimen__clock {
+  font: var(--font-display-weight) 30px/1.1 var(--font-display);
+}
+.custom-theme-specimen__meta {
+  font-size: 11px;
+  margin: 6px 0;
+}
+.primary-action {
+  padding: 4px 10px;
+  min-height: 28px;
+  border-radius: 6px;
+  background: var(--color-accent);
+  color: var(--ui-accent-ink, var(--color-accent-ink));
+  font: 500 11px var(--font-body);
+}
+
+.btn,
+.quiet-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  font: 500 11px var(--font-body);
+  color: var(--ui-ink, var(--color-ink));
+  background: var(--surface-input);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+.btn:hover,
+.quiet-action:hover {
+  background: var(--surface-hover);
+}
+.btn:active:not(:disabled),
+.quiet-action:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--state-disabled-opacity);
+}
+
+.control-surface .settings-nav__item {
+  min-height: 40px;
+}
+
+.picker--themes .pick-card:has(input:disabled) .pick-card__edit {
+  opacity: 1;
+}
+
+/* custom font picker */
+.custom-font__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.custom-font__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ui-muted, var(--color-muted));
+}
+
+.custom-font__field .select {
+  width: 100%;
+}
+
+/* Theme preview components consume only declared preview tokens. */
+[data-theme-card] i:nth-child(1) {
+  --preview-runtime-swatch: var(
+    --preview-card-swatch-1,
+    var(--ui-rule, var(--color-rule))
+  );
+}
+[data-theme-card] i:nth-child(2) {
+  --preview-runtime-swatch: var(
+    --preview-card-swatch-2,
+    var(--ui-rule, var(--color-rule))
+  );
+}
+[data-theme-card] i:nth-child(3) {
+  --preview-runtime-swatch: var(
+    --preview-card-swatch-3,
+    var(--ui-rule, var(--color-rule))
+  );
+}
+[data-theme-card] i:nth-child(4) {
+  --preview-runtime-swatch: var(
+    --preview-card-swatch-4,
+    var(--ui-rule, var(--color-rule))
+  );
+}
+
+/* Custom cards keep Edit outside the native radio label. */
+.picker--themes [data-custom-theme] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+[data-custom-theme] .pick-card__edit {
+  align-self: flex-end;
+  min-height: 28px;
+}
+#custom-theme-status:has(#custom-theme-status-text:empty):has(
+    #custom-theme-undo[hidden]
+  ) {
+  display: none;
+}
+
+/* One registry-owned two-role specimen for presets and the isolated draft. */
+.typography-control > .control__field-label {
+  display: block;
+  margin-top: 12px;
+}
+#custom-font-open {
+  width: 100%;
+  margin-top: 8px;
+}
+.custom-font__field {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.custom-font__grid .control__input {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+.custom-font__grid .control__hint {
+  margin: 0;
+}
+.custom-font__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.custom-font__actions .btn {
+  min-width: 0;
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+#custom-font-preview-button {
+  grid-column: 1 / -1;
+}
+#custom-font-controls[hidden],
+#custom-font-draft-actions[hidden],
+#custom-font-open[hidden] {
+  display: none;
+}

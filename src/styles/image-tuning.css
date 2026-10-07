@@ -1,0 +1,622 @@
+/* Paper-only optional geometry/material fold; existing controls are unchanged. */
+.background-advanced {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.background-advanced > summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding-block: 0.75rem;
+}
+.background-advanced > .background-field {
+  margin-block: 0.5rem;
+}
+
+/* Original image mode has no tint, CSS filter, canvas or procedural overlay. */
+.local-image-background {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-position: center;
+  filter: none;
+}
+.local-image-background[hidden] {
+  display: none;
+}
+/* Background sources are a workflow, not preview cards. Only saved originals
+ * receive a 64×44 thumbnail; collection preview assets remain catalog metadata. */
+.background-sources {
+  margin-bottom: var(--space-lg);
+}
+.background-effects-heading {
+  margin: 0 0 var(--space-sm);
+  font: inherit;
+  font-weight: 600;
+}
+.local-image-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.local-image-summary:focus-visible {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 4px;
+}
+.local-image-thumb {
+  width: 64px;
+  height: 44px;
+  flex: 0 0 64px;
+  object-fit: contain;
+}
+.local-image-thumb:not([src]) {
+  display: none;
+}
+.local-image-label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.local-image-label strong {
+  font-weight: 500;
+}
+.local-image-actions {
+  display: grid;
+  gap: 12px;
+  padding-block: 16px 0;
+  font-size: 12px;
+}
+.local-image-actions p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.local-image-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.local-image-actions button,
+.local-image-actions select {
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.local-image-field {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.local-image-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.local-image-repo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+.local-image-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.local-image-feedback p {
+  flex: 1;
+}
+.local-image-feedback:has(p:empty):has(button[hidden]) {
+  display: none;
+}
+.local-image-actions [hidden] {
+  display: none;
+}
+@media (max-width: 640px) {
+  .local-image-actions button,
+  .local-image-actions select {
+    font-size: 12px;
+  }
+  .local-image-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  /* These controls meet the mobile scrollport edge; keep the full ring inside. */
+  .local-image-summary:focus-visible,
+  #local-image-fit:focus-visible,
+  #local-image-filter:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+/* Original remains underneath every optional, checked Paper image overlay. */
+.paper-image-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.paper-image-overlay canvas {
+  z-index: 0;
+}
+.background-color-hex {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--ui-ink, var(--color-ink));
+  padding: 0.5rem;
+}
+.background-color-hex:focus-visible {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 2px;
+}
+.background-color-hex[aria-invalid="true"] {
+  border-style: dashed;
+}
+.background-color-error {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: var(--text-xs);
+}
+@media (max-width: 640px) {
+  .background-color-hex {
+    font-size: 16px;
+  }
+}
+
+/* One compact nonmodal control surface. Mobile stays top-right at <=50dvh. */
+.effect-tuner {
+  position: fixed;
+  z-index: var(--z-modal);
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  width: min(
+    336px,
+    calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))
+  );
+  max-height: min(
+    640px,
+    70dvh,
+    calc(var(--tuning-viewport-height, 100dvh) - 32px)
+  );
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 16px;
+  color: var(--ui-ink, var(--color-ink));
+  background: var(--ui-paper-2, var(--color-paper-2));
+  border: 1px solid var(--ui-rule, var(--color-rule));
+  border-radius: 12px;
+  overflow: hidden;
+  animation: tuning-enter 170ms var(--ease-out);
+}
+.effect-tuner[hidden],
+.tuning-dock[hidden],
+.page[hidden] {
+  display: none;
+}
+.effect-tuner .popup-header,
+.effect-tuner__return {
+  flex: 0 0 auto;
+}
+.effect-tuner__return {
+  align-self: start;
+}
+.effect-tuner__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 12px;
+}
+/* Edge-aligned controls keep all four focus edges inside their scroll surface. */
+.effect-tuner__body :focus-visible,
+.settings-content .background-range-adapter:focus-visible {
+  outline-offset: -2px;
+}
+.effect-tuner .background-controls {
+  margin-top: 0;
+}
+.effect-tuner #background-fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+.effect-tuner .local-image-field {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.effect-tuner .local-image-repo,
+.effect-tuner .bg-collection__link {
+  display: inline-flex;
+  align-items: center;
+}
+.background-feedback:has(#background-error[hidden]):has(
+    #background-retry[hidden]
+  ) {
+  display: none;
+}
+.effect-tuner .local-image-feedback {
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-xs);
+}
+.effect-tuner .local-image-feedback [hidden] {
+  display: none;
+}
+/* The dock only relocates the existing round Settings button; it has no outer material. */
+.tuning-dock {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  top: max(16px, env(safe-area-inset-top));
+  z-index: var(--z-raised);
+  display: flex;
+  border-radius: 9999px;
+}
+.effect-shortcut {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: var(--z-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--surface-border);
+  border-top-color: var(--surface-border-top);
+  background: var(--capsule-bg);
+  color: var(--ui-ink, var(--color-ink));
+  font: 500 12px var(--font-body);
+  backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%);
+  cursor: pointer;
+}
+.effect-shortcut:hover {
+  background: var(--capsule-hover);
+}
+.effect-shortcut:focus-visible {
+  outline: 2px solid var(--ui-focus, var(--color-focus));
+  outline-offset: 3px;
+}
+.effect-shortcut svg {
+  flex-shrink: 0;
+}
+@keyframes tuning-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 640px) {
+  .effect-tuner {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    width: min(
+      336px,
+      calc(
+        100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right)
+      )
+    );
+    max-height: min(50dvh, calc(var(--tuning-viewport-height, 100dvh) - 16px));
+  }
+  .tuning-dock {
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .effect-tuner {
+    animation: none;
+  }
+}
+/* Shared sizing adaptations for real workflows absent from the reference. */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.filter-row .settings-filter {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.presentation-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.presentation-row .segmented {
+  display: flex;
+  max-width: 100%;
+}
+.presentation-row .segmented-btn {
+  width: 100%;
+}
+.segmented {
+  max-width: 100%;
+}
+.weather-location-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.weather-location-row .control__input {
+  margin: 0;
+  min-width: 0;
+}
+.date-components {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+}
+.date-components .control {
+  padding-left: 0;
+}
+.background-field__label {
+  font-size: 12px;
+  font-weight: 500;
+}
+.background-field__value {
+  font: 400 11px var(--font-mono);
+}
+.background-range-adapter__thumb {
+  background: var(--color-accent);
+}
+.weather__location {
+  min-width: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 12px var(--font-body);
+  color: var(--ui-ink-2, var(--color-ink-2));
+}
+.weather__location[hidden],
+.island__ampm[hidden],
+.island__date[hidden],
+.island__divider[hidden] {
+  display: none;
+}
+.island__weather.has-location {
+  max-width: 260px;
+  min-width: 60px;
+}
+.weather__icon-wrap,
+.weather__temp {
+  flex-shrink: 0;
+}
+.weather__temp {
+  font-size: 14px;
+}
+.island__time-btn {
+  min-width: 0;
+  flex-shrink: 1;
+}
+.island__time {
+  flex-shrink: 0;
+}
+.island__date {
+  min-width: 0;
+}
+.island__ampm {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font: 600 11px var(--font-body);
+  margin-left: 4px;
+  color: var(--ui-muted, var(--color-muted));
+}
+.island__search-hint {
+  flex-shrink: 0;
+}
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (max-width: 600px) {
+  .island__content {
+    gap: 6px;
+  }
+  .island__date {
+    text-overflow: ellipsis;
+  }
+  .island:hover .island__date,
+  .island:focus-within .island__date,
+  :root[data-date-expanded="true"] .island__date {
+    max-width: 60px;
+    margin-left: 4px;
+  }
+  .search-hint__kbd,
+  .search__engine-tag {
+    display: none;
+  }
+  .island__search-hint {
+    padding-inline: 6px;
+    gap: 4px;
+  }
+}
+@media (max-width: 400px) {
+  .island {
+    padding-inline: 6px;
+  }
+  .island__content {
+    gap: 3px;
+  }
+  .search-hint__text {
+    display: none;
+  }
+  .island:hover .island__date,
+  .island:focus-within .island__date,
+  :root[data-date-expanded="true"] .island__date {
+    max-width: 36px;
+  }
+  .island__weather {
+    gap: 3px;
+    padding-inline: 0;
+  }
+  .search__time-chip {
+    padding-inline: 6px;
+  }
+  .search__engine-popover {
+    left: -60px;
+  }
+}
+@media (pointer: coarse), (any-pointer: coarse) {
+  .control-surface button,
+  .control-surface a[href],
+  .control__input,
+  .select,
+  .settings-filter,
+  .segmented-btn {
+    min-height: 44px;
+  }
+  .control-surface .icon-close {
+    width: 44px;
+    flex-basis: 44px;
+  }
+  .icon-close::after {
+    inset: 0;
+  }
+  .custom-color-picker-wrap input[type="color"] {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .island,
+  .effect-shortcut {
+    --capsule-bg: var(--surface-solid);
+    --capsule-hover: var(--surface-solid);
+  }
+  .island.is-hidden {
+    background-color: var(--surface-solid);
+    border-color: var(--surface-border);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  #settings-sheet[data-presentation] .sheet__panel,
+  .island,
+  .effect-tuner,
+  .search__engine-popover,
+  .effect-shortcut {
+    background: var(--surface-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .island,
+  .effect-shortcut {
+    --capsule-bg: var(--surface-solid);
+    --capsule-hover: var(--surface-solid);
+  }
+  .island.is-hidden {
+    background-color: var(--surface-solid);
+    border-color: var(--surface-border);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  #settings-sheet[data-presentation] .sheet__panel,
+  .island,
+  .effect-tuner,
+  .search__engine-popover,
+  .effect-shortcut {
+    background: var(--surface-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  #settings-sheet[data-presentation] .sheet__backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  :is(.sheet__panel, .effect-tuner, .island, .tuning-dock, .effect-shortcut) {
+    --ui-ink: CanvasText;
+    --ui-ink-2: CanvasText;
+    --ui-muted: GrayText;
+    --ui-focus: Highlight;
+    --ui-accent-text: LinkText;
+    --ui-accent-boundary: Highlight;
+    --ui-accent-ink: HighlightText;
+  }
+  .island,
+  .effect-shortcut {
+    --capsule-bg: Canvas;
+    --capsule-hover: Canvas;
+  }
+  #settings-sheet[data-presentation] .sheet__backdrop {
+    background: Canvas;
+    opacity: 0.7;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  #settings-sheet[data-presentation] .sheet__panel,
+  .island,
+  .effect-tuner,
+  .search__engine-popover,
+  .effect-shortcut {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .island.is-hidden {
+    background-color: CanvasText;
+    border-color: transparent;
+  }
+  .island-reveal:focus-visible {
+    outline-color: Highlight;
+  }
+  .segmented-btn,
+  .engine-card,
+  .font-pairing-card,
+  .quiet-action,
+  .search__form {
+    color: ButtonText;
+    background: Canvas;
+    border: 1px solid ButtonBorder;
+  }
+  .segmented-item input:checked + .segmented-btn,
+  .segmented-btn.is-active,
+  .font-pairing-card.is-active,
+  .engine-card:has(input:checked),
+  .modal__tab-btn.is-active {
+    color: HighlightText;
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .tuning-dock .island__btn {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+  }
+  .theme-card__tone-badge,
+  .weather__location,
+  .island__time,
+  .modal__subtitle {
+    color: CanvasText;
+  }
+  .engine-card:has(input:checked) *,
+  .font-pairing-card.is-active *,
+  .pick-card:has(input:checked) .theme-card__tone-badge {
+    color: HighlightText;
+  }
+}

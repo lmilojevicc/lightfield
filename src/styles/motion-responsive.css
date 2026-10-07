@@ -1,0 +1,205 @@
+/* ---------------------------------------------------------------- reveal */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: reveal var(--dur-long) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition-property: none !important;
+    transition-duration: 0s !important;
+  }
+
+  .reveal {
+    transform: none;
+  }
+  .sheet__panel {
+    transition: none;
+  }
+
+  .reveal {
+    opacity: 1;
+  }
+  .booting .page {
+    animation: bootstrap-fallback 0s 1500ms forwards !important;
+  }
+}
+
+/* ---------------------------------------------------------------- responsive */
+
+@media (pointer: coarse), (any-pointer: coarse) {
+  button,
+  .pick-card,
+  .bg-card,
+  .control__input,
+  .select {
+    min-height: 44px;
+  }
+
+  .background-field:has(input[type="range"]),
+  .background-field:has(input[type="checkbox"]) {
+    min-height: 44px;
+  }
+}
+
+/* Deliberate narrow modal: retain a vertical icon tab rail, never squeeze controls. */
+@media (max-width: 600px) {
+  #settings-sheet[data-presentation="modal"] .settings-nav {
+    width: 52px;
+    flex-basis: 52px;
+    padding: 12px 4px;
+  }
+  #settings-sheet[data-presentation="modal"] .modal__tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  #settings-sheet[data-presentation="modal"] .settings-nav__item {
+    justify-content: center;
+    padding: 10px;
+  }
+  .settings-content {
+    padding: 16px;
+  }
+  #settings-sheet[data-presentation="modal"] .presentation-row .segmented {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #settings-sheet[data-presentation="modal"] .presentation-row .segmented-item {
+    flex: 0 0 auto;
+  }
+  #settings-sheet[data-presentation="modal"] .presentation-row .segmented-btn {
+    min-width: 0;
+    height: auto;
+    padding-block: 8px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+@media (max-width: 380px) {
+  #settings-sheet[data-presentation="modal"]
+    :is(.picker, .font-grid, .engine-picker-grid, .bg-collection__grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .segmented .segmented-btn,
+  .segmented-btn,
+  .dock__seg-btn {
+    padding-inline: 10px;
+  }
+}
+
+@media (forced-colors: active) {
+  .background-host {
+    display: none;
+  }
+
+  .pick-card,
+  .select,
+  .control__input,
+  .settings-filter,
+  .btn,
+  .bg-card,
+  .toggle__track,
+  .background-range-adapter__rail {
+    color: CanvasText !important;
+    background: Canvas !important;
+    border: 1px solid ButtonBorder !important;
+  }
+
+  .bg-card__preview {
+    background: Canvas !important;
+    border-color: ButtonBorder !important;
+  }
+
+  .bg-none-row .bg-card__body::before {
+    background: Canvas !important;
+    border-color: ButtonBorder !important;
+    box-shadow: none !important;
+  }
+
+  .bg-none-row input:checked + .bg-card__body::before {
+    background: HighlightText !important;
+    border-color: HighlightText !important;
+  }
+
+  .pick-card__name,
+  .pick-card__preview-display,
+  .pick-card__preview-meta,
+  .custom-font__field,
+  .custom-color-field {
+    color: CanvasText !important;
+  }
+
+  .pick-card__swatches i {
+    background: Canvas !important;
+    border-color: ButtonBorder !important;
+  }
+
+  .pick-card:has(input:checked),
+  .bg-card:has(input:checked) {
+    color: HighlightText !important;
+    background: Highlight !important;
+    border-color: Highlight !important;
+  }
+
+  /* System-color content surfaces prevent Chromium's dark text backplates. */
+  .pick-card:has(input:checked) .pick-card__body,
+  .bg-card:has(input:checked) .bg-card__body,
+  .pick-card:has(input:checked) .pick-card__name,
+  .pick-card:has(input:checked) .pick-card__preview-display,
+  .pick-card:has(input:checked) .pick-card__preview-meta,
+  .bg-card:has(input:checked) .bg-card__name,
+  .bg-card:has(input:checked) .bg-card__selected {
+    forced-color-adjust: none;
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+
+  .picker--themes .pick-card:has(input:checked:focus-visible),
+  .bg-card input:checked:focus-visible + .bg-card__body {
+    outline: 2px solid HighlightText !important;
+    outline-offset: -3px;
+  }
+
+  .toggle input:checked + .toggle__track {
+    background: Highlight !important;
+    border-color: Highlight !important;
+  }
+
+  .toggle__thumb,
+  .background-range-adapter__thumb {
+    background: CanvasText !important;
+  }
+  .toggle input:checked + .toggle__track .toggle__thumb {
+    background: HighlightText !important;
+  }
+
+  :focus-visible,
+  .pick-card input:focus-visible + .pick-card__body {
+    outline-color: Highlight !important;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    color: GrayText !important;
+    border-color: GrayText !important;
+  }
+}

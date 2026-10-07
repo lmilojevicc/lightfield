@@ -5,7 +5,7 @@ import type {
   BackgroundInstance,
 } from "./runtime/contracts";
 
-export const fractalFragmentShader = /* glsl */ `precision highp float;
+const fractalFragmentShader = /* glsl */ `precision highp float;
   uniform float uTime;
   uniform vec2 uResolution;
   uniform vec3 uPaper;

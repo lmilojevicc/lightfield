@@ -14,7 +14,7 @@ import {
   RETIRED_FONT_PRESETS,
   type FontPairing,
 } from "../fonts/font-pairings";
-export type { FontPairing } from "../fonts/font-pairings";
+
 export type SearchEngine =
   | "google"
   | "duckduckgo"
@@ -25,13 +25,7 @@ export type SearchEngine =
   | "ecosia"
   | "kagi";
 import { BUILTIN_THEME_IDS, type ThemeName } from "../../shared/theme";
-export type {
-  ThemeName,
-  CustomTheme,
-  CustomThemeContrastWarning,
-  CustomThemeImportResult,
-  CustomThemeSemanticTokens,
-} from "../../shared/theme";
+export type { CustomTheme } from "../../shared/theme";
 import type { CustomTheme } from "../../shared/theme";
 
 import {
@@ -42,8 +36,8 @@ import {
   type BackgroundOverrides,
 } from "../../shared/background-metadata";
 
-export type SettingsPresentation = "modal" | "drawer";
-export type IslandMode = "normal" | "hidden";
+type SettingsPresentation = "modal" | "drawer";
+type IslandMode = "normal" | "hidden";
 
 export interface Settings {
   seconds: boolean;

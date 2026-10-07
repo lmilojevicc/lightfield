@@ -1,4 +1,4 @@
-export type NumericControlKey =
+type NumericControlKey =
   "ArrowRight" | "ArrowUp" | "ArrowLeft" | "ArrowDown" | "Home" | "End";
 
 function clamp(value: number, min: number, max: number): number {

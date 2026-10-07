@@ -16,7 +16,7 @@ void main() {
 
 // The reversed-edge smoothstep in this shader is deliberately preserved byte-for-byte
 // from the pinned source despite its cross-driver GLSL specification risk.
-export const grainientFragmentShader = `#version 300 es
+const grainientFragmentShader = `#version 300 es
 precision highp float;
 uniform vec2 iResolution;
 uniform float iTime;

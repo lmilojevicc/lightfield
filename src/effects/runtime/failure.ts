@@ -9,7 +9,7 @@ export type BackgroundFailureReason =
   | "compile"
   | "context-lost"
   | "render";
-export type BackgroundRetryStatus =
+type BackgroundRetryStatus =
   "scheduled" | "deferred" | "retrying" | "stopped" | "recovered" | "cancelled";
 /** Last failure only, tab-local. Never includes settings, image URLs or stacks. */
 export interface BackgroundFailure {

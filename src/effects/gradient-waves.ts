@@ -17,7 +17,7 @@ void main() {
 
 // Source-fidelity constraints: the pinned shader adds grain after opacity, and the
 // pinned wrapper intentionally retains DPR 2 with no render-scale/FPS controls.
-export const gradientWavesFragmentShader = `#version 300 es
+const gradientWavesFragmentShader = `#version 300 es
 precision highp float;
 uniform vec2 iResolution;
 uniform float iTime;

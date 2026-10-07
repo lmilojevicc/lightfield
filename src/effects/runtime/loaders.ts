@@ -355,7 +355,4 @@ export const backgroundLoaders: Record<
   },
 };
 
-export const BACKGROUND_LOADER_IDS: readonly BackgroundImplementationId[] =
-  Object.keys(backgroundLoaders) as BackgroundImplementationId[];
-
 export const localImageLoader = () => import("../local-image");

@@ -7,7 +7,7 @@ import type {
   BackgroundInstance,
 } from "./runtime/contracts";
 
-export const inkFragmentShader = /* glsl */ `
+const inkFragmentShader = /* glsl */ `
   ${ISLAND_COMMON_GLSL}
 
   void main() {

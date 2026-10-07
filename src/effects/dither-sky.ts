@@ -7,7 +7,7 @@ import type {
   BackgroundInstance,
 } from "./runtime/contracts";
 
-export const ditherSkyFragmentShader = /* glsl */ `
+const ditherSkyFragmentShader = /* glsl */ `
   ${ISLAND_COMMON_GLSL}
 
   void main() {

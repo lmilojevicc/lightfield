@@ -6,7 +6,7 @@ import {
 } from "./schema";
 import { IMAGE_CONFLICT } from "../../shared/local-image";
 
-export const BACKGROUND_VIEW_FIELDS = [
+const BACKGROUND_VIEW_FIELDS = [
   "background",
   "backgroundOverrides",
   "backgroundRevision",

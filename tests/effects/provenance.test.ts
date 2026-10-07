@@ -11,7 +11,6 @@ import {
 } from "../../src/shared/background-metadata";
 import { PAPER_IMAGE_FILTER_IDS } from "../../src/shared/image-filter-metadata";
 import {
-  BACKGROUND_LOADER_IDS,
   backgroundLoaders,
   localImageLoader,
 } from "../../src/effects/runtime/loaders";
@@ -36,10 +35,10 @@ test("source bytes: all quarantined engines, licenses, fixtures and 113 public a
 });
 
 test("84 literal procedural factories, distinct Local Image loader and seven filter modules are reachable", async () => {
-  expect([...BACKGROUND_LOADER_IDS].sort()).toEqual(
+  expect(Object.keys(backgroundLoaders).sort()).toEqual(
     [...BACKGROUND_IMPLEMENTATION_IDS].sort(),
   );
-  expect(new Set(BACKGROUND_LOADER_IDS).size).toBe(84);
+  expect(Object.keys(backgroundLoaders).length).toBe(84);
   for (const id of BACKGROUND_IMPLEMENTATION_IDS) {
     const module = await backgroundLoaders[id]();
     expect(typeof module.default).toBe("function");

@@ -3,7 +3,6 @@ import { describe, expect, test } from "bun:test";
 import {
   FontCommitState,
   fontTuple,
-  ownsFontCommitFocus,
 } from "../../src/domain/fonts/font-commit-state";
 import { customFontTuple } from "../../src/domain/fonts/font-pairings";
 import {
@@ -100,14 +99,4 @@ describe("font-commit-state: durable tuple and sheet focus ownership", () => {
     expect(commit.savedTuple()).toEqual(patch);
     expect(commit.failedTuple()).toBeNull();
   });
-  for (const outcome of ["success", "reject"])
-    test(`${outcome}: focus belongs only to invoking sheet session/context`, () => {
-      const apply = {},
-        otherSetting = {};
-      expect(ownsFontCommitFocus(1, 1, true, apply, apply)).toBe(true);
-      expect(ownsFontCommitFocus(1, 1, true, apply, otherSetting)).toBe(false);
-      expect(ownsFontCommitFocus(1, 2, false, apply, apply)).toBe(false);
-      expect(ownsFontCommitFocus(1, 3, true, apply, otherSetting)).toBe(false);
-      expect(ownsFontCommitFocus(1, 3, true, apply, apply)).toBe(false);
-    });
 });

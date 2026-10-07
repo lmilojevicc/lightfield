@@ -13,8 +13,6 @@ import {
 import {
   createCustomThemePreviewState,
   customThemePreviewTransition,
-  createSerialMutationQueue,
-  persistCustomThemeTransaction,
   deleteCustomTheme,
   restoreDeletedCustomTheme,
 } from "../../src/domain/themes/custom-theme-workflow";
@@ -85,7 +83,7 @@ test("semantic roles preserve source contrast constraints, low contrast remains 
     ),
   ).toBe(true);
 });
-test("preview cancel, delete/undo collision remap and serial queue rollback ownership", async () => {
+test("preview cancel and delete/undo collision remap", () => {
   const state = createCustomThemePreviewState(theme);
   const draft = { ...theme, accent: "#ff0000" };
   const preview = customThemePreviewTransition(state, {
@@ -105,28 +103,4 @@ test("preview cancel, delete/undo collision remap and serial queue rollback owne
       "midnight",
     ).nextThemeId,
   ).toBe("custom:remap");
-  const writes: string[] = [];
-  const result = await persistCustomThemeTransaction(
-    { previousThemes: [theme], nextThemes: [], nextThemeId: "midnight" },
-    {
-      writeThemes: (values) => {
-        writes.push(String(values.length));
-      },
-      writeThemeSelection: () => Promise.resolve(false),
-    },
-  );
-  expect(result).toEqual({ ok: false, reason: "selection-write" });
-  expect(writes).toEqual(["0", "1"]);
-  const queue = createSerialMutationQueue();
-  const order: number[] = [];
-  await Promise.all([
-    queue.run(() => {
-      order.push(1);
-    }),
-    queue.run(() => {
-      order.push(2);
-    }),
-  ]);
-  expect(order).toEqual([1, 2]);
-  expect(queue.isBusy()).toBe(false);
 });

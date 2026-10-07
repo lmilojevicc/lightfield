@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { BUILTIN_THEME_IDS as THEMES } from "../../src/shared/theme";
-import { themeMatchesSearch } from "../../src/domain/themes/theme-filter";
+import { BUILTIN_THEME_IDS as THEMES } from "../../../src/shared/theme";
+import { themeMatchesSearch } from "../../../src/ui/appearance/theme-cards";
 
 describe("theme-filter without collapse state", () => {
   test("an empty query matches all 36 shipped themes and custom names", () => {

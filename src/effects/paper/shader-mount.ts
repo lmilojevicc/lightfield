@@ -1215,13 +1215,6 @@ export interface PaperShaderElement extends HTMLElement {
   paperShaderMount?: ShaderMount | undefined;
 }
 
-/** Check if an element is a Paper shader element */
-export function isPaperShaderElement(
-  element: HTMLElement,
-): element is PaperShaderElement {
-  return "paperShaderMount" in element;
-}
-
 /**
  * Uniform types that we support to be auto-mapped into the fragment shader
  *

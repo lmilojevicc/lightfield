@@ -1,14 +1,14 @@
 import type { Settings } from "../../domain/settings/schema";
 type IslandMode = Settings["islandMode"];
 
-export const ISLAND_IDLE_MS = 6000;
-export const SEARCH_MORPH_MS = 400;
+const ISLAND_IDLE_MS = 6000;
+const SEARCH_MORPH_MS = 400;
 /** Drawer slack around the capsule's slot: how far outside it the pointer still counts as near. */
-export const ISLAND_PROXIMITY_PAD = 80;
+const ISLAND_PROXIMITY_PAD = 80;
 /** Extra slack the pointer must clear to close the drawer, so boundary jitter cannot flicker it. */
 export const ISLAND_PROXIMITY_SLACK = 36;
 
-export function canSubmergeIsland(state: {
+function canSubmergeIsland(state: {
   searching: boolean;
   settingsOpen: boolean;
   hidden: boolean;

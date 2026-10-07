@@ -20,7 +20,7 @@ void main() {
 }
 `;
 
-export const gradientBlindsFragmentShader = `
+const gradientBlindsFragmentShader = `
 #ifdef GL_ES
 precision mediump float;
 #endif

@@ -1,6 +1,6 @@
 export const CACHE_KEY = "lightfield:weather";
 const CACHE_MS = 5 * 60 * 1000;
-export const GEOLOCATION_DECIMAL_PLACES = 2;
+const GEOLOCATION_DECIMAL_PLACES = 2;
 
 export interface Weather {
   location: string;
@@ -63,7 +63,7 @@ export function normalizeWeatherLocation(value: string): string {
   return value.trim() || "auto";
 }
 
-export function coarsenCoordinate(value: number): number {
+function coarsenCoordinate(value: number): number {
   const scale = 10 ** GEOLOCATION_DECIMAL_PLACES;
   return Math.round(value * scale) / scale;
 }
@@ -272,7 +272,7 @@ function validWeather(value: unknown): value is Weather {
   );
 }
 
-export function normalizeWeatherCacheRecord(
+function normalizeWeatherCacheRecord(
   value: unknown,
   now: number,
 ): WeatherCacheRecord | null {

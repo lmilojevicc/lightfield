@@ -15,11 +15,11 @@ export interface NumberControl extends BaseControl {
   step: number;
 }
 
-export interface BooleanControl extends BaseControl {
+interface BooleanControl extends BaseControl {
   type: "boolean";
 }
 
-export interface SelectControl extends BaseControl {
+interface SelectControl extends BaseControl {
   type: "select";
   options: readonly { value: string; label: string }[];
 }

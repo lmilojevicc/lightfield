@@ -9,7 +9,6 @@ import type {
 } from "./runtime/contracts";
 
 type RGB = [number, number, number];
-export type FerrofluidDirection = "up" | "down" | "left" | "right";
 
 const MAX_COLORS = 8;
 export const FERROFLUID_INITIAL_MOUSE: readonly [number, number] = [0, 0];
@@ -82,7 +81,7 @@ export function ferrofluidPointerCoordinates(
   ];
 }
 
-export function ferrofluidMouseSettled(
+function ferrofluidMouseSettled(
   current: ArrayLike<number>,
   target: ArrayLike<number>,
   epsilon = 0.01,
@@ -129,7 +128,7 @@ export function ferrofluidDependencySnapshot(
   ]);
 }
 
-export const ferrofluidVertexShader = `
+const ferrofluidVertexShader = `
 attribute vec2 position;
 attribute vec2 uv;
 varying vec2 vUv;
@@ -139,7 +138,7 @@ void main() {
 }
 `;
 
-export const ferrofluidFragmentShader = `
+const ferrofluidFragmentShader = `
 precision highp float;
 
 uniform vec3  iResolution;

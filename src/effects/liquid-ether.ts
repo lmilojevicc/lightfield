@@ -40,17 +40,7 @@ export function liquidEtherTargetFits(
   return width <= maxTextureSize && height <= maxTextureSize;
 }
 
-export function liquidEtherPassCount(
-  isViscous: boolean,
-  iterationsViscous: number,
-  iterationsPoisson: number,
-): number {
-  return (
-    1 + 1 + (isViscous ? iterationsViscous : 0) + 1 + iterationsPoisson + 1 + 1
-  );
-}
-
-export const liquidEtherFaceVertexShader = `
+const liquidEtherFaceVertexShader = `
   attribute vec3 position;
   uniform vec2 px;
   uniform vec2 boundarySpace;
@@ -65,7 +55,7 @@ export const liquidEtherFaceVertexShader = `
 }
 `;
 
-export const liquidEtherLineVertexShader = `
+const liquidEtherLineVertexShader = `
   attribute vec3 position;
   uniform vec2 px;
   precision highp float;
@@ -80,7 +70,7 @@ export const liquidEtherLineVertexShader = `
 }
 `;
 
-export const liquidEtherMouseVertexShader = `
+const liquidEtherMouseVertexShader = `
     precision highp float;
     attribute vec3 position;
     attribute vec2 uv;
@@ -95,7 +85,7 @@ export const liquidEtherMouseVertexShader = `
 }
 `;
 
-export const liquidEtherAdvectionFragmentShader = `
+const liquidEtherAdvectionFragmentShader = `
     precision highp float;
     uniform sampler2D velocity;
     uniform float dt;
@@ -126,7 +116,7 @@ export const liquidEtherAdvectionFragmentShader = `
 }
 `;
 
-export const liquidEtherColorFragmentShader = `
+const liquidEtherColorFragmentShader = `
     precision highp float;
     uniform sampler2D velocity;
     uniform sampler2D palette;
@@ -142,7 +132,7 @@ export const liquidEtherColorFragmentShader = `
 }
 `;
 
-export const liquidEtherDivergenceFragmentShader = `
+const liquidEtherDivergenceFragmentShader = `
     precision highp float;
     uniform sampler2D velocity;
     uniform float dt;
@@ -158,7 +148,7 @@ export const liquidEtherDivergenceFragmentShader = `
 }
 `;
 
-export const liquidEtherExternalForceFragmentShader = `
+const liquidEtherExternalForceFragmentShader = `
     precision highp float;
     uniform vec2 force;
     uniform vec2 center;
@@ -173,7 +163,7 @@ export const liquidEtherExternalForceFragmentShader = `
 }
 `;
 
-export const liquidEtherPoissonFragmentShader = `
+const liquidEtherPoissonFragmentShader = `
     precision highp float;
     uniform sampler2D pressure;
     uniform sampler2D divergence;
@@ -190,7 +180,7 @@ export const liquidEtherPoissonFragmentShader = `
 }
 `;
 
-export const liquidEtherPressureFragmentShader = `
+const liquidEtherPressureFragmentShader = `
     precision highp float;
     uniform sampler2D pressure;
     uniform sampler2D velocity;
@@ -210,7 +200,7 @@ export const liquidEtherPressureFragmentShader = `
 }
 `;
 
-export const liquidEtherViscousFragmentShader = `
+const liquidEtherViscousFragmentShader = `
     precision highp float;
     uniform sampler2D velocity;
     uniform sampler2D velocity_new;

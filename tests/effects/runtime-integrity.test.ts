@@ -33,7 +33,6 @@ import { dotRepulsionImpulse } from "../../src/effects/dot-field";
 import { lightRaysAnchor } from "../../src/effects/light-rays";
 
 import {
-  modulateRgbPreservingLuminance,
   plasmaPingPongTime,
   shouldContinueOglAnimation,
   shouldResizeOglBacking,
@@ -88,7 +87,6 @@ import {
   LIQUID_ETHER_BFECC,
   LIQUID_ETHER_DT,
   LIQUID_ETHER_TAKEOVER_DURATION,
-  liquidEtherPassCount,
   liquidEtherTargetFits,
   liquidEtherTargetSize,
   makeLiquidEtherPaletteTexture,
@@ -794,11 +792,6 @@ test("source runtime integrity: Orbs geometry/caps, Three geometry/materials, pa
     "Liquid Ether MAX_TEXTURE_SIZE preflight drifted",
   );
   assert(
-    liquidEtherPassCount(false, 32, 32) === 37 &&
-      liquidEtherPassCount(true, 32, 32) === 69,
-    "Liquid Ether 37/69 render-pass contract drifted",
-  );
-  assert(
     effectiveBackgroundConfig("liquid-ether", {}).isViscous === true,
     "Liquid Ether live viscosity default was disabled",
   );
@@ -1023,76 +1016,6 @@ test("source runtime integrity: Orbs geometry/caps, Three geometry/materials, pa
     scanlineFrequency.type === "number" && scanlineFrequency.min === 0.5,
     "Dark Veil official slider minimum drifted",
   );
-  const luminance = (color: readonly number[]) =>
-    requiredValue(color[0]) * 0.2126 +
-    requiredValue(color[1]) * 0.7152 +
-    requiredValue(color[2]) * 0.0722;
-  const assertDisplayedModulation = (
-    source: [number, number, number],
-    tint: [number, number, number],
-    sanitizedSource: [number, number, number],
-    label: string,
-  ) => {
-    const result = modulateRgbPreservingLuminance(source, tint);
-    assert(
-      result.every(
-        (channel) => Number.isFinite(channel) && channel >= 0 && channel <= 1,
-      ),
-      `${label} palette modulation left displayed gamut`,
-    );
-    assert(
-      Math.abs(luminance(sanitizedSource) - luminance(result)) < 1e-12,
-      `${label} palette modulation changed displayed luminance`,
-    );
-    return result;
-  };
-  const sourceColor: [number, number, number] = [0.7, 0.4, 0.2];
-  assertDisplayedModulation(
-    sourceColor,
-    [0.2, 0.8, 0.5],
-    sourceColor,
-    "normal",
-  );
-  assertEqual(
-    modulateRgbPreservingLuminance([0, 0, 0], [1, 1, 1]),
-    [0, 0, 0],
-    "black source did not remain black",
-  );
-  const blackTintLum = luminance(sourceColor);
-  assertEqual(
-    modulateRgbPreservingLuminance(sourceColor, [0, 0, 0]),
-    [blackTintLum, blackTintLum, blackTintLum],
-    "black tint did not fall back to source-luminance grayscale",
-  );
-  assertDisplayedModulation(
-    [-1, 0.5, 0.25],
-    [-2, 1, 0.5],
-    [0, 0.5, 0.25],
-    "negative-channel",
-  );
-  const saturated = assertDisplayedModulation(
-    [1, 0.2, 0.2],
-    [1, 0, 0],
-    [1, 0.2, 0.2],
-    "saturated",
-  );
-  assert(
-    saturated.some((channel) => Math.abs(channel - 1) < 1e-12),
-    "saturated modulation did not map to the gamut boundary",
-  );
-  assertDisplayedModulation(
-    [Number.POSITIVE_INFINITY, 0.5, 0.25],
-    [1, Number.NEGATIVE_INFINITY, 1],
-    [0, 0.5, 0.25],
-    "Infinity",
-  );
-  assertDisplayedModulation(
-    [Number.NaN, 0.5, 0.25],
-    [1, Number.NaN, 1],
-    [0, 0.5, 0.25],
-    "NaN",
-  );
-
   assert(
     plasmaPingPongTime(0) === 0 &&
       plasmaPingPongTime(10) === 10 &&
@@ -1355,7 +1278,7 @@ import {
   numericControlKeyTransition,
   numericControlPercentage,
   numericControlPointerValue,
-} from "../../src/effects/numeric-control";
+} from "../../src/ui/backgrounds/numeric-control";
 import {
   shouldAnimateMeridianQuad,
   shouldRenderMeridianQuadFrame,

@@ -76,7 +76,7 @@ export const NEAT_PRESET_PARAMETERS = [
   ["resolution", "Mesh detail (not DPR)", 0.05, 2, 0.05, 1],
   ["backgroundAlpha", "Clear alpha (not opacity)", 0, 1, 0.01, 1],
 ] as const;
-export const NEAT_PRESET_CONTROLS: readonly BackgroundControl[] = [
+const NEAT_PRESET_CONTROLS: readonly BackgroundControl[] = [
   {
     key: "useThemeColors",
     label: "Use theme colors (replaces official palette)",

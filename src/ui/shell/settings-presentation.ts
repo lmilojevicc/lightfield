@@ -1,7 +1,7 @@
 export type SettingsCategory =
   "search" | "appearance" | "background" | "fonts" | "time-date";
 export type SettingsPresentation = "modal" | "drawer";
-export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
+const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
   "search",
   "appearance",
   "background",

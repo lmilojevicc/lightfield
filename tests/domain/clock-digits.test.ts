@@ -1,10 +1,7 @@
 /// <reference types="bun" />
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { clockCellWidths } from "../../src/domain/clock-digits";
-import {
-  observeClockFont,
-  updateClockDigits,
-} from "../../src/platform/clock-digits";
+import { observeClockFont } from "../../src/platform/clock-digits";
 
 const glyph = (advance: number, left = 0, right = advance) => ({
   advance,
@@ -47,9 +44,6 @@ class Cell {
   }
   append(cell: Cell) {
     this.children.push(cell);
-  }
-  replaceChildren(...cells: Cell[]) {
-    this.children = cells;
   }
   remove() {}
   getBoundingClientRect() {
@@ -98,18 +92,6 @@ afterEach(() => {
   originals.clear();
 });
 const element = (cell: Cell) => cell as unknown as HTMLElement;
-test("clock rollover updates fixed nodes without measuring on tick", () => {
-  const cell = new Cell();
-  updateClockDigits(element(cell), "09:59:58");
-  const nodes = [...cell.children];
-  for (const value of ["09:59:59", "10:00:00", "11:11:58", "12:00:00"]) {
-    updateClockDigits(element(cell), value);
-    expect(cell.children.every((node, i) => node === nodes[i])).toBe(true);
-    expect(cell.children.map((node) => node.textContent).join("")).toBe(value);
-  }
-  expect(reads).toBe(0);
-  expect(cell.attributes.get("aria-hidden")).toBe("true");
-});
 test("clock font cache keys family, weight and size; late ready invalidates fallback metrics", () => {
   const cell = new Cell(),
     controller = observeClockFont(element(cell));

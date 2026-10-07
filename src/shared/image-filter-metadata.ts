@@ -1057,7 +1057,7 @@ const filterDefinitions = {
  * Water alone retains speed. Select unions come from the official enum metadata.
  * Normalization persists only validated exposed controls, matching the source registry.
  */
-export type ImageFilterParams = {
+type ImageFilterParams = {
   [Id in PaperImageFilterId]: {
     -readonly [
       Key in keyof (typeof filterDefinitions)[Id]["defaults"]

@@ -9,7 +9,7 @@ import type {
   BackgroundUpdateContext,
 } from "./runtime/contracts";
 
-export const shapeBlurVertexShader = `
+const shapeBlurVertexShader = `
 varying vec2 v_texcoord;
 void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -17,7 +17,7 @@ void main() {
 }
 `;
 
-export const shapeBlurFragmentShader = `
+const shapeBlurFragmentShader = `
 varying vec2 v_texcoord;
 
 uniform vec2 u_mouse;
@@ -142,20 +142,20 @@ const CONTROL_KEYS = [
   "circleEdge",
 ] as const;
 
-export function shapeBlurConfigChanged(
+function shapeBlurConfigChanged(
   previous: Record<string, number>,
   next: Record<string, unknown>,
 ): boolean {
   return CONTROL_KEYS.some((key) => previous[key] !== Number(next[key]));
 }
 
-export interface ShapeBlurSizeContract {
+interface ShapeBlurSizeContract {
   cssWidth: number;
   cssHeight: number;
   effectiveDpr: number;
 }
 
-export function shouldResizeShapeBlur(
+function shouldResizeShapeBlur(
   previous: ShapeBlurSizeContract | null,
   next: ShapeBlurSizeContract,
 ): boolean {

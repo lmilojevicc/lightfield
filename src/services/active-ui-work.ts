@@ -34,33 +34,3 @@ export function createActiveClock(
     },
   };
 }
-
-export function createActiveEffect(
-  activity: ActivitySignal,
-  run: () => Promise<void> | void,
-  suspend: () => boolean = () => false,
-): { request(): Promise<void> | undefined; dispose(): void } {
-  let pending = false;
-  let disposed = false;
-  const request = (): Promise<void> | undefined => {
-    if (disposed) return;
-    if (!activity.isActive()) {
-      pending = true;
-      return;
-    }
-    pending = false;
-    return Promise.resolve(run());
-  };
-  const unsubscribe = activity.subscribe((active) => {
-    if (!active) {
-      if (suspend()) pending = true;
-    } else if (pending) void request();
-  });
-  return {
-    request,
-    dispose: () => {
-      disposed = true;
-      unsubscribe();
-    },
-  };
-}

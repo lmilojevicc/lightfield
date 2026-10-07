@@ -1,7 +1,7 @@
 import { requiredValue } from "../required-value";
 export const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
-export const MAX_IMAGE_PIXELS = 24_000_000;
-export const MAX_IMAGE_EDGE = 16_384;
+const MAX_IMAGE_PIXELS = 24_000_000;
+const MAX_IMAGE_EDGE = 16_384;
 export interface LocalImageMetadata {
   mime: "image/jpeg" | "image/png" | "image/webp";
   bytes: number;
@@ -228,14 +228,4 @@ export function validateImageBytes(
     height: orientation >= 5 ? width : height,
     orientation,
   };
-}
-export async function validateLocalImage(
-  blob: Blob,
-): Promise<LocalImageMetadata> {
-  if (!blob.size || blob.size > MAX_IMAGE_BYTES)
-    throw new Error("Choose an image up to 32 MiB.");
-  return validateImageBytes(
-    new Uint8Array(await blob.arrayBuffer()),
-    blob.type,
-  );
 }

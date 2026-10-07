@@ -5,15 +5,15 @@ import type {
   CustomThemeImportResult,
   CustomThemeSemanticTokens,
 } from "../../shared/theme";
-export const CUSTOM_THEME_EXPORT_SCHEMA = "lightfield.custom-themes";
-export const CUSTOM_THEME_EXPORT_VERSION = 1;
+const CUSTOM_THEME_EXPORT_SCHEMA = "lightfield.custom-themes";
+const CUSTOM_THEME_EXPORT_VERSION = 1;
 export const CUSTOM_THEME_IMPORT_MAX_BYTES = 256 * 1024;
-export const CUSTOM_THEME_IMPORT_MAX_COUNT = 100;
-export const CUSTOM_THEME_ID_PATTERN = /^custom:[A-Za-z0-9_-]+$/;
+const CUSTOM_THEME_IMPORT_MAX_COUNT = 100;
+const CUSTOM_THEME_ID_PATTERN = /^custom:[A-Za-z0-9_-]+$/;
 
 // WCAG 2.x AA minimum for the normal-sized semantic text tokens.
-export const CUSTOM_THEME_MIN_CONTRAST = 4.5;
-export const CUSTOM_THEME_MIN_BOUNDARY_CONTRAST = 3;
+const CUSTOM_THEME_MIN_CONTRAST = 4.5;
+const CUSTOM_THEME_MIN_BOUNDARY_CONTRAST = 3;
 
 export function canonicalHexColor(value: unknown): string | null {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
@@ -35,7 +35,7 @@ export function hexContrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-export function customThemeAccentInk(
+function customThemeAccentInk(
   paperValue: unknown,
   inkValue: unknown,
   accentValue: unknown,
@@ -51,7 +51,7 @@ export function customThemeAccentInk(
   return candidates[0]?.color ?? null;
 }
 
-export function customThemePaper2(paperValue: unknown): string | null {
+function customThemePaper2(paperValue: unknown): string | null {
   const paper = canonicalHexColor(paperValue);
   return paper ? mixHexSrgb(paper, "#ffffff", 0.05) : null;
 }
@@ -70,7 +70,7 @@ function mixHexSrgb(a: string, b: string, bStrength: number): string {
 }
 
 /** Keep an intended sRGB ink→paper mix when readable on both page and settings surfaces. */
-export function customThemeReadableTextColor(
+function customThemeReadableTextColor(
   paperValue: unknown,
   inkValue: unknown,
   intendedPaperStrength: number,
@@ -138,7 +138,7 @@ function customThemeReadableAccentRole(
   return null;
 }
 
-export function customThemeTextTokens(
+function customThemeTextTokens(
   paperValue: unknown,
   inkValue: unknown,
 ): { ink2: string; muted: string } | null {
@@ -234,10 +234,7 @@ function contrastEvaluation(
   };
 }
 
-export function customThemeContrastFails(
-  ratio: number,
-  minimum: number,
-): boolean {
+function customThemeContrastFails(ratio: number, minimum: number): boolean {
   return ratio < minimum;
 }
 
@@ -407,7 +404,7 @@ export function validateCustomThemes(
   return valid;
 }
 
-export function createCustomThemeId(randomUUID: () => string): string {
+function createCustomThemeId(randomUUID: () => string): string {
   return `custom:${randomUUID()}`;
 }
 

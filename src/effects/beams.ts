@@ -12,7 +12,7 @@ import type {
 export const BEAMS_HEIGHT_SEGMENTS = 100;
 export const BEAMS_SPACING = 0;
 
-export const beamsNoise = `
+const beamsNoise = `
 float random (in vec2 st) {
     return fract(sin(dot(st.xy,
                          vec2(12.9898,78.233)))*
@@ -89,7 +89,7 @@ float cnoise(vec3 P){
 }
 `;
 
-export const beamsShaderHeader = `
+const beamsShaderHeader = `
   varying vec3 vEye;
   varying float vNoise;
   varying vec2 vUv;
@@ -100,7 +100,7 @@ export const beamsShaderHeader = `
   uniform float uScale;
   ${beamsNoise}`;
 
-export const beamsVertexHeader = `
+const beamsVertexHeader = `
   float getPos(vec3 pos) {
     vec3 noisePos =
       vec3(pos.x * 0., pos.y - uv.y, pos.z + time * uSpeed * 3.) * uScale;
@@ -120,24 +120,21 @@ export const beamsVertexHeader = `
     return normalize(cross(tangentZ, tangentX));
   }`;
 
-export const beamsBeginVertexInjection = `transformed.z += getPos(transformed.xyz);`;
-export const beamsBeginNormalInjection = `objectNormal = getNormal(position.xyz);`;
-export const beamsDitheringInjection = `
+const beamsBeginVertexInjection = `transformed.z += getPos(transformed.xyz);`;
+const beamsBeginNormalInjection = `objectNormal = getNormal(position.xyz);`;
+const beamsDitheringInjection = `
     float randomNoise = noise(gl_FragCoord.xy);
     gl_FragColor.rgb -= randomNoise / 15. * uNoiseIntensity;`;
 
-export function beamsRotationRadians(degrees: number): number {
+function beamsRotationRadians(degrees: number): number {
   return THREE.MathUtils.degToRad(degrees);
 }
 
-export function beamsTimeAdvance(
-  current: number,
-  deltaSeconds: number,
-): number {
+function beamsTimeAdvance(current: number, deltaSeconds: number): number {
   return current + 0.1 * deltaSeconds;
 }
 
-export function beamsTopologyCounts(
+function beamsTopologyCounts(
   count: number,
   heightSegments = BEAMS_HEIGHT_SEGMENTS,
 ): { vertices: number; faces: number; indices: number } {
@@ -216,7 +213,7 @@ export function createStackedPlanesBufferGeometry(
   }
 }
 
-export function beamsTopologySnapshot(config: Record<string, unknown>): string {
+function beamsTopologySnapshot(config: Record<string, unknown>): string {
   return JSON.stringify([
     Number(config.beamWidth),
     Number(config.beamHeight),
@@ -224,7 +221,7 @@ export function beamsTopologySnapshot(config: Record<string, unknown>): string {
   ]);
 }
 
-export function beamsMaterialDependencySnapshot(
+function beamsMaterialDependencySnapshot(
   config: Record<string, unknown>,
 ): string {
   return JSON.stringify([
@@ -244,7 +241,7 @@ function beamsRenderSnapshot(context: BackgroundUpdateContext): string {
   ]);
 }
 
-export function createBeamsPhysicalShaders(): {
+function createBeamsPhysicalShaders(): {
   vertexShader: string;
   fragmentShader: string;
 } {

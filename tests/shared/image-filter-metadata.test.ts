@@ -8,7 +8,7 @@ import {
   normalizeImageFilterMap,
   effectiveImageFilter,
   type ImageFilterOverrides,
-} from "../../src/shared/background-metadata";
+} from "../../src/shared/image-filter-metadata";
 
 test("registry.ts seven filter exports preserve all 104 controls and exact defaults/enum/mipmap metadata", () => {
   // Captured from source registry exports at 3e3116215c98475e3ee5c4043119ff6b86aa211f.

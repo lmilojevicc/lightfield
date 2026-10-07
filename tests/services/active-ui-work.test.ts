@@ -4,7 +4,6 @@ import { browserWeatherEnvironment } from "../../src/platform/browser";
 import { expect, test } from "bun:test";
 import {
   createActiveClock,
-  createActiveEffect,
   type ActivitySignal,
 } from "../../src/services/active-ui-work";
 import { FontRequestOwner } from "../../src/services/custom-font-loading";
@@ -325,41 +324,6 @@ test("saved-font loading is deferred and abortable without touching applied face
   font.dispose();
 });
 
-test("sites startup and storage refresh coalesce while inactive; mutation writes remain independent", async () => {
-  const page = activity(false);
-  let latest = "initial",
-    reads = 0,
-    rendered = "",
-    writes = 0;
-  const sites = createActiveEffect(page, async () => {
-    reads++;
-    const value = latest;
-    await Promise.resolve();
-    if (page.isActive()) rendered = value;
-  });
-  void sites.request();
-  latest = "external A";
-  void sites.request();
-  latest = "external B";
-  void sites.request();
-  writes++;
-  expect(reads).toBe(0);
-  expect(writes).toBe(1);
-  page.set(true);
-  await Promise.resolve();
-  expect(reads).toBe(1);
-  expect(rendered).toBe("external B");
-  page.set(false);
-  latest = "external C";
-  void sites.request();
-  void sites.request();
-  page.set(true);
-  await Promise.resolve();
-  expect(reads).toBe(2);
-  expect(rendered).toBe("external C");
-  sites.dispose();
-});
-
 function fetchWeather(location: string, units: "c" | "f", signal: AbortSignal) {
   return fetchWeatherInjected(
     location,
@@ -367,4 +331,35 @@ function fetchWeather(location: string, units: "c" | "f", signal: AbortSignal) {
     signal,
     browserWeatherEnvironment(() => true),
   );
+}
+
+// Test scheduling harness for real weather fetch and FontRequestOwner regressions.
+function createActiveEffect(
+  activity: ActivitySignal,
+  run: () => Promise<void> | void,
+  suspend: () => boolean = () => false,
+): { request(): Promise<void> | undefined; dispose(): void } {
+  let pending = false;
+  let disposed = false;
+  const request = (): Promise<void> | undefined => {
+    if (disposed) return;
+    if (!activity.isActive()) {
+      pending = true;
+      return;
+    }
+    pending = false;
+    return Promise.resolve(run());
+  };
+  const unsubscribe = activity.subscribe((active) => {
+    if (!active) {
+      if (suspend()) pending = true;
+    } else if (pending) void request();
+  });
+  return {
+    request,
+    dispose: () => {
+      disposed = true;
+      unsubscribe();
+    },
+  };
 }

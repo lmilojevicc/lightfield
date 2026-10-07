@@ -38,13 +38,3 @@ export class FontCommitState {
     return this.echoed && this.latest ? this.latest : this.patch;
   }
 }
-
-export function ownsFontCommitFocus(
-  originSession: number,
-  currentSession: number,
-  sheetOpen: boolean,
-  invoker: unknown,
-  active: unknown,
-): boolean {
-  return originSession === currentSession && sheetOpen && invoker === active;
-}

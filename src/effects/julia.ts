@@ -7,7 +7,7 @@ import type {
   BackgroundInstance,
 } from "./runtime/contracts";
 
-export const juliaFragmentShader = /* glsl */ `
+const juliaFragmentShader = /* glsl */ `
   ${ISLAND_COMMON_GLSL}
 
   void main() {

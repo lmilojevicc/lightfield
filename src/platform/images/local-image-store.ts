@@ -4,7 +4,7 @@ import {
 } from "../../shared/local-image";
 import type { LocalImageMetadata } from "../../domain/images/local-image-validation";
 export const LOCAL_IMAGE_DATABASE = "lightfield:local-images";
-export const LOCAL_IMAGE_STORE_CAP = 96 * 1024 * 1024;
+const LOCAL_IMAGE_STORE_CAP = 96 * 1024 * 1024;
 export interface LocalImageAsset extends LocalImageMetadata {
   id: LocalImageAssetId;
   original: Blob;

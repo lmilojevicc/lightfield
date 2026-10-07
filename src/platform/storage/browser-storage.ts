@@ -2,7 +2,7 @@ export interface StorageChange {
   oldValue?: unknown;
   newValue?: unknown;
 }
-export interface ExtensionStorage {
+interface ExtensionStorage {
   local: {
     get(key: string): Promise<Record<string, unknown>>;
     set(values: Record<string, unknown>): Promise<void>;

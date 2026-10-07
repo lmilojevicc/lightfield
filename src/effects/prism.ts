@@ -18,7 +18,7 @@ void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }`;
 
-export const prismFragmentShader = `
+const prismFragmentShader = `
 precision highp float;
 uniform vec2  iResolution;
 uniform float iTime;

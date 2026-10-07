@@ -26,10 +26,7 @@ export interface ImageIntent {
 export type ImageSettingsLock = <T>(
   work: (store: SettingsPatchStore) => Promise<T>,
 ) => Promise<T>;
-export function assertImageIntent(
-  settings: Settings,
-  expected: ImageIntent,
-): void {
+function assertImageIntent(settings: Settings, expected: ImageIntent): void {
   if (
     settings.backgroundRevision !== expected.revision ||
     settings.localImage.assetId !== expected.assetId

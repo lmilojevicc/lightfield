@@ -1,4 +1,4 @@
-export const MERIDIAN_COLOR_FILTER_DEFAULTS = {
+const MERIDIAN_COLOR_FILTER_DEFAULTS = {
   brightness: 1,
   saturation: 1,
   contrast: 1,
@@ -28,7 +28,7 @@ function formatFilterNumber(value: number): string {
   return Number(value.toFixed(2)).toString();
 }
 
-export function meridianCanvasFilter(config: MeridianColorConfig): string {
+function meridianCanvasFilter(config: MeridianColorConfig): string {
   const brightness = normalizedFilterValue(config, "brightness");
   const saturation = normalizedFilterValue(config, "saturation");
   const contrast = normalizedFilterValue(config, "contrast");

@@ -18,7 +18,7 @@ void main() {
 }
 `;
 
-export const strandsFragmentShader = `#version 300 es
+const strandsFragmentShader = `#version 300 es
 precision highp float;
 
 uniform float uTime;
@@ -108,7 +108,7 @@ void main() {
 }
 `;
 
-export const strandsGlassFragmentShader = `#version 300 es
+const strandsGlassFragmentShader = `#version 300 es
 precision highp float;
 
 uniform sampler2D uScene;
@@ -180,7 +180,7 @@ export function strandsGlassRadius(glassSize: number): number {
   return 0.46 * glassSize;
 }
 
-export function disposeStrandsRenderTarget(
+function disposeStrandsRenderTarget(
   gl: WebGLRenderingContext | WebGL2RenderingContext,
   target: RenderTarget,
 ) {

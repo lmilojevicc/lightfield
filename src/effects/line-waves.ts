@@ -10,7 +10,7 @@ import type {
 
 export const LINE_WAVES_INITIAL_MOUSE: readonly [number, number] = [0.5, 0.5];
 
-export const lineWavesVertexShader = `
+const lineWavesVertexShader = `
 attribute vec2 uv;
 attribute vec2 position;
 varying vec2 vUv;
@@ -20,7 +20,7 @@ void main() {
 }
 `;
 
-export const lineWavesFragmentShader = `
+const lineWavesFragmentShader = `
 precision highp float;
 
 uniform float uTime;

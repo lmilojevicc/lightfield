@@ -21,9 +21,9 @@ import {
   type ShaderSizingAnimation,
 } from "./shader-mount";
 
-export const PAPER_MAX_PIXEL_COUNT = 1920 * 1080;
-export const PAPER_MAX_DPR = 1.5;
-export const PAPER_MIN_DPR = 1;
+const PAPER_MAX_PIXEL_COUNT = 1920 * 1080;
+const PAPER_MAX_DPR = 1.5;
+const PAPER_MIN_DPR = 1;
 
 /** Same bounds as persisted settings, also applied at the native factory seam. */
 export function normalizePaperConfig(
@@ -55,7 +55,7 @@ export function normalizePaperConfig(
 
 /** Preserve source palette order/cardinality/duplicates/alpha. Luminance ranks map
  * along paper → accent → focus → ink, keeping semantic roles on light/dark themes. */
-export function paperPaletteColors(
+function paperPaletteColors(
   source: readonly string[],
   palette: ThemePalette,
 ): [number, number, number, number][] {
@@ -88,7 +88,7 @@ export function paperPaletteColors(
 }
 
 let noisePromise: Promise<HTMLImageElement> | undefined;
-export function decodedPaperNoise(): Promise<HTMLImageElement> {
+function decodedPaperNoise(): Promise<HTMLImageElement> {
   return (noisePromise ??= (async () => {
     const image = getShaderNoiseTexture();
     if (!image) throw new Error("Paper Shaders: noise image unavailable");

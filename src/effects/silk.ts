@@ -9,7 +9,7 @@ import type {
   BackgroundUpdateContext,
 } from "./runtime/contracts";
 
-export const silkVertexShader = `
+const silkVertexShader = `
 varying vec2 vUv;
 varying vec3 vPosition;
 
@@ -20,7 +20,7 @@ void main() {
 }
 `;
 
-export const silkFragmentShader = `
+const silkFragmentShader = `
 varying vec2 vUv;
 varying vec3 vPosition;
 

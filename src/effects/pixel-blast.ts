@@ -19,9 +19,9 @@ interface TrailPoint {
   vx: number;
   vy: number;
 }
-export const PIXEL_BLAST_MAX_TRAIL_POINTS = 64;
+const PIXEL_BLAST_MAX_TRAIL_POINTS = 64;
 
-export function pushBoundedPixelBlastTrail<T>(trail: T[], point: T): void {
+function pushBoundedPixelBlastTrail<T>(trail: T[], point: T): void {
   trail.push(point);
   if (trail.length > PIXEL_BLAST_MAX_TRAIL_POINTS) {
     trail.splice(0, trail.length - PIXEL_BLAST_MAX_TRAIL_POINTS);
@@ -142,7 +142,7 @@ function createTouchTexture(): TouchTexture {
   };
 }
 
-export const pixelBlastLiquidFragmentShader = `
+const pixelBlastLiquidFragmentShader = `
 uniform sampler2D uTexture;
 uniform float uStrength;
 uniform float uTime;
@@ -181,13 +181,13 @@ const SHAPE_MAP: Readonly<Record<string, number>> = {
 };
 const MAX_CLICKS = 10;
 
-export const pixelBlastVertexShader = `
+const pixelBlastVertexShader = `
 void main() {
   gl_Position = vec4(position, 1.0);
 }
 `;
 
-export const pixelBlastFragmentShader = `
+const pixelBlastFragmentShader = `
 precision highp float;
 
 uniform vec3  uColor;
@@ -353,15 +353,15 @@ void main(){
 }
 `;
 
-export function pixelBlastShapeValue(variant: unknown): number {
+function pixelBlastShapeValue(variant: unknown): number {
   return typeof variant === "string" ? (SHAPE_MAP[variant] ?? 0) : 0;
 }
 
-export function nextPixelBlastClickIndex(index: number): number {
+function nextPixelBlastClickIndex(index: number): number {
   return (index + 1) % MAX_CLICKS;
 }
 
-export function shouldAnimatePixelBlast(
+function shouldAnimatePixelBlast(
   speed: number,
   reducedMotion: boolean,
   touchActive: boolean,
@@ -369,13 +369,13 @@ export function shouldAnimatePixelBlast(
   return !reducedMotion && (speed !== 0 || touchActive);
 }
 
-export interface PixelBlastSizeSnapshot {
+interface PixelBlastSizeSnapshot {
   cssWidth: number;
   cssHeight: number;
   dpr: number;
 }
 
-export function shouldResizePixelBlast(
+function shouldResizePixelBlast(
   previous: PixelBlastSizeSnapshot | null,
   next: PixelBlastSizeSnapshot,
 ): boolean {
@@ -387,7 +387,7 @@ export function shouldResizePixelBlast(
   );
 }
 
-export function pixelBlastSizeContract(
+function pixelBlastSizeContract(
   cssWidth: number,
   cssHeight: number,
   backingWidth: number,
@@ -401,7 +401,7 @@ export function pixelBlastSizeContract(
   } as const;
 }
 
-export function pixelBlastMapToPixels(
+function pixelBlastMapToPixels(
   clientX: number,
   clientY: number,
   rect: Pick<DOMRect, "left" | "top" | "width" | "height">,

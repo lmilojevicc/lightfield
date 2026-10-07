@@ -13,7 +13,7 @@ import {
 // Pure family metadata is independent of native engine implementations.
 import { NEAT_DEFAULTS, NEAT_CONTROLS } from "./neat-metadata";
 import { PAPER_BACKGROUND_IDS, PAPER_DEFINITIONS } from "./paper-metadata";
-export { PAPER_BACKGROUND_IDS } from "./paper-metadata";
+
 import { ORBS_DEFAULT_SCALE_PCT } from "./orbs-metadata";
 
 export const BACKGROUND_IDS = [
@@ -77,13 +77,7 @@ export type BackgroundImplementationId = Exclude<
 >;
 export const BACKGROUND_IMPLEMENTATION_IDS: readonly BackgroundImplementationId[] =
   BACKGROUND_IDS.filter((id) => id !== "none" && id !== "local-image");
-export type {
-  BackgroundControlValue,
-  BackgroundControl,
-  NumberControl,
-  BooleanControl,
-  SelectControl,
-} from "./control-types";
+export type { BackgroundControlValue } from "./control-types";
 import type {
   BackgroundControlValue,
   BackgroundControl,
@@ -192,7 +186,7 @@ export const LIGHTFIELD_COLLECTION: BackgroundCollection = {
   ids: LIGHTFIELD_BACKGROUND_IDS,
 };
 
-export const PAPER_COLLECTION: BackgroundCollection = {
+const PAPER_COLLECTION: BackgroundCollection = {
   id: "paper",
   name: "Paper Shaders",
   attribution: "Powered by Paper Shaders (Apache-2.0).",
@@ -200,7 +194,7 @@ export const PAPER_COLLECTION: BackgroundCollection = {
   ids: PAPER_BACKGROUND_IDS,
 };
 
-export const PIXEL_PERFECT_COLLECTION: BackgroundCollection = {
+const PIXEL_PERFECT_COLLECTION: BackgroundCollection = {
   id: "pixel-perfect",
   name: "Pixel Perfect",
   attribution: "Adapted from Pixel Perfect by Vansh Nagar.",
@@ -1170,14 +1164,10 @@ export {
   PAPER_IMAGE_FILTER_IDS,
   PAPER_IMAGE_FILTERS,
   isPaperImageFilter,
-  normalizeImageFilterOverrides,
   normalizeImageFilterMap,
   effectiveImageFilter,
 } from "./image-filter-metadata";
 export type {
   PaperImageFilterId,
-  ImageFilterParams,
   ImageFilterOverrides,
-  ImageFilterControl,
-  ImageFilterDefinition,
 } from "./image-filter-metadata";

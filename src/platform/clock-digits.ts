@@ -1,26 +1,5 @@
 import { requiredValue } from "../domain/required-value";
 import { clockCellWidths } from "../domain/clock-digits";
-/** Fixed glyph cells preserve node identity and geometry across clock rollovers.
- * The parent time element owns the full locale-aware accessible name. */
-export function updateClockDigits(element: HTMLElement, value: string): void {
-  element.classList.add("clock-digits");
-  element.setAttribute("aria-hidden", "true");
-  if (element.children.length !== value.length) {
-    element.replaceChildren(
-      ...Array.from(value, (character) => {
-        const cell = document.createElement("span");
-        cell.className = character === ":" ? "clock-separator" : "clock-digit";
-        cell.textContent = character;
-        return cell;
-      }),
-    );
-  } else
-    Array.from(value).forEach((character, index) => {
-      const cell = requiredValue(element.children[index]);
-      if (cell.textContent !== character) cell.textContent = character;
-    });
-}
-
 /** One current-style cache, invalidated by font completion (including fallback
  * replacement). No promises retain an old family; every callback reads live CSS.
  * Tick never calls this controller or performs a layout read. */

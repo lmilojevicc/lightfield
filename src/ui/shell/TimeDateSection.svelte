@@ -16,6 +16,15 @@
   } = $props();
   let location = $state("");
   let focused = $state(false);
+  let weather = $state(untrack(() => services.weather.current()));
+  let actionError = $state<string | null>(null);
+  let actionRevision = 0;
+  const unweather = untrack(() =>
+    services.weather.subscribe((view) => {
+      weather = view;
+      if (!view.error && view.temperature !== "--°") actionError = null;
+    }),
+  );
   const draft = untrack(() => createLocationDraft(services.settings));
   const toggle = untrack(() =>
     createWeatherToggle({
@@ -31,13 +40,21 @@
     if (!focused) location = snapshot.settings.weatherLocation;
   });
   function editLocation(value: string) {
+    const mine = ++actionRevision;
+    actionError = null;
     focused = true;
     location = value;
     if (
       snapshot.settings.showWeather &&
       normalizeWeatherLocation(value) === "auto"
     )
-      void services.permissions.request("location").catch(() => {});
+      void services.permissions.request("location").catch((error: unknown) => {
+        if (mine !== actionRevision) return;
+        actionError =
+          error instanceof Error
+            ? error.message
+            : "Location unavailable. Enter a city.";
+      });
     draft.edit(normalizeWeatherLocation(value));
   }
   function flushLocation() {
@@ -46,12 +63,37 @@
   }
   function save(patch: SettingsPatch) {
     if (patch.showWeather !== undefined) {
+      const mine = ++actionRevision;
+      actionError = null;
       void toggle
         .set(patch.showWeather, normalizeWeatherLocation(location) === "auto")
-        .catch(() => {});
+        .catch((error: unknown) => {
+          if (mine !== actionRevision) return;
+          actionError =
+            error instanceof Error
+              ? error.message
+              : "Location unavailable. Enter a city.";
+        });
     } else void services.settings.patch(patch).catch(() => {});
   }
+  async function retryWeather() {
+    const mine = ++actionRevision;
+    actionError = null;
+    try {
+      if (normalizeWeatherLocation(location) === "auto")
+        await services.permissions.request("location");
+      if (mine === actionRevision) await services.weather.refresh();
+    } catch (error) {
+      if (mine !== actionRevision) return;
+      actionError =
+        error instanceof Error
+          ? error.message
+          : "Weather unavailable. Enter a city.";
+    }
+  }
   onDestroy(() => {
+    actionRevision++;
+    unweather();
     draft.dispose();
     toggle.dispose();
   });
@@ -360,7 +402,6 @@
         class="control__input"
         id="settings-weather-location"
         type="text"
-        disabled={!snapshot.settings.showWeather}
         data-setting="weatherLocation"
         aria-describedby="weather-location-hint weather-options-hint"
         placeholder="City or leave blank"
@@ -384,7 +425,19 @@
       id="weather-options-hint"
       hidden={snapshot.settings.showWeather}
     >
-      Turn on Weather to change location and temperature unit.
+      Enter a city without device-location access; turn on Weather to load it.
     </p>
+    {#if snapshot.settings.showWeather && (actionError || weather.error)}
+      <p class="control__hint" role="status">{actionError || weather.error}</p>
+      <button
+        type="button"
+        onclick={() => {
+          void retryWeather();
+        }}>Retry weather</button
+      >
+      <p class="control__hint">
+        Or enter a city above without device-location access.
+      </p>
+    {/if}
   </fieldset>
 </section>

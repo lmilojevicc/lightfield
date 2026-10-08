@@ -1,3 +1,4 @@
+import { createLocationPermission } from "../../src/platform/location-permission";
 import { createWeatherToggle } from "../../src/ui/shell/weather-toggle";
 import { createNetworkConsent } from "../../src/app/network-consent";
 import type { AppServices } from "../../src/services/contracts";
@@ -698,4 +699,160 @@ test("composed weather opt-ins follow external off/on and failed user writes wit
   expect(f.consent.weather()).toBe(true);
   f.toggle.dispose();
   f.services.dispose();
+});
+
+for (const mode of ["startup", "toggle"] as const)
+  test(`composed ${mode} delayed location grant refreshes without focus and clears error`, async () => {
+    const h = fixture();
+    h.values.set(
+      STORAGE_KEY,
+      normalize({ showWeather: mode === "startup", weatherLocation: "auto" }),
+    );
+    const grant = deferred<boolean>();
+    let allowed = false;
+    let prompts = 0;
+    h.deps.permissions = createPermissions({
+      contains: (request) =>
+        request.permissions
+          ? mode === "startup"
+            ? grant.promise
+            : Promise.resolve(allowed)
+          : Promise.resolve(false),
+      request: () => {
+        prompts++;
+        return grant.promise;
+      },
+      onAdded: { addListener() {}, removeListener() {} },
+      onRemoved: { addListener() {}, removeListener() {} },
+    });
+    let geo = 0,
+      forecasts = 0;
+    h.deps.weatherEnvironment.allowed = () => true;
+    h.deps.weatherEnvironment.locationAllowed = () =>
+      h.deps.permissions.current().location;
+    h.deps.weatherEnvironment.geolocate = () => {
+      geo++;
+      return Promise.resolve({ latitude: 0, longitude: 0 });
+    };
+    h.deps.weatherEnvironment.fetch = () => {
+      forecasts++;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            current: {
+              temperature_2m: 20,
+              apparent_temperature: 19,
+              relative_humidity_2m: 50,
+              weather_code: 0,
+              wind_speed_10m: 3,
+              wind_direction_10m: 0,
+            },
+          }),
+        ),
+      );
+    };
+    const services = createServices({ dependencies: h.deps });
+    let pending: Promise<void>;
+    if (mode === "toggle") {
+      await services.ready;
+      const toggle = createWeatherToggle({
+        settings: services.settings,
+        requestLocation: () => services.permissions.request("location"),
+        consent() {},
+      });
+      pending = toggle.set(true, true);
+    } else pending = services.ready;
+    await waitUntil(() => services.weather.current().error !== null);
+    expect(geo).toBe(0);
+    expect(forecasts).toBe(0);
+    expect(prompts).toBe(mode === "toggle" ? 1 : 0);
+    allowed = true;
+    grant.resolve(true);
+    await pending;
+    await waitUntil(() => services.weather.current().temperature === "20°");
+    expect(services.weather.current().error).toBeNull();
+    expect(geo).toBe(1);
+    expect(forecasts).toBe(1);
+    services.dispose();
+  });
+
+test("native location revocation immediately clears weather cache then exposes guarded recovery without unauthorized work", async () => {
+  const h = fixture();
+  h.values.set(
+    STORAGE_KEY,
+    normalize({ showWeather: true, weatherLocation: "auto" }),
+  );
+  const status = Object.assign(new EventTarget(), { state: "granted" });
+  let prompts = 0;
+  const location = createLocationPermission({
+    permissions: {
+      query: () => Promise.resolve(status),
+    } as unknown as Permissions,
+    geolocation: {
+      getCurrentPosition(success) {
+        prompts++;
+        status.state = "granted";
+        status.dispatchEvent(new Event("change"));
+        success({
+          coords: { latitude: 0, longitude: 0 },
+        } as GeolocationPosition);
+      },
+    } as Geolocation,
+  });
+  h.deps.permissions = createPermissions(undefined, location);
+  let geo = 0,
+    forecasts = 0,
+    cleared = 0;
+  h.deps.weatherEnvironment.allowed = () => true;
+  h.deps.weatherEnvironment.locationAllowed = () =>
+    h.deps.permissions.current().location;
+  h.deps.weatherEnvironment.geolocate = () => {
+    geo++;
+    return Promise.resolve({ latitude: 0, longitude: 0 });
+  };
+  h.deps.weatherEnvironment.storage.removeItem = () => {
+    cleared++;
+  };
+  h.deps.weatherEnvironment.fetch = () => {
+    forecasts++;
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          current: {
+            temperature_2m: 20,
+            apparent_temperature: 19,
+            relative_humidity_2m: 50,
+            weather_code: 0,
+            wind_speed_10m: 3,
+            wind_direction_10m: 0,
+          },
+        }),
+      ),
+    );
+  };
+  const services = createServices({ dependencies: h.deps });
+  await services.ready;
+  await waitUntil(() => services.weather.current().temperature === "20°");
+  expect(prompts).toBe(0);
+  const before = { geo, forecasts, cleared };
+  status.state = "denied";
+  status.dispatchEvent(new Event("change"));
+  expect(services.permissions.current().location).toBe(false);
+  expect(services.weather.current().temperature).toBe("--°");
+  expect(cleared).toBeGreaterThan(before.cleared);
+  await waitUntil(() => services.weather.current().error !== null);
+  // This is the settings UI's error/retry visibility condition; no focus transition is needed.
+  expect(services.settings.current().settings.showWeather).toBe(true);
+  expect(services.weather.current().error).toBe(
+    "Enable location access or enter a city.",
+  );
+  expect(geo).toBe(before.geo);
+  expect(forecasts).toBe(before.forecasts);
+  expect(prompts).toBe(0);
+  // Explicit retry grants location and the composed grant transition recovers the chip.
+  expect(await services.permissions.request("location")).toBe(true);
+  await waitUntil(() => services.weather.current().temperature === "20°");
+  expect(services.weather.current().error).toBeNull();
+  expect(prompts).toBe(1);
+  services.dispose();
 });

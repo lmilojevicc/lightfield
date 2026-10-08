@@ -23,7 +23,7 @@ export function createManifest(target: Target) {
     chrome_url_overrides: { newtab: "newtab.html" },
     // Native services use storage. Network/location prompts belong to explicit user gestures.
     permissions: ["storage"],
-    optional_permissions: ["geolocation"],
+    ...(target === "firefox" ? { optional_permissions: ["geolocation"] } : {}),
     optional_host_permissions: ["https://fonts.googleapis.com/*"],
     content_security_policy: {
       extension_pages:

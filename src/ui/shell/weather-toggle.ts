@@ -24,9 +24,11 @@ export function createWeatherToggle(port: {
         ticket = undefined;
         await draft.commit();
       } catch (error) {
+        if (mine !== revision) return;
         if (mine === revision && ticket === draft) {
           ticket = undefined;
-          draft.cancel();
+          // Weather opt-in is independent of device-location consent.
+          await draft.commit();
         }
         throw error;
       }

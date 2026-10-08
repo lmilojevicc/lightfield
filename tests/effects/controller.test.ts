@@ -54,6 +54,7 @@ let visible: boolean,
   listeners: Map<string, () => void>;
 let controllers: BackgroundController[];
 let timerId: number;
+let now: number;
 function install(key: string, value: unknown) {
   originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
   Object.defineProperty(globalThis, key, { configurable: true, value });
@@ -65,6 +66,9 @@ beforeEach(() => {
   listeners = new Map();
   controllers = [];
   timerId = 0;
+  now = 1000;
+  originals.set("dateNow", Object.getOwnPropertyDescriptor(Date, "now"));
+  Object.defineProperty(Date, "now", { configurable: true, value: () => now });
   install("document", {
     get hidden() {
       return !visible;
@@ -101,6 +105,11 @@ beforeEach(() => {
 afterEach(() => {
   for (const c of controllers) c.destroy();
   for (const [key, descriptor] of originals) {
+    if (key === "dateNow") {
+      if (descriptor) Object.defineProperty(Date, "now", descriptor);
+      else Reflect.deleteProperty(Date, "now");
+      continue;
+    }
     if (descriptor) Object.defineProperty(globalThis, key, descriptor);
     else Reflect.deleteProperty(globalThis, key);
   }
@@ -262,6 +271,20 @@ test("controller: hidden failures defer the same budget; pending retries cancel 
   expect(timers.size).toBe(0);
   await advance();
   expect(f.destroyed).toEqual([0, 1, 2, 3]);
+});
+
+test("controller: idle release uses controlled elapsed time and preserves the remaining budget", async () => {
+  const f = fixture();
+  await f.controller.set("fractal", {}, palette);
+  visibility(false);
+  now += 59_000;
+  await advance();
+  expect(f.destroyed).toEqual([]);
+  expect(timers.size).toBe(1);
+  now += 1000;
+  await advance();
+  expect(f.destroyed).toEqual([0]);
+  expect(timers.size).toBe(0);
 });
 
 for (const source of ["ascii", "none"] as const)

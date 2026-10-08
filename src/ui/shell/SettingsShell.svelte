@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { listenOutsideDismiss } from "./outside-dismiss";
+  import { createPresentationMotion } from "./presentation-motion";
   import SectionIcon from "./SectionIcon.svelte";
   import { SvelteMap } from "svelte/reactivity";
-  import { tick, type Snippet } from "svelte";
+  import { onMount, tick, type Snippet } from "svelte";
   import type { AppServices, SettingsSnapshot } from "../../services/contracts";
   import {
     categoryForKey,
@@ -36,6 +38,54 @@
   } = $props();
   let sheet: HTMLDivElement;
   let scroll: HTMLDivElement;
+  let panel: HTMLElement;
+  let motion: ReturnType<typeof createPresentationMotion> | undefined;
+  let motionMode: string | undefined;
+  function isOpen() {
+    return open;
+  }
+  $effect.pre(() => {
+    const mode = snapshot.settings.settingsPresentation;
+    const changed = motionMode !== undefined && motionMode !== mode;
+    motionMode = mode;
+    if (!open) {
+      motion?.cancel();
+      return;
+    }
+    if (!changed || !motion) return;
+    const from = motion.capture();
+    const top = scroll.scrollTop;
+    void tick().then(() => {
+      if (
+        !motion ||
+        !isOpen() ||
+        mode !== snapshot.settings.settingsPresentation
+      )
+        return;
+      scroll.scrollTop = top;
+      motion.play(from);
+    });
+  });
+  onMount(() => {
+    motion = createPresentationMotion(panel, () => services.reducedMotion());
+    const stopMotion = services.subscribeReducedMotion(() => motion?.cancel());
+    const stopOutside = listenOutsideDismiss(
+      window,
+      () => (open ? panel : null),
+      () => {
+        close();
+      },
+    );
+    $effect(() => {
+      if (!open) stopOutside.reset();
+    });
+    return () => {
+      stopOutside.destroy();
+      stopMotion();
+      motion?.cancel();
+      motion = undefined;
+    };
+  });
   export function tunerReturnScroll(): number {
     return open ? scroll.scrollTop : 0;
   }
@@ -217,17 +267,8 @@
       first?.focus();
     }
   }
-  function backdrop(event: MouseEvent) {
-    if (
-      open &&
-      event.target instanceof HTMLElement &&
-      event.target.hasAttribute("data-close")
-    )
-      close();
-  }
 </script>
 
-<svelte:window onclick={backdrop} />
 <div
   class="sheet"
   id="settings-sheet"
@@ -248,7 +289,7 @@
     data-close
     aria-hidden="true"
   ></div>
-  <aside class="sheet__panel control-surface">
+  <aside class="sheet__panel control-surface" bind:this={panel}>
     <header class="sheet__head">
       <div class="modal__title-group drawer__title-group">
         <h2 class="sheet__title modal__title drawer__title" id="settings-title">

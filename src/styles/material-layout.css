@@ -37,7 +37,7 @@
   --capsule-hover: rgb(255 255 255 / 0.94);
 }
 /* Resolve aliases where preview snapshots are stored, not on their ancestor. */
-:is(.sheet__panel, .effect-tuner, .island, .tuning-dock, .effect-shortcut) {
+:is(.sheet__panel, .effect-tuner, .island, .effect-shortcut) {
   --ui-ink: var(--surface-fg);
   --ui-ink-2: var(--surface-muted);
   --ui-muted: var(--surface-muted);

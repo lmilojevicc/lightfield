@@ -205,12 +205,12 @@ const PIXEL_PERFECT_COLLECTION: BackgroundCollection = {
   ids: PIXEL_PERFECT_IDS,
 };
 
-/** Registry order matches newtab.html. */
+/** First-party shaders lead the picker; other groups retain their relative order. */
 export const BACKGROUND_COLLECTIONS: readonly BackgroundCollection[] = [
+  LIGHTFIELD_COLLECTION,
   { id: "personal", name: "Personal", ids: ["none", "local-image"] },
   REACT_BITS_COLLECTION,
   ORBS_COLLECTION,
-  LIGHTFIELD_COLLECTION,
   NEAT_COLLECTION,
   PAPER_COLLECTION,
   PIXEL_PERFECT_COLLECTION,

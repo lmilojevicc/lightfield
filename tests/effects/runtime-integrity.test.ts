@@ -175,10 +175,10 @@ test("source runtime integrity: Orbs geometry/caps, Three geometry/materials, pa
   assertEqual(
     BACKGROUND_COLLECTIONS.map((collection) => collection.id),
     [
+      "meridian",
       "personal",
       "react-bits",
       "orbs",
-      "meridian",
       "neat",
       "paper",
       "pixel-perfect",
@@ -193,7 +193,9 @@ test("source runtime integrity: Orbs geometry/caps, Three geometry/materials, pa
     "Neat collection ownership drifted",
   );
   assertEqual(
-    requiredValue(BACKGROUND_COLLECTIONS[0]).ids,
+    requiredValue(
+      BACKGROUND_COLLECTIONS.find((collection) => collection.id === "personal"),
+    ).ids,
     ["none", "local-image"],
     "Personal source membership drifted",
   );

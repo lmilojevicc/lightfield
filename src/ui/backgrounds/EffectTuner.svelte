@@ -1,12 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { listenOutsideDismiss } from "../shell/outside-dismiss";
   import type { AppServices, SettingsSnapshot } from "../../services/contracts";
   import type { BackgroundStatus } from "../../effects/runtime/contracts";
-  import {
-    selectedControls,
-    tuningScope,
-    attachToTuner,
-  } from "./control-state";
+  import { selectedControls, tuningScope } from "./control-state";
   const {
     services,
     snapshot,
@@ -19,7 +16,7 @@
     ontarget,
     onfeedback,
     onretry,
-    dockTarget = null,
+    onactions,
   }: {
     services: AppServices;
     snapshot: SettingsSnapshot;
@@ -32,12 +29,12 @@
     ontarget: (target: HTMLElement | null) => void;
     onfeedback: (target: HTMLElement | null) => void;
     onretry: () => void | Promise<void>;
-    dockTarget?: HTMLElement | null;
+    onactions: (target: HTMLElement | null) => void;
   } = $props();
   let target = $state<HTMLDivElement>();
   let title = $state<HTMLHeadingElement>();
   let feedback = $state<HTMLDivElement>();
-  let dock = $state<HTMLDivElement>();
+  let actions = $state<HTMLDivElement>();
   let aside = $state<HTMLElement>();
   let openedScope: string | null = null;
   let wasOpen = false;
@@ -65,13 +62,7 @@
     }
     ontarget(open ? (target ?? null) : null);
     onfeedback(open ? (feedback ?? null) : null);
-  });
-  $effect(() => {
-    if (!open || !dockTarget || !dock) return;
-    const attachment = attachToTuner(dockTarget, dock);
-    return () => {
-      attachment.destroy();
-    };
+    onactions(open ? (actions ?? null) : null);
   });
   onMount(() => {
     const key = (event: KeyboardEvent) => {
@@ -84,9 +75,19 @@
         onclose();
       }
     };
+    const stopOutside = listenOutsideDismiss(
+      window,
+      () => (open ? (aside ?? null) : null),
+      onclose,
+    );
+    $effect(() => {
+      if (!open) stopOutside.reset();
+    });
     window.addEventListener("keydown", key);
     return () => {
+      stopOutside.destroy();
       window.removeEventListener("keydown", key);
+      onactions(null);
       ontarget(null);
       onfeedback(null);
     };
@@ -104,7 +105,6 @@
     onclick={onopen}>Effect settings</button
   >
 {/if}
-<div class="tuning-dock" id="tuning-dock" bind:this={dock} hidden={!open}></div>
 <aside
   class="effect-tuner control-surface"
   id="effect-tuner"
@@ -130,12 +130,6 @@
       onclick={onclose}>×</button
     >
   </header>
-  <button
-    class="quiet-action effect-tuner__return"
-    id="effect-tuner-return"
-    type="button"
-    onclick={onreturn}>Return to Settings</button
-  >
   <div class="effect-tuner__body" id="effect-tuner-body">
     <div id="effect-tuner-feedback" bind:this={feedback}>
       <p
@@ -164,5 +158,13 @@
       >
     </div>
     <div id="effect-tuner-controls" bind:this={target}></div>
+  </div>
+  <div class="effect-tuner__actions" bind:this={actions}>
+    <button
+      class="quiet-action effect-tuner__return"
+      id="effect-tuner-return"
+      type="button"
+      onclick={onreturn}>Return to Settings</button
+    >
   </div>
 </aside>

@@ -30,6 +30,7 @@
     visible = false,
     tunerTarget = null,
     tunerFeedback = null,
+    tunerActions = null,
     onopen,
     onretry,
     borrowThumbnail,
@@ -41,6 +42,7 @@
     visible?: boolean;
     tunerTarget?: HTMLElement | null;
     tunerFeedback?: HTMLElement | null;
+    tunerActions?: HTMLElement | null;
     onopen: () => void;
     onretry: () => void | Promise<void>;
     borrowThumbnail: BorrowThumbnail;
@@ -101,7 +103,7 @@
   const values = $derived(controlValues(settings));
   const term = $derived(query.trim().toLowerCase());
   const count = $derived(
-    BACKGROUND_COLLECTIONS.slice(1).flatMap((c) =>
+    BACKGROUND_COLLECTIONS.filter((c) => c.id !== "personal").flatMap((c) =>
       c.ids.filter((id) => matches(id, c.name)),
     ).length,
   );
@@ -282,7 +284,7 @@
           : ""}
       </p>
       <div id="background-picker-options">
-        {#each BACKGROUND_COLLECTIONS.slice(1) as collection (collection.id)}
+        {#each BACKGROUND_COLLECTIONS.filter((c) => c.id !== "personal") as collection (collection.id)}
           {@const open = !!term || expanded.includes(collection.id)}
           <div
             class="bg-collection"
@@ -422,6 +424,7 @@
               />{/key}
           </div>
           <button
+            use:attachToTuner={tunerActions}
             class="btn btn--ghost background-reset"
             id="background-reset"
             type="button"

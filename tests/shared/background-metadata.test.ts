@@ -19,6 +19,7 @@ import {
 
 // Export snapshots captured from catalog.ts at reference 3e3116215c98475e3ee5c4043119ff6b86aa211f.
 // These freeze every ID/name/default/control/condition/order, not only inventory counts.
+// Collection order intentionally puts the ten original lightfield shaders first.
 test("catalog.ts exported descriptor and collection parity", () => {
   const digest = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -31,7 +32,7 @@ test("catalog.ts exported descriptor and collection parity", () => {
       : collection,
   );
   expect(digest(sourceNamedCollections)).toBe(
-    "98011bc67c63af112034a11ba8bbff7257e17323eae1fd3590ee13fd020cff5e",
+    "aec866c93c9901986fdda2f2e08db60940f207fde43a17d927d1e0aabc2ecba3",
   );
   expect(
     BACKGROUND_COLLECTIONS.find((collection) => collection.id === "meridian")
@@ -48,7 +49,7 @@ test("86 selections, 84 derived procedural IDs, all families including release-b
   expect(BACKGROUND_IMPLEMENTATION_IDS).toHaveLength(84);
   expect(
     BACKGROUND_COLLECTIONS.map((collection) => collection.ids.length),
-  ).toEqual([2, 24, 9, 10, 26, 9, 6]);
+  ).toEqual([10, 2, 24, 9, 26, 9, 6]);
   const collectionIds = BACKGROUND_COLLECTIONS.flatMap((collection) => [
     ...collection.ids,
   ]);
@@ -220,4 +221,28 @@ test("Paper metadata keeps static mesh distinct from animated radial, and Pixel 
     interactive: true,
     paused: true,
   });
+});
+
+test("first-party shaders precede imported collections without removing personal sources", () => {
+  expect(BACKGROUND_COLLECTIONS.map((c) => c.id)).toEqual([
+    "meridian",
+    "personal",
+    "react-bits",
+    "orbs",
+    "neat",
+    "paper",
+    "pixel-perfect",
+  ]);
+  expect(BACKGROUND_COLLECTIONS[0]?.ids).toEqual([
+    "ascii",
+    "topo",
+    "halftone",
+    "ripple",
+    "smoke",
+    "fractal",
+    "ray",
+    "ink",
+    "dither-sky",
+    "julia",
+  ]);
 });

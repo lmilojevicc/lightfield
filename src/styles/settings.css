@@ -915,3 +915,8 @@ textarea {
 .background-picker-control {
   padding-top: 0;
 }
+
+/* Presentation changes have one bounds owner, never competing CSS transforms. */
+#settings-sheet[data-presentation] .sheet__panel[data-presentation-motion] {
+  transition: none;
+}

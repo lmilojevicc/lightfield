@@ -108,11 +108,6 @@
         if (alive && !snapshot.settings.showSearch) collapse();
       });
   });
-  export function settingsOpener(): HTMLElement | null {
-    return island.querySelector<HTMLElement>(
-      searching ? "#search-settings-btn" : "#settings-open",
-    );
-  }
   /** Settings/tuner integration restores the source scene target, including Hidden mode's pill. */
   export function restoreSettingsFocus() {
     if (snapshot.settings.islandMode === "hidden" && !searching) {

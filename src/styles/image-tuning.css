@@ -196,12 +196,11 @@
   animation: tuning-enter 170ms var(--ease-out);
 }
 .effect-tuner[hidden],
-.tuning-dock[hidden],
 .page[hidden] {
   display: none;
 }
 .effect-tuner .popup-header,
-.effect-tuner__return {
+.effect-tuner__actions {
   flex: 0 0 auto;
 }
 .effect-tuner__return {
@@ -244,15 +243,6 @@
 }
 .effect-tuner .local-image-feedback [hidden] {
   display: none;
-}
-/* The dock only relocates the existing round Settings button; it has no outer material. */
-.tuning-dock {
-  position: fixed;
-  left: max(16px, env(safe-area-inset-left));
-  top: max(16px, env(safe-area-inset-top));
-  z-index: var(--z-raised);
-  display: flex;
-  border-radius: 9999px;
 }
 .effect-shortcut {
   position: fixed;
@@ -305,10 +295,6 @@
       )
     );
     max-height: min(50dvh, calc(var(--tuning-viewport-height, 100dvh) - 16px));
-  }
-  .tuning-dock {
-    top: auto;
-    bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -546,7 +532,7 @@
   }
 }
 @media (forced-colors: active) {
-  :is(.sheet__panel, .effect-tuner, .island, .tuning-dock, .effect-shortcut) {
+  :is(.sheet__panel, .effect-tuner, .island, .effect-shortcut) {
     --ui-ink: CanvasText;
     --ui-ink-2: CanvasText;
     --ui-muted: GrayText;
@@ -603,11 +589,6 @@
     background: Highlight;
     border-color: Highlight;
   }
-  .tuning-dock .island__btn {
-    color: CanvasText;
-    background: Canvas;
-    border-color: CanvasText;
-  }
   .theme-card__tone-badge,
   .weather__location,
   .island__time,
@@ -619,4 +600,15 @@
   .pick-card:has(input:checked) .theme-card__tone-badge {
     color: HighlightText;
   }
+}
+
+.effect-tuner__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+}
+.effect-tuner__actions .background-reset {
+  margin: 0;
 }

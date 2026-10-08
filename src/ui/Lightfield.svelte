@@ -55,7 +55,6 @@
   let tunerOpen = $state(false);
   let category = $state<SettingsCategory>("appearance");
   let island: {
-    settingsOpener(): HTMLElement | null;
     restoreSettingsFocus(): void;
   };
   let appearance: { cancelEditor(): boolean; isCloseBlocked(): boolean };
@@ -73,7 +72,7 @@
   const editorBusy = $derived(themeEditor.busy || fontEditor.busy);
   let tunerTarget = $state<HTMLElement | null>(null);
   let tunerFeedback = $state<HTMLElement | null>(null);
-  let dockTarget = $state<HTMLElement | null>(null);
+  let tunerActions = $state<HTMLElement | null>(null);
   let saved: HTMLParagraphElement;
   let failure = $state("");
   let preview: CustomTheme | undefined;
@@ -162,7 +161,6 @@
     backgroundScroll = shell.tunerReturnScroll();
     navigationRevision++;
     sessionOpen = true;
-    dockTarget = island.settingsOpener();
     settingsOpen = false;
     tunerOpen = true;
   }
@@ -318,6 +316,7 @@
           snapshot.settings.settingsPresentation === "drawer")}
       {tunerTarget}
       {tunerFeedback}
+      {tunerActions}
       onopen={openTuner}
       onretry={retry}
       {resolveAsset}
@@ -347,7 +346,9 @@
   {backgroundStatus}
   open={tunerOpen}
   shortcutVisible={false}
-  {dockTarget}
+  onactions={(target: HTMLElement | null) => {
+    tunerActions = target;
+  }}
   onopen={openTuner}
   onclose={closeTuner}
   onreturn={returnSettings}

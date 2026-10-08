@@ -9,6 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev:browsers": "bun tooling/dev-browsers.ts",
     "build": "bun tooling/build.ts",
     "build:chromium": "bun tooling/build.ts chromium",
     "build:firefox": "bun tooling/build.ts firefox",

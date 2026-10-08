@@ -14,6 +14,7 @@ import {
   prepareLocalImageThumbnail,
   thumbnailFromPrepared,
 } from "./images/local-image-loading";
+import { createLocationPermission } from "./location-permission";
 import { createPermissions } from "./permissions";
 import type {
   ServiceDependencies,
@@ -25,7 +26,16 @@ export function createBrowserPlatform(
   const namespaces = browserNamespaces();
   const permissionAPI =
     namespaces.browser?.permissions ?? namespaces.chrome?.permissions;
-  const permissions = createPermissions(permissionAPI);
+  // Chromium also exposes browser; getBrowserInfo is Firefox-specific.
+  const firefox =
+    typeof (
+      namespaces.browser as
+        { runtime?: { getBrowserInfo?: unknown } } | undefined
+    )?.runtime?.getBrowserInfo === "function";
+  const permissions = createPermissions(
+    permissionAPI,
+    !firefox ? createLocationPermission(navigator) : undefined,
+  );
   const locks = (navigator as Partial<Navigator>).locks;
   const media = matchMedia("(prefers-reduced-motion: reduce)");
   return {

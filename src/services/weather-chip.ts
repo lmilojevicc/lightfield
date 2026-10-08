@@ -6,6 +6,7 @@ export type WeatherChipSettings = Pick<
   "showWeather" | "showWeatherLocation" | "weatherLocation" | "weatherUnits"
 >;
 export interface WeatherChipView {
+  error: string | null;
   hidden: boolean;
   temperature: string;
   code: number | null;
@@ -17,7 +18,7 @@ export interface WeatherChipView {
 export function weatherChipView(
   settings: WeatherChipSettings,
   weather: Weather | null,
-  failed = false,
+  failed: string | boolean = false,
 ): WeatherChipView {
   const auto = normalizeWeatherLocation(settings.weatherLocation) === "auto";
   const location = weather
@@ -40,6 +41,12 @@ export function weatherChipView(
       ? `Current weather in ${location}: ${temperature}, ${description}`
       : description;
   return {
+    error:
+      settings.showWeather && failed
+        ? typeof failed === "string"
+          ? failed
+          : "Weather unavailable. Retry or enter a city."
+        : null,
     hidden: !settings.showWeather,
     temperature,
     code: settings.showWeather && weather ? weather.code : null,
@@ -130,7 +137,15 @@ export class WeatherChipController {
       )
         return;
       this.retained = null;
-      this.deps.render(weatherChipView(this.deps.settings(), null, true));
+      this.deps.render(
+        weatherChipView(
+          this.deps.settings(),
+          null,
+          error instanceof Error
+            ? error.message
+            : "Weather unavailable. Retry or enter a city.",
+        ),
+      );
     } finally {
       if (id === this.requestId) this.abort = null;
     }

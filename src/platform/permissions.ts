@@ -1,3 +1,4 @@
+import type { LocationPermissionPort } from "./location-permission";
 export interface PermissionSet {
   permissions?: string[];
   origins?: string[];
@@ -25,7 +26,10 @@ export interface PermissionSnapshot {
   error: string | null;
 }
 /** Only request() prompts. Its caller must invoke it directly from the relevant user gesture. */
-export function createPermissions(api?: PermissionAPI) {
+export function createPermissions(
+  api?: PermissionAPI,
+  locationPort?: LocationPermissionPort,
+) {
   let snapshot: PermissionSnapshot = {
     fonts: false,
     location: false,
@@ -41,15 +45,17 @@ export function createPermissions(api?: PermissionAPI) {
   };
   const refresh = async () => {
     const own = ++generation;
-    if (!api) {
+    if (!api && !locationPort) {
       snapshot = { ...snapshot, error: "Extension permissions unavailable." };
       emit();
       return;
     }
     try {
       const [fonts, location] = await Promise.all([
-        api.contains(REQUESTS.fonts),
-        api.contains(REQUESTS.location),
+        api?.contains(REQUESTS.fonts) ?? false,
+        locationPort
+          ? locationPort.query()
+          : (api?.contains(REQUESTS.location) ?? false),
       ]);
       if (disposed || own !== generation) return;
       snapshot = { fonts, location, error: null };
@@ -74,11 +80,24 @@ export function createPermissions(api?: PermissionAPI) {
   const removed = () => {
     // Revoke synchronously; contains() may settle after nonabortable network work.
     generation++;
-    snapshot = { fonts: false, location: false, error: null };
+    snapshot = {
+      fonts: false,
+      location: locationPort ? snapshot.location : false,
+      error: null,
+    };
     for (const listener of revocations) listener();
     emit();
     void refresh();
   };
+  const unlocation = locationPort?.subscribe((location) => {
+    generation++;
+    const revoked = snapshot.location && !location;
+    snapshot = { ...snapshot, location, error: null };
+    if (revoked) for (const listener of revocations) listener();
+    emit();
+    // The event invalidated a combined query; replace it so Fonts can settle too.
+    void refresh();
+  });
   api?.onAdded.addListener(changed);
   api?.onRemoved.addListener(removed);
   return {
@@ -98,11 +117,15 @@ export function createPermissions(api?: PermissionAPI) {
     },
     refresh,
     async request(feature: NetworkPermission): Promise<boolean> {
-      if (disposed || !api)
+      if (disposed || (!api && !(feature === "location" && locationPort)))
         throw new Error("Extension permissions unavailable.");
       try {
         // Call before any await: preserve browser user-gesture authority.
-        const granted = await api.request(REQUESTS[feature]);
+        const granted = await (feature === "location" && locationPort
+          ? locationPort.request()
+          : api
+            ? api.request(REQUESTS[feature])
+            : Promise.reject(new Error("Extension permissions unavailable.")));
         if (isDisposed()) return false;
         await refresh();
         if (!granted) {
@@ -135,6 +158,8 @@ export function createPermissions(api?: PermissionAPI) {
       generation++;
       api?.onAdded.removeListener(changed);
       api?.onRemoved.removeListener(removed);
+      unlocation?.();
+      locationPort?.dispose();
       listeners.clear();
       revocations.clear();
     },

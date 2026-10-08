@@ -15,7 +15,9 @@ describe("generated MV3 manifests", () => {
       expect(manifest.name).toBe("lightfield");
       expect(manifest.chrome_url_overrides).toEqual({ newtab: "newtab.html" });
       expect(manifest.permissions).toEqual(["storage"]);
-      expect(manifest.optional_permissions).toEqual(["geolocation"]);
+      expect(manifest.optional_permissions).toEqual(
+        target === "firefox" ? ["geolocation"] : undefined,
+      );
       expect(manifest.optional_host_permissions).toEqual([
         "https://fonts.googleapis.com/*",
       ]);

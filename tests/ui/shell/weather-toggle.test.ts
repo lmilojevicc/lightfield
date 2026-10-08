@@ -87,3 +87,50 @@ test("manual city needs no permission and unmount cancels an unsubmitted automat
   expect(commits).toBe(1);
   expect(cancels).toBe(1);
 });
+
+test("denied or failed auto access keeps feature opt-in so a manual city can recover", async () => {
+  for (const failure of [false, new Error("Location denied")]) {
+    let committed = false;
+    const toggle = createWeatherToggle({
+      settings: {
+        stage: () => ({
+          cancel() {},
+          commit() {
+            committed = true;
+            return Promise.resolve(DEFAULT_SETTINGS);
+          },
+        }),
+      },
+      requestLocation: () =>
+        failure instanceof Error
+          ? Promise.reject(failure)
+          : Promise.resolve(failure),
+      consent() {},
+    });
+    await toggle.set(true, true).catch(() => {});
+    expect(committed).toBe(true);
+    toggle.dispose();
+  }
+});
+
+test("obsolete location rejection does not publish an error after a newer manual enable", async () => {
+  let reject!: (error: Error) => void;
+  const pending = new Promise<boolean>((_, no) => {
+    reject = no;
+  });
+  const toggle = createWeatherToggle({
+    settings: {
+      stage: () => ({
+        cancel() {},
+        commit: () => Promise.resolve(DEFAULT_SETTINGS),
+      }),
+    },
+    requestLocation: () => pending,
+    consent() {},
+  });
+  const stale = toggle.set(true, true);
+  await toggle.set(true, false);
+  reject(new Error("obsolete"));
+  await stale;
+  toggle.dispose();
+});

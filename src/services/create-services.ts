@@ -185,7 +185,16 @@ export function createServices(
       (permissionState.location && !next.location)
     )
       notifyConsentChanged();
+    const locationChanged = permissionState.location !== next.location;
     permissionState = next;
+    const value = settings.current();
+    if (
+      locationChanged &&
+      value.ready &&
+      value.settings.showWeather &&
+      value.settings.weatherLocation === "auto"
+    )
+      void weather.refresh();
   });
   const prepareIntent = async (expected: ImageSessionIntent) => {
     if (!lock.imageMutationsAvailable) throw new Error(IMAGE_LOCK_REASON);

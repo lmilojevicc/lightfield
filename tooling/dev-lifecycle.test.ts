@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile, chmod } from "node:fs/promises";
+import {
+  access,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+  chmod,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -145,3 +152,48 @@ describe("developer browser lifecycle", () => {
     expect(calls).toBe(1);
   });
 });
+
+test.skipIf(process.platform === "win32")(
+  "version probe hard timeout kills a SIGTERM-ignoring owned child and removes its profile",
+  async () => {
+    const dir = await mkdtemp(join(tmpdir(), "lightfield-probe-timeout-test-"));
+    const binary = join(dir, "fixture");
+    const record = join(dir, "record.json");
+    await writeFile(
+      binary,
+      `#!${process.execPath}
+import {writeFileSync} from 'node:fs';
+process.on('SIGTERM', () => {});
+const args = process.argv.slice(2);
+if (!args.includes('--headless') || !args.includes('--version') || process.env.MOZ_HEADLESS !== '1') process.exit(90);
+writeFileSync(process.env.LIGHTFIELD_PROBE_RECORD, JSON.stringify({pid: process.pid, profile: args[args.indexOf('-profile') + 1]}));
+setInterval(() => {}, 1000);
+`,
+    );
+    await chmod(binary, 0o700);
+    const start = Date.now();
+    try {
+      const error = await discoverBinary("firefox", {
+        LIGHTFIELD_FIREFOX_BINARY: binary,
+        LIGHTFIELD_PROBE_RECORD: record,
+      }).catch((error: unknown) => error);
+      expect(String(error)).toContain("Version probe failed");
+      expect(Date.now() - start).toBeGreaterThanOrEqual(14000);
+      expect(Date.now() - start).toBeLessThan(20000);
+      const owned = JSON.parse(await readFile(record, "utf8")) as {
+        pid: number;
+        profile: string;
+      };
+      expect(() => process.kill(owned.pid, 0)).toThrow();
+      expect(
+        await access(owned.profile).then(
+          () => true,
+          () => false,
+        ),
+      ).toBe(false);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  },
+  25000,
+);

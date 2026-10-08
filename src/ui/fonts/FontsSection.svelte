@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import type {
     AppServices,
     SettingsSnapshot,
@@ -19,6 +19,7 @@
     fontSaveBlocksClose,
     type FontSaveKind,
   } from "./font-save-barrier";
+  import { fontTabForKey, type FontTab } from "./font-tabs";
   import { createFontPreviewOwner } from "./font-preview-owner";
   const {
     services,
@@ -57,7 +58,9 @@
     ),
   );
   let section: HTMLElement;
-  let openButton: HTMLButtonElement;
+  let presetsTab: HTMLButtonElement;
+  let selectedTab = $state<FontTab>("presets");
+  let wasVisible = false;
   let opened = $state(false);
   let display = $state("");
   let body = $state("");
@@ -69,6 +72,7 @@
   });
   let preview = $state<FontPreview | undefined>();
   let loading = $state(false);
+  let retrying = $state(false);
   let saveKind = $state<FontSaveKind>(null);
   const saving = $derived(saveKind !== null);
   let slowSave = $state(false);
@@ -136,25 +140,38 @@
   $effect(() => {
     if (!sessionOpen && opened && (!saving || slowSave)) cancel(false);
   });
-  function ownsNavigation(navigation: number) {
-    return alive && active && sessionOpen && navigation === navigationRevision;
-  }
-  function focusDraft(navigation: number) {
-    if (opened && ownsNavigation(navigation))
-      section.querySelector<HTMLInputElement>("#custom-display-font")?.focus();
-  }
-  async function open() {
-    const values = [
-      snapshot.settings.customDisplayFont,
-      snapshot.settings.customBodyFont,
-    ];
-    display = values[0] ?? "";
-    body = values[1] ?? "";
+  $effect(() => {
+    const visible = active && sessionOpen;
+    if (visible && !wasVisible) {
+      untrack(() => {
+        if (!saving)
+          selectTab(
+            snapshot.settings.fonts === "custom" ? "custom" : "presets",
+          );
+      });
+    }
+    wasVisible = visible;
+  });
+  function open() {
+    display = snapshot.settings.customDisplayFont;
+    body = snapshot.settings.customBodyFont;
     opened = true;
     error = "";
-    const navigation = navigationRevision;
-    await tick();
-    focusDraft(navigation);
+  }
+  function selectTab(tab: FontTab) {
+    // A submitted write owns its draft even after the delayed-close barrier.
+    if (saving) return;
+    if (tab === "presets") cancel(false);
+    else if (!opened) open();
+    selectedTab = tab;
+  }
+  function tabKey(event: KeyboardEvent) {
+    const next = fontTabForKey(selectedTab, event.key);
+    if (!next) return;
+    event.preventDefault();
+    if (saving) return;
+    selectTab(next);
+    section.querySelector<HTMLButtonElement>(`#font-tab-${next}`)?.focus();
   }
   function edit(role: "display" | "body", value: string) {
     request++;
@@ -175,6 +192,7 @@
     deferred = false;
     error = "";
     opened = false;
+    selectedTab = "presets";
     if (focus) {
       const ticket = request;
       const navigation = navigationRevision;
@@ -195,7 +213,7 @@
             document.activeElement !== document.body
           )
             return;
-          if (openButton.isConnected) openButton.focus();
+          if (presetsTab.isConnected) presetsTab.focus();
           else onFocusReturn?.();
         })
         .catch((reason: unknown) => {
@@ -207,14 +225,54 @@
         });
     }
   }
-  function authorization(): boolean | Promise<boolean> {
+  async function retrySavedFonts() {
+    const ticket = request;
+    const navigation = navigationRevision;
+    const savedDisplay = snapshot.settings.customDisplayFont;
+    const savedBody = snapshot.settings.customBodyFont;
+    const ownsRetry = () =>
+      alive &&
+      active &&
+      sessionOpen &&
+      opened &&
+      ticket === request &&
+      navigation === navigationRevision &&
+      !saving &&
+      !loading &&
+      snapshot.settings.fonts === "custom" &&
+      savedDisplay === snapshot.settings.customDisplayFont &&
+      savedBody === snapshot.settings.customBodyFont;
+    if (!ownsRetry() || fontState.state !== "error" || retrying) return;
+    retrying = true;
+    error = "";
+    try {
+      // Consent concerns the saved pairing, not the editable draft names.
+      const grant = authorization(savedDisplay, savedBody);
+      if (!(await grant))
+        throw new Error(
+          "Google Fonts permission is required. Included and system fonts work offline.",
+        );
+      if (!ownsRetry() || services.fonts.current().state !== "error") return;
+      await services.fonts.retry();
+    } catch (reason) {
+      if (ownsRetry())
+        error =
+          reason instanceof Error ? reason.message : "Couldn’t load fonts.";
+    } finally {
+      retrying = false;
+    }
+  }
+  function authorization(
+    left = display,
+    right = body,
+  ): boolean | Promise<boolean> {
     const remote =
-      resolveFontFamily(display, "display").source === "google" ||
-      resolveFontFamily(body, "body").source === "google";
+      resolveFontFamily(left, "display").source === "google" ||
+      resolveFontFamily(right, "body").source === "google";
     return remote ? (onRequestFontConsent?.() ?? false) : true;
   }
   async function load(authorize = true) {
-    if (!opened || saving || !alive) return;
+    if (!opened || saving || retrying || !alive) return;
     let grant: boolean | Promise<boolean>;
     try {
       grant = authorize ? authorization() : true;
@@ -248,7 +306,7 @@
     }
   }
   async function apply() {
-    if (saving || !preview || !opened) return;
+    if (saving || retrying || !preview || !opened) return;
     const invoker = document.activeElement;
     const ticket = request;
     const navigation = navigationRevision;
@@ -350,42 +408,86 @@
   <div class="panel__header">
     <h3 class="panel__title">Typography &amp; Font Pairings</h3>
   </div>
+  <div class="dock__segmented segmented" role="tablist" aria-label="Fonts">
+    <button
+      bind:this={presetsTab}
+      class="dock__seg-btn segmented-btn"
+      class:is-active={selectedTab === "presets"}
+      id="font-tab-presets"
+      type="button"
+      role="tab"
+      aria-selected={selectedTab === "presets"}
+      aria-controls="font-panel-presets"
+      tabindex={selectedTab === "presets" ? 0 : -1}
+      aria-disabled={saving}
+      onclick={() => {
+        selectTab("presets");
+      }}
+      onkeydown={tabKey}>Presets</button
+    >
+    <button
+      class="dock__seg-btn segmented-btn"
+      class:is-active={selectedTab === "custom"}
+      id="font-tab-custom"
+      type="button"
+      role="tab"
+      aria-selected={selectedTab === "custom"}
+      aria-controls="font-panel-custom"
+      tabindex={selectedTab === "custom" ? 0 : -1}
+      aria-disabled={saving}
+      onclick={() => {
+        selectTab("custom");
+      }}
+      onkeydown={tabKey}>Custom</button
+    >
+  </div>
   <div
-    class="font-grid"
-    id="modal-font-grid"
-    role="radiogroup"
-    aria-label="Font pairings"
+    id="font-panel-presets"
+    role="tabpanel"
+    aria-labelledby="font-tab-presets"
+    tabindex="0"
+    hidden={selectedTab !== "presets"}
   >
-    {#each FONT_PRESETS as value, index (value.id)}<button
-        type="button"
-        class="font-pairing-card"
-        class:is-active={snapshot.settings.fonts === value.id}
-        data-font-id={value.id}
-        role="radio"
-        aria-checked={snapshot.settings.fonts === value.id}
-        tabindex={snapshot.settings.fonts === value.id ||
-        (snapshot.settings.fonts === "custom" && index === 0)
-          ? 0
-          : -1}
-        disabled={saving}
-        onclick={() => preset(value.id)}
-        onkeydown={(e: KeyboardEvent) => {
-          cardKey(e, index);
-        }}
-        ><span class="font-card__header"
-          ><span class="font-card__name">{value.label}</span><span
-            class="font-card__badge">{value.badge}</span
-          ></span
-        ><span class="font-card__sub"
-          >{value.display.name === "system-ui"
-            ? "System Sans"
-            : value.display.name}</span
-        ><span
-          class="font-card__preview-sample"
-          style:font-family={value.display.stack}
-          style:font-weight={value.displayWeight}>12:00 Preview</span
-        ></button
-      >{/each}
+    <div
+      class="font-grid"
+      id="modal-font-grid"
+      role="radiogroup"
+      aria-label="Font pairings"
+    >
+      {#each FONT_PRESETS as value, index (value.id)}<button
+          type="button"
+          class="font-pairing-card"
+          class:is-active={snapshot.settings.fonts === value.id}
+          data-font-id={value.id}
+          role="radio"
+          aria-checked={snapshot.settings.fonts === value.id}
+          tabindex={snapshot.settings.fonts === value.id ||
+          (snapshot.settings.fonts === "custom" && index === 0)
+            ? 0
+            : -1}
+          disabled={saving}
+          onclick={() => preset(value.id)}
+          onkeydown={(e: KeyboardEvent) => {
+            cardKey(e, index);
+          }}
+          ><span class="font-card__header"
+            ><span class="font-card__name">{value.label}</span><span
+              class="font-card__badge">{value.badge}</span
+            ></span
+          ><span class="font-card__sub"
+            >{value.display.name === "system-ui"
+              ? "System Sans"
+              : value.display.name}</span
+          ><span
+            class="font-card__preview-sample"
+            style:font-family={value.display.stack}
+            style:font-weight={value.displayWeight}>12:00 Preview</span
+          ></button
+        >{/each}
+    </div>
+    {#if error && !opened}
+      <p class="control__hint" role="status">{error}</p>
+    {/if}
   </div>
   <div class="panel__subgroup">
     <div
@@ -414,7 +516,14 @@
       </p>
     </div>
   </div>
-  <div class="control typography-control">
+  <div
+    class="control typography-control"
+    id="font-panel-custom"
+    role="tabpanel"
+    aria-labelledby="font-tab-custom"
+    tabindex="0"
+    hidden={selectedTab !== "custom"}
+  >
     <p
       class="control__hint"
       id="current-font-status"
@@ -431,33 +540,13 @@
               ? "Custom fonts ready."
               : ""}{!opened ? error : ""}
     </p>
-    {#if fontState.state === "error" && !opened}<button
+    {#if snapshot.settings.fonts === "custom" && fontState.state === "error"}<button
         class="btn btn--ghost"
+        id="custom-font-retry"
         type="button"
-        onclick={() => {
-          void services.fonts.retry().catch((reason: unknown) => {
-            error =
-              reason instanceof Error ? reason.message : "Couldn’t load fonts.";
-          });
-        }}>Retry</button
+        disabled={saving || loading || retrying}
+        onclick={retrySavedFonts}>{retrying ? "Retrying…" : "Retry"}</button
       >{/if}
-    <button
-      bind:this={openButton}
-      class="btn btn--ghost"
-      id="custom-font-open"
-      type="button"
-      aria-expanded={opened}
-      aria-controls="custom-font-controls"
-      disabled={saving}
-      hidden={opened}
-      onclick={() => {
-        if (opened) cancel();
-        else void open();
-      }}
-      >{snapshot.settings.fonts === "custom"
-        ? "Edit custom fonts"
-        : "Custom fonts"}</button
-    >
     <div id="custom-font-controls" hidden={!opened}>
       <div class="custom-font__grid">
         <label class="custom-font__field" for="custom-display-font"
@@ -551,14 +640,14 @@
           id="custom-font-preview-button"
           type="button"
           aria-describedby="font-network-help"
-          disabled={saving || loading}
+          disabled={saving || loading || retrying}
           onclick={() => load()}>Preview fonts</button
         ><button
           class="btn"
           id="custom-font-apply"
           type="button"
-          disabled={loading || !preview}
-          aria-disabled={saving || loading || !preview}
+          disabled={loading || retrying || !preview}
+          aria-disabled={saving || loading || retrying || !preview}
           onclick={apply}>Apply fonts</button
         ><button
           class="btn btn--ghost"

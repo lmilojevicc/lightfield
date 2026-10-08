@@ -97,7 +97,7 @@ import { createServer } from 'node:net';
 const args = process.argv.slice(2);
 const browser = args.shift();
 const log = (event, extra = {}) => appendFileSync(process.env.LIGHTFIELD_TEST_RECORD, JSON.stringify({event, browser, pid: process.pid, ...extra}) + '\\n');
-if (browser === 'chromium' && args.includes('--version')) { console.log('Chromium 151.0.0.0'); process.exit(0); }
+if (args.includes('--version')) { console.log(browser === 'chromium' ? 'Chromium 151.0.0.0' : 'Mozilla Firefox 157.0.1'); process.exit(0); }
 const profile = browser === 'chromium' ? args.find(a => a.startsWith('--user-data-dir=')).split('=').slice(1).join('=') : args[args.indexOf('-profile') + 1];
 if (!profile || !(browser === 'chromium' ? args.includes('--headless=new') : args.includes('--headless') && process.env.MOZ_HEADLESS === '1')) process.exit(90);
 log('spawn', {profile});

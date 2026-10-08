@@ -13,7 +13,6 @@ import { resolve } from "node:path";
 import { root } from "./paths";
 import { developmentGeckoId } from "./manifest";
 import {
-  discoverBinary,
   firefoxArguments,
   RebuildQueue,
   waitForBrowser,
@@ -27,9 +26,9 @@ import {
   type FirefoxRemote,
 } from "./web-ext";
 
+import { resolveManagedBinary } from "./managed-browsers";
+
 export async function launchBrowsers(headless: boolean) {
-  const chromiumBinary = await discoverBinary("chromium");
-  const firefoxBinary = await discoverBinary("firefox");
   const owned = await mkdtemp(resolve(tmpdir(), "lightfield-dev-"));
   const live = resolve(owned, "extension");
   let chromium: ChromiumRunner | undefined;
@@ -157,6 +156,15 @@ export async function launchBrowsers(headless: boolean) {
     if (!isStopped()) await readyReload?.();
   }, console.error);
   try {
+    const chromiumBinary = await resolveManagedBinary(
+      "chromium",
+      cancellation.signal,
+    );
+    const firefoxBinary = await resolveManagedBinary(
+      "firefox",
+      cancellation.signal,
+    );
+    cancellation.signal.throwIfAborted();
     for (const path of [
       "src",
       "public",
@@ -469,7 +477,7 @@ if (import.meta.main) {
   const args = Bun.argv.slice(2);
   if (args.includes("--help")) {
     console.log(
-      "Usage: bun run dev:browsers [--headless]\nBuild and watch both MV3 targets in isolated Chromium/CfT and Firefox profiles.\nVisible by default; --headless is for automation. Ctrl+C cleans up owned browsers/data.\nSet LIGHTFIELD_CHROMIUM_BINARY / LIGHTFIELD_FIREFOX_BINARY to override installed executables.\nNo downloads. Current Chromium/CfT and Firefox 140+ required. Manifest changes require restart; successful page builds reload without focus.",
+      "Usage: bun run dev [--headless]\nBuild and watch both MV3 targets in isolated Chromium/CfT and Firefox profiles.\nVisible by default; --headless is for automation. Ctrl+C cleans up owned browsers/data.\nFirst run downloads pinned Chrome for Testing + Firefox into the lightfield OS user cache; later runs reuse it without provisioning network.\nOptional strict LIGHTFIELD_CHROMIUM_BINARY / LIGHTFIELD_FIREFOX_BINARY executable overrides. Linux needs browser OS libraries; extraction tools and a desktop/display are prerequisites. Manifest changes require restart; successful page builds reload without focus.",
     );
   } else if (args.some((arg) => arg !== "--headless")) {
     console.error("Unknown option. Use bun run dev:browsers --help.");

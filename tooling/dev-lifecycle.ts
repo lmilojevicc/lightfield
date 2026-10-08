@@ -6,75 +6,85 @@ import { tmpdir } from "node:os";
 export async function discoverBinary(
   browser: "chromium" | "firefox",
   env = process.env,
+  signal?: AbortSignal,
+  expectedVersion?: string,
 ): Promise<string> {
   const key =
     browser === "chromium" ? "LIGHTFIELD_CHROMIUM_BINARY" : "LIGHTFIELD_FIREFOX_BINARY";
   const override = env[key];
-  const names =
-    browser === "chromium"
-      ? ["chromium", "chromium-browser", "chrome-for-testing"]
-      : ["firefox"];
-  const candidates = override
-    ? [override]
-    : [
-        ...names.flatMap((name) =>
-          (env.PATH ?? "")
-            .split(process.platform === "win32" ? ";" : ":")
-            .map((dir) =>
-              join(dir, process.platform === "win32" ? `${name}.exe` : name),
-            ),
-        ),
-        ...(process.platform === "darwin"
-          ? browser === "chromium"
-            ? [
-                "/Applications/Chromium.app/Contents/MacOS/Chromium",
-                "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-              ]
-            : ["/Applications/Firefox.app/Contents/MacOS/firefox"]
-          : []),
-        ...(process.platform === "win32"
-          ? [
-              join(
-                env.PROGRAMFILES ?? "C:\\Program Files",
-                browser === "chromium"
-                  ? "Chromium/Application/chrome.exe"
-                  : "Mozilla Firefox/firefox.exe",
-              ),
-            ]
-          : []),
-      ];
-  for (const path of candidates) {
+  if (override) {
+    signal?.throwIfAborted();
     try {
-      await access(path, constants.X_OK);
-      if (browser === "chromium") {
-        // Even a mistaken executable override must never reuse a normal profile.
-        const probe = await mkdtemp(join(tmpdir(), "lightfield-browser-probe-"));
+      await access(override, constants.X_OK);
+      // Even a mistaken override must never reuse a normal profile.
+      const probe = await mkdtemp(join(tmpdir(), "lightfield-browser-probe-"));
+      try {
+        const child = Bun.spawn(
+          [
+            override,
+            ...(browser === "chromium"
+              ? ["--headless=new", `--user-data-dir=${probe}`]
+              : ["--headless", "-no-remote", "-profile", probe]),
+            "--version",
+          ],
+          {
+            stdout: "pipe",
+            stderr: "pipe",
+            env: { ...process.env, ...env, MOZ_HEADLESS: "1" },
+            timeout: 15000,
+            killSignal: "SIGKILL",
+          },
+        );
+        const abort = () => {
+          child.kill("SIGKILL");
+        };
+        signal?.addEventListener("abort", abort, { once: true });
+        if (signal?.aborted) abort();
         try {
-          const child = Bun.spawn(
-            [path, "--headless=new", `--user-data-dir=${probe}`, "--version"],
-            {
-              stdout: "pipe",
-              stderr: "ignore",
-              timeout: 5000,
-            },
-          );
-          const version = await new Response(child.stdout).text();
+          const [version, diagnostics] = await Promise.all([
+            new Response(child.stdout).text(),
+            new Response(child.stderr).text(),
+          ]);
+          if ((await child.exited) !== 0)
+            throw new Error(
+              `Version probe failed (exit ${String(child.exitCode)}, signal ${String(child.signalCode)}): ${diagnostics}`,
+            );
+          signal?.throwIfAborted();
           if (
-            (await child.exited) !== 0 ||
-            !/Chromium|Chrome for Testing/i.test(version)
+            browser === "chromium"
+              ? !/Chromium|Chrome for Testing/i.test(version)
+              : !/Firefox (\d+)/.test(version) ||
+                Number(/Firefox (\d+)/.exec(version)?.[1]) < 140
           )
-            continue;
+            throw new Error(`Incompatible version: ${version.trim()}`);
+          if (expectedVersion) {
+            const actual = (
+              browser === "chromium"
+                ? /(?:Chromium|Chrome for Testing)\s+(\d+(?:\.\d+)+)/i
+                : /Firefox\s+(\d+(?:\.\d+)+)/
+            ).exec(version)?.[1];
+            if (actual !== expectedVersion)
+              throw new Error(
+                `Managed ${browser} version mismatch: expected ${expectedVersion}, got ${actual ?? "unparseable version"}`,
+              );
+          }
+          return override;
         } finally {
-          await rm(probe, { recursive: true, force: true });
+          signal?.removeEventListener("abort", abort);
         }
+      } finally {
+        await rm(probe, { recursive: true, force: true });
       }
-      return path;
-    } catch {
-      /* Try the next installed candidate. */
+    } catch (error) {
+      signal?.throwIfAborted();
+      throw new Error(
+        `Missing compatible ${browser}. Invalid ${key}: ${override}. ${browser === "chromium" ? "Use Chromium or Chrome for Testing; regular Google Chrome is not supported." : "Use Firefox 140+."} Check OS libraries/sandbox prerequisites. ${String(error)}`,
+        { cause: error },
+      );
     }
   }
   throw new Error(
-    `Missing compatible ${browser}. Set ${key} to an executable${browser === "chromium" ? " for Chromium or Chrome for Testing (regular Google Chrome is not supported)" : " for Firefox"}. No browser is downloaded.`,
+    `Missing compatible ${browser}. ${key} must be a nonempty executable path; no installed-browser fallback.`,
   );
 }
 

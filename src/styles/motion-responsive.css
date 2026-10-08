@@ -98,20 +98,6 @@
       max(12px, var(--sheet-safe-area-left));
     gap: 16px;
   }
-  #settings-sheet[data-presentation="modal"] .presentation-row .segmented {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  #settings-sheet[data-presentation="modal"] .presentation-row .segmented-item {
-    flex: 0 0 auto;
-  }
-  #settings-sheet[data-presentation="modal"] .presentation-row .segmented-btn {
-    min-width: 0;
-    height: auto;
-    padding-block: 8px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
 }
 @media (max-width: 380px) {
   #settings-sheet[data-presentation="modal"]

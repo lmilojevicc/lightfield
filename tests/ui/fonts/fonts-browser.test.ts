@@ -239,12 +239,17 @@ test.skipIf(!binary)(
           await evaluate<boolean>(`(() => {
             const panel = document.querySelector('#panel-fonts');
             const bar = panel.querySelector('[role="tablist"]');
-            const tabs = [...bar.querySelectorAll('[role="tab"]')].map(e => parseFloat(getComputedStyle(e).width));
+            const buttons = [...bar.querySelectorAll('[role="tab"]')];
+            const tabs = buttons.map(e => parseFloat(getComputedStyle(e).width));
             const style = getComputedStyle(bar);
             const available = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
             return Math.abs(tabs[0] - tabs[1]) < 1
               && Math.abs(tabs[0] + tabs[1] + parseFloat(style.columnGap) - available) < 1
-              && Math.abs(bar.offsetWidth - panel.clientWidth) < 1;
+              && Math.abs(bar.offsetWidth - panel.clientWidth) < 1
+              && bar.offsetHeight === 44
+              && buttons.every(e => e.offsetHeight === 36
+                && parseFloat(getComputedStyle(e).paddingLeft) === 10
+                && parseFloat(getComputedStyle(e).fontSize) === 13);
           })()`),
         ).toBe(true);
         if (focused)
@@ -300,6 +305,12 @@ test.skipIf(!binary)(
           deviceScaleFactor: 1,
           mobile: true,
         });
+        await browser.command("Emulation.setTouchEmulationEnabled", {
+          enabled: true,
+        });
+        expect(
+          await evaluate<boolean>("matchMedia('(pointer: coarse)').matches"),
+        ).toBe(true);
         for (const presentation of ["modal", "drawer"] as const) {
           await reset({ presentation });
           await specimenAfter("#modal-font-grid");
@@ -343,7 +354,8 @@ test.skipIf(!binary)(
               });
               const touchTargetsFit = visible.filter(e => e.matches('button, input')).every(e => {
                 const r = e.getBoundingClientRect();
-                return r.height >= 44 && r.width >= 44;
+                const minimumHeight = e.matches('#panel-fonts > [role="tablist"] > [role="tab"]') ? 36 : 44;
+                return r.height >= minimumHeight && r.width >= 44;
               });
               const nav = document.querySelector('.settings-nav');
               const navWidth = nav.getBoundingClientRect().width;
@@ -389,6 +401,9 @@ test.skipIf(!binary)(
         mobile: false,
       });
 
+      await browser.command("Emulation.setTouchEmulationEnabled", {
+        enabled: false,
+      });
       for (const presentation of ["modal", "drawer"] as const) {
         await reset({ presentation });
         await selected("presets");

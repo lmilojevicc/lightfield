@@ -322,8 +322,13 @@
   display: flex;
   max-width: 100%;
 }
+.presentation-row .segmented-item {
+  flex: 1 1 0;
+}
 .presentation-row .segmented-btn {
   width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .segmented {
   max-width: 100%;

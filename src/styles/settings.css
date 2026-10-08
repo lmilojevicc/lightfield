@@ -205,6 +205,22 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+/* Font modes and settings position share compact, full-width segments. */
+#panel-fonts > [role="tablist"],
+#settings-sheet .presentation-row .segmented {
+  width: 100%;
+  padding: 3px;
+  align-items: stretch;
+}
+#panel-fonts > [role="tablist"] > [role="tab"],
+#settings-sheet .presentation-row .segmented-btn {
+  min-width: 0;
+  min-height: 36px;
+  height: auto;
+  padding: 0 10px;
+  line-height: 16px;
+}
+
 /* ---------------------------------------------------------------- Search Engine Picker Cards */
 .engine-card:has(input:focus-visible) {
   outline: 2px solid var(--ui-focus, var(--color-focus));

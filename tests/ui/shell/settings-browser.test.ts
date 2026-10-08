@@ -330,6 +330,110 @@ test.skipIf(!binary)(
       ).toBe(0);
       await outside();
       expect(await opened()).toBe(false);
+      for (const width of [1280, 320, 360, 390, 430]) {
+        await browser.command("Emulation.setDeviceMetricsOverride", {
+          width,
+          height: width === 1280 ? 900 : 568,
+          deviceScaleFactor: 1,
+          mobile: width !== 1280,
+        });
+        await browser.command("Emulation.setTouchEmulationEnabled", {
+          enabled: width !== 1280,
+        });
+        expect(
+          await evaluate<boolean>("matchMedia('(pointer: coarse)').matches"),
+        ).toBe(width !== 1280);
+        await click("#settings-open");
+        await click('[data-settings-nav="appearance"]');
+        await click('input[name="settingsPresentation"][value="modal"]');
+        async function presentationGeometry(presentation: "modal" | "drawer") {
+          const geometry = await evaluate<{
+            presentation: string;
+            checked: string[];
+            compactEqualHalves: boolean;
+            fullWidth: boolean;
+            noOverflow: boolean;
+            selectedStyle: boolean;
+            otherControlsUnchanged: boolean;
+          }>(`(() => {
+            const row = document.querySelector('.presentation-row');
+            const bar = row.querySelector('.segmented');
+            const labels = [...bar.querySelectorAll('.segmented-item')];
+            const buttons = labels.map(e => e.querySelector('.segmented-btn'));
+            const rects = buttons.map(e => e.getBoundingClientRect());
+            const style = getComputedStyle(bar);
+            const available = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            const inputs = [...bar.querySelectorAll('input')];
+            const selected = inputs.find(e => e.checked).nextElementSibling;
+            const unselected = inputs.find(e => !e.checked).nextElementSibling;
+            const content = document.querySelector('.settings-content');
+            return {
+              presentation: document.querySelector('#settings-sheet').dataset.presentation,
+              checked: inputs.filter(e => e.checked).map(e => e.value),
+              compactEqualHalves: rects.every(r => r.height === 36)
+                && bar.offsetHeight === 44
+                && Math.abs(rects[0].width - rects[1].width) < 1
+                && Math.abs(rects[0].top - rects[1].top) < 1
+                && Math.abs(rects[0].width + rects[1].width + parseFloat(style.columnGap) - available) < 1,
+              fullWidth: Math.abs(bar.offsetWidth - row.clientWidth) < 1,
+              noOverflow: buttons.every(e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1)
+                && rects.every(r => r.left >= content.getBoundingClientRect().left && r.right <= content.getBoundingClientRect().right)
+                && content.scrollWidth <= content.clientWidth + 1
+                && document.documentElement.scrollWidth <= innerWidth,
+              selectedStyle: getComputedStyle(selected).backgroundColor !== getComputedStyle(unselected).backgroundColor,
+              otherControlsUnchanged: innerWidth > 600 || [...document.querySelectorAll('#panel-themes .segmented-btn')]
+                .filter(e => !bar.contains(e)).every(e => e.getBoundingClientRect().height >= 44),
+            };
+          })()`);
+          expect(geometry).toEqual({
+            presentation,
+            checked: [presentation],
+            compactEqualHalves: true,
+            fullWidth: true,
+            noOverflow: true,
+            selectedStyle: true,
+            otherControlsUnchanged: true,
+          });
+        }
+        await presentationGeometry("modal");
+        // Click the visible label, exercising the native radio change handler.
+        const target = await evaluate<{ x: number; y: number }>(`(() => {
+          const button = document.querySelector('input[name="settingsPresentation"][value="drawer"]').nextElementSibling;
+          button.scrollIntoView({block: 'center'});
+          const r = button.getBoundingClientRect();
+          return {x: r.x + r.width / 2, y: r.y + r.height / 2};
+        })()`);
+        await pointer("mousePressed", target.x, target.y);
+        await pointer("mouseReleased", target.x, target.y);
+        await wait(60);
+        await presentationGeometry("drawer");
+        expect(
+          await evaluate<boolean>(
+            'document.activeElement === document.querySelector(\'input[name="settingsPresentation"][value="drawer"]\')',
+          ),
+        ).toBe(true);
+        for (const type of ["keyDown", "keyUp"]) {
+          await browser.command("Input.dispatchKeyEvent", {
+            type,
+            key: "ArrowLeft",
+            code: "ArrowLeft",
+          });
+        }
+        await wait(60);
+        await presentationGeometry("modal");
+        expect(
+          await evaluate<boolean>(`(() => {
+            const input = document.querySelector('input[name="settingsPresentation"][value="modal"]');
+            const style = getComputedStyle(input.nextElementSibling);
+            return document.activeElement === input && input.matches(':focus-visible')
+              && style.outlineStyle === 'solid' && style.outlineWidth === '2px';
+          })()`),
+        ).toBe(true);
+        await click("#settings-close");
+        console.log(
+          `Production position segments ${String(width)}px: 36px segments / 44px bar, horizontal equal full-width halves, no overflow, native label/keyboard switching and focus ring passed`,
+        );
+      }
       console.log(
         "Headless production evidence: modal/drawer exact endpoints, rapid reversal/close/reduced-motion behavior; inside/outside/slider drag dismissal; unique footer controls and retained DOM identity/focus; lightfield first.",
       );

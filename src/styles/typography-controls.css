@@ -1,8 +1,5 @@
 /* ---------------------------------------------------------------- Font Grid & Specimen */
 
-#panel-fonts > [role="tablist"] {
-  width: 100%;
-}
 #panel-fonts > [role="tablist"] > [role="tab"] {
   flex: 1 1 0;
   min-width: 0;
@@ -319,8 +316,7 @@
     gap: 6px;
   }
   #panel-fonts .control__input,
-  #panel-fonts .btn,
-  #panel-fonts .segmented-btn {
+  #panel-fonts .btn {
     min-height: 44px;
   }
   #panel-fonts .custom-font__actions .btn {

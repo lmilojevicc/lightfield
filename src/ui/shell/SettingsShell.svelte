@@ -1,6 +1,5 @@
 <script lang="ts">
   import { listenOutsideDismiss } from "./outside-dismiss";
-  import { createPresentationMotion } from "./presentation-motion";
   import SectionIcon from "./SectionIcon.svelte";
   import { SvelteMap } from "svelte/reactivity";
   import { onMount, tick, type Snippet } from "svelte";
@@ -39,36 +38,7 @@
   let sheet: HTMLDivElement;
   let scroll: HTMLDivElement;
   let panel: HTMLElement;
-  let motion: ReturnType<typeof createPresentationMotion> | undefined;
-  let motionMode: string | undefined;
-  function isOpen() {
-    return open;
-  }
-  $effect.pre(() => {
-    const mode = snapshot.settings.settingsPresentation;
-    const changed = motionMode !== undefined && motionMode !== mode;
-    motionMode = mode;
-    if (!open) {
-      motion?.cancel();
-      return;
-    }
-    if (!changed || !motion) return;
-    const from = motion.capture();
-    const top = scroll.scrollTop;
-    void tick().then(() => {
-      if (
-        !motion ||
-        !isOpen() ||
-        mode !== snapshot.settings.settingsPresentation
-      )
-        return;
-      scroll.scrollTop = top;
-      motion.play(from);
-    });
-  });
   onMount(() => {
-    motion = createPresentationMotion(panel, () => services.reducedMotion());
-    const stopMotion = services.subscribeReducedMotion(() => motion?.cancel());
     const stopOutside = listenOutsideDismiss(
       window,
       () => (open ? panel : null),
@@ -81,9 +51,6 @@
     });
     return () => {
       stopOutside.destroy();
-      stopMotion();
-      motion?.cancel();
-      motion = undefined;
     };
   });
   export function tunerReturnScroll(): number {

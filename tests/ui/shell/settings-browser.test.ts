@@ -296,24 +296,12 @@ test.skipIf(!binary)(
           `document.activeElement===window.__search && window.__search.selectionStart===1 && window.__search.selectionEnd===3`,
         ),
       ).toBe(true);
-      expect(
-        await evaluate<number>(
-          `document.querySelector('.sheet__panel').getAnimations().length`,
-        ),
-      ).toBe(1);
-      const middle = await bounds();
-      expect(middle.width).toBeGreaterThan(440);
-      expect(middle.width).toBeLessThan(740);
-      expect(
-        await evaluate<boolean>(
-          `document.querySelector('.sheet__panel').getAnimations().every(a=>a.effect.getKeyframes().every(f=>f.transform==='none'))`,
-        ),
-      ).toBe(true);
-      await wait(230);
+      // The restored CSS drawer transition takes 400ms.
+      await wait(450);
       expect(await bounds()).toEqual({ x: 840, y: 0, width: 440, height: 900 });
       await click('input[name="settingsPresentation"][value="modal"]');
       await click('input[name="settingsPresentation"][value="drawer"]');
-      await wait(230);
+      await wait(450);
       expect(await bounds()).toEqual({ x: 840, y: 0, width: 440, height: 900 });
       expect(
         await evaluate<number>(
@@ -343,7 +331,7 @@ test.skipIf(!binary)(
       await outside();
       expect(await opened()).toBe(false);
       console.log(
-        "Headless production evidence: modal/drawer exact endpoints, unscaled intermediate bounds, rapid reversal/close/reduced-motion cleanup; inside/outside/slider drag dismissal; unique footer controls and retained DOM identity/focus; lightfield first.",
+        "Headless production evidence: modal/drawer exact endpoints, rapid reversal/close/reduced-motion behavior; inside/outside/slider drag dismissal; unique footer controls and retained DOM identity/focus; lightfield first.",
       );
     } finally {
       cdp?.close();

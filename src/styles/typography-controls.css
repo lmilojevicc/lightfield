@@ -83,6 +83,9 @@
 }
 
 .specimen-card {
+  min-width: 0;
+  container-type: inline-size;
+  overflow-wrap: anywhere;
   padding: 14px 16px;
   /* Declared so the card's own role tokens preview a draft instead of inheriting body's computed font. */
   font-family: var(--font-body);
@@ -96,7 +99,7 @@
 }
 
 .specimen-clock {
-  font-size: 30px;
+  font-size: clamp(20px, 10cqi, 30px);
   font-weight: var(--font-display-weight, 500);
   font-variant-numeric: tabular-nums;
   color: var(--ui-ink, var(--color-ink));
@@ -285,4 +288,44 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Keep live regions mounted for announcements, without reserving idle space. */
+#panel-fonts .control__hint.is-empty {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  #settings-sheet #panel-fonts {
+    gap: 10px;
+  }
+  #panel-fonts .panel__subgroup {
+    padding-top: 10px;
+  }
+  #panel-fonts .custom-font__grid {
+    margin-top: 0;
+    gap: 6px;
+  }
+  #panel-fonts .control__input,
+  #panel-fonts .btn,
+  #panel-fonts .segmented-btn {
+    min-height: 44px;
+  }
+  #panel-fonts .custom-font__actions .btn {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  #panel-fonts .specimen-card {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  #settings-sheet[data-presentation="modal"] .font-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

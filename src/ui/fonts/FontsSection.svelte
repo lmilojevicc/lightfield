@@ -111,6 +111,29 @@
           .join(";")
       : "";
   });
+  const savedFontStatus = $derived(
+    (snapshot.settings.fonts !== "custom"
+      ? ""
+      : fontState.state === "loading"
+        ? "Loading saved custom fonts…"
+        : fontState.state === "error"
+          ? "Saved custom fonts unavailable. Stable fallback remains. Edit custom fonts to preview and retry; saved names are unchanged."
+          : fontState.state === "ready"
+            ? "Custom fonts ready."
+            : "") + (!opened ? error : ""),
+  );
+  const draftFontStatus = $derived(
+    error ||
+      (saving
+        ? slowSave
+          ? "Saving is taking longer than expected. You can close Settings; font changes will be available when saving finishes."
+          : "Saving fonts…"
+        : loading
+          ? "Loading draft fonts. Current fonts remain in use."
+          : preview
+            ? "Draft preview ready. Apply fonts to save this pairing."
+            : ""),
+  );
   onMount(() => {
     const stop = services.fonts.subscribe((value) => {
       fontState = value;
@@ -489,33 +512,6 @@
       <p class="control__hint" role="status">{error}</p>
     {/if}
   </div>
-  <div class="panel__subgroup">
-    <div
-      class="specimen-card"
-      id="specimen-card"
-      role="group"
-      aria-label="Font specimen"
-      style={specimenStyle}
-    >
-      <div class="specimen-clock" id="specimen-clock">12:00:48</div>
-      <div class="specimen-date" id="specimen-date">
-        Monday, October 28 · 18° Partly Cloudy
-      </div>
-      <p class="specimen-text" id="specimen-text">
-        The quick brown fox jumps over the lazy dog. 0123456789. Designed for
-        serenity and spatial minimalism in browser start pages.
-      </p>
-      <p
-        class="specimen-caption"
-        id="specimen-draft-note"
-        role="status"
-        aria-live="polite"
-        hidden={!preview}
-      >
-        Draft preview · not applied
-      </p>
-    </div>
-  </div>
   <div
     class="control typography-control"
     id="font-panel-custom"
@@ -526,19 +522,12 @@
   >
     <p
       class="control__hint"
+      class:is-empty={!savedFontStatus}
       id="current-font-status"
       role="status"
       aria-live="polite"
     >
-      {snapshot.settings.fonts !== "custom"
-        ? `${fontPreset(snapshot.settings.fonts).label} · works offline`
-        : fontState.state === "loading"
-          ? "Loading saved custom fonts…"
-          : fontState.state === "error"
-            ? "Saved custom fonts unavailable. Stable fallback remains. Edit custom fonts to preview and retry; saved names are unchanged."
-            : fontState.state === "ready"
-              ? "Custom fonts ready."
-              : ""}{!opened ? error : ""}
+      {savedFontStatus}
     </p>
     {#if snapshot.settings.fonts === "custom" && fontState.state === "error"}<button
         class="btn btn--ghost"
@@ -568,6 +557,7 @@
         />
         <p
           class="control__hint"
+          class:is-empty={!loading && !preview}
           id="display-font-status"
           role="status"
           aria-live="polite"
@@ -593,6 +583,7 @@
         />
         <p
           class="control__hint"
+          class:is-empty={!loading && !preview}
           id="body-font-status"
           role="status"
           aria-live="polite"
@@ -615,20 +606,12 @@
     <div id="custom-font-draft-actions" hidden={!opened}>
       <p
         class="control__hint"
+        class:is-empty={!draftFontStatus}
         id="custom-font-status"
         role="status"
         aria-live="polite"
       >
-        {error ||
-          (saving
-            ? slowSave
-              ? "Saving is taking longer than expected. You can close Settings; font changes will be available when saving finishes."
-              : "Saving fonts…"
-            : loading
-              ? "Loading draft fonts. Current fonts remain in use."
-              : preview
-                ? "Draft preview ready. Apply fonts to save this pairing."
-                : "Draft · preview before applying. Current fonts unchanged.")}
+        {draftFontStatus}
       </p>
       <p class="control__hint" id="font-network-help">
         Google families send names and weights to Google on preview. Included
@@ -659,6 +642,33 @@
           }}>Cancel</button
         >
       </div>
+    </div>
+  </div>
+  <div class="panel__subgroup">
+    <div
+      class="specimen-card"
+      id="specimen-card"
+      role="group"
+      aria-label="Font specimen"
+      style={specimenStyle}
+    >
+      <div class="specimen-clock" id="specimen-clock">12:00:48</div>
+      <div class="specimen-date" id="specimen-date">
+        Monday, October 28 · 18° Partly Cloudy
+      </div>
+      <p class="specimen-text" id="specimen-text">
+        The quick brown fox jumps over the lazy dog. 0123456789. Designed for
+        serenity and spatial minimalism in browser start pages.
+      </p>
+      <p
+        class="specimen-caption"
+        id="specimen-draft-note"
+        role="status"
+        aria-live="polite"
+        hidden={!preview}
+      >
+        Draft preview · not applied
+      </p>
     </div>
   </div>
 </section>

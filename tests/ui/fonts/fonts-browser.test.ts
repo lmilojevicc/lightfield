@@ -66,7 +66,7 @@ class CDP {
 }
 
 test.skipIf(!binary)(
-  "mounted Fonts: tabs, native focus, presentations and saved-font Retry ownership",
+  "mounted Fonts: layout, mobile geometry, tabs, focus and saved-font Retry ownership",
   async () => {
     if (!binary) throw new Error("Explicit headless binary required");
     const built = await build({
@@ -95,7 +95,7 @@ test.skipIf(!binary)(
       .filter((file) => file.fileName.endsWith(".css"))
       .map((file) => `<link rel="stylesheet" href="/${file.fileName}">`)
       .join("");
-    const html = `<!doctype html><html><head>${css}</head><body><script type="module" src="/fixture.js"></script></body></html>`;
+    const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${css}</head><body><script type="module" src="/fixture.js"></script></body></html>`;
     const profile = await mkdtemp(join(tmpdir(), "lightfield-fonts-headless-"));
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -240,6 +240,33 @@ test.skipIf(!binary)(
             `font-tab-${tab}`,
           );
       }
+      async function specimenAfter(selector: string) {
+        expect(
+          await evaluate<boolean>(`(() => {
+            const controls = document.querySelector(${JSON.stringify(selector)});
+            const specimen = document.querySelector('#specimen-card');
+            return !!(controls.compareDocumentPosition(specimen) & Node.DOCUMENT_POSITION_FOLLOWING)
+              && specimen.getBoundingClientRect().top >= controls.getBoundingClientRect().bottom;
+          })()`),
+        ).toBe(true);
+      }
+      async function noIdleFiller() {
+        expect(
+          await evaluate<boolean>(`(() => {
+            const panel = document.querySelector('#panel-fonts');
+            const idle = ['current-font-status', 'custom-font-status', 'display-font-status', 'body-font-status'];
+            return !panel.textContent.includes('· works offline')
+              && !panel.textContent.includes('Draft · preview before applying. Current fonts unchanged.')
+              && idle.every(id => {
+                const status = document.getElementById(id);
+                return status.textContent.trim() === ''
+                  && status.getBoundingClientRect().height === 0
+                  && status.getAttribute('role') === 'status'
+                  && status.getAttribute('aria-live') === 'polite';
+              });
+          })()`),
+        ).toBe(true);
+      }
       await browser.command("Page.enable");
       await browser.command("Emulation.setDeviceMetricsOverride", {
         width: 1280,
@@ -254,9 +281,117 @@ test.skipIf(!binary)(
         "!!window.fontsFixture && !!document.querySelector('#font-tab-presets')",
       );
 
+      for (const width of [320, 360, 390, 430]) {
+        await browser.command("Emulation.setDeviceMetricsOverride", {
+          width,
+          height: 568,
+          deviceScaleFactor: 1,
+          mobile: true,
+        });
+        for (const presentation of ["modal", "drawer"] as const) {
+          await reset({ presentation });
+          await specimenAfter("#modal-font-grid");
+          await noIdleFiller();
+          for (const tab of ["presets", "custom"] as const) {
+            if (tab === "custom") await click("#font-tab-custom");
+            await selected(tab);
+            await noIdleFiller();
+            await specimenAfter(
+              tab === "presets"
+                ? "#modal-font-grid"
+                : "#custom-font-draft-actions",
+            );
+            if (tab === "custom") await specimenAfter("#custom-font-controls");
+            const geometry = await evaluate<{
+              overflow: string[];
+              navWidth: number;
+              padding: number;
+              fieldsInView: boolean;
+              touchTargetsFit: boolean;
+              clockSize: number;
+              scrollable: boolean;
+              specimenReachable: boolean;
+            }>(`(() => {
+              const content = document.querySelector('.settings-content');
+              content.scrollTop = 0;
+              const viewport = content.getBoundingClientRect();
+              const panel = document.querySelector('#panel-fonts');
+              const visible = [...panel.querySelectorAll('button, input, .specimen-card, .specimen-clock, .specimen-date, .specimen-text')]
+                .filter(e => e.checkVisibility());
+              const overflow = visible.filter(e => {
+                const r = e.getBoundingClientRect();
+                return r.left < viewport.left - 1 || r.right > viewport.right + 1
+                  || e.scrollWidth > e.clientWidth + 1;
+              }).map(e => e.id || e.className);
+              if (content.scrollWidth > content.clientWidth + 1) overflow.push('settings-content');
+              if (document.documentElement.scrollWidth > innerWidth) overflow.push('document');
+              const fieldsInView = ['custom-display-font', 'custom-body-font'].every(id => {
+                const r = document.getElementById(id).getBoundingClientRect();
+                return r.top >= viewport.top && r.bottom <= viewport.bottom && r.height >= 44;
+              });
+              const touchTargetsFit = visible.filter(e => e.matches('button, input')).every(e => {
+                const r = e.getBoundingClientRect();
+                return r.height >= 44 && r.width >= 44;
+              });
+              const nav = document.querySelector('.settings-nav');
+              const navWidth = nav.getBoundingClientRect().width;
+              const padding = parseFloat(getComputedStyle(content).paddingLeft);
+              const clockSize = parseFloat(getComputedStyle(document.querySelector('#specimen-clock')).fontSize);
+              content.scrollTop = content.scrollHeight;
+              const specimen = document.querySelector('#specimen-card').getBoundingClientRect();
+              return {
+                overflow, navWidth, padding, fieldsInView, touchTargetsFit, clockSize,
+                scrollable: getComputedStyle(content).overflowY === 'auto'
+                  && (content.scrollHeight <= content.clientHeight || content.scrollTop > 0),
+                specimenReachable: specimen.bottom <= viewport.bottom + 1 && specimen.top >= viewport.top - 1,
+              };
+            })()`);
+            expect(geometry.overflow).toEqual([]);
+            expect(geometry.navWidth).toBeLessThanOrEqual(52);
+            expect(geometry.padding).toBeLessThanOrEqual(12);
+            expect(geometry.clockSize).toBeLessThanOrEqual(30);
+            if (width === 320) expect(geometry.clockSize).toBeLessThan(30);
+            expect(geometry.touchTargetsFit).toBe(true);
+            expect(geometry.scrollable).toBe(true);
+            expect(geometry.specimenReachable).toBe(true);
+            if (tab === "custom") {
+              expect(geometry.fieldsInView).toBe(true);
+              // A real pointer click remains usable after scrolling to the specimen.
+              await click("#custom-font-preview-button");
+              await until(
+                "!document.querySelector('#specimen-draft-note').hidden",
+              );
+              expect((await stats()).previews).toBe(1);
+              await specimenAfter("#custom-font-draft-actions");
+            }
+            console.log(
+              `Mounted ${presentation} ${String(width)}px ${tab}: ordering, idle regions, overflow, controls and scroll reachability passed`,
+            );
+          }
+        }
+      }
+      await browser.command("Emulation.setDeviceMetricsOverride", {
+        width: 1280,
+        height: 900,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+
       for (const presentation of ["modal", "drawer"] as const) {
         await reset({ presentation });
         await selected("presets");
+        await specimenAfter("#modal-font-grid");
+        await noIdleFiller();
+        expect(
+          await evaluate<number>(
+            "parseFloat(getComputedStyle(document.querySelector('#specimen-clock')).fontSize)",
+          ),
+        ).toBe(30);
+        expect(
+          await evaluate<number>(
+            "document.querySelector('.settings-nav').getBoundingClientRect().width",
+          ),
+        ).toBe(presentation === "modal" ? 195 : 0);
         expect(
           await evaluate<string>(
             "document.querySelector('#settings-sheet').dataset.presentation",
@@ -269,6 +404,9 @@ test.skipIf(!binary)(
         ).toBe(true);
         await click("#font-tab-custom");
         await selected("custom", true);
+        await specimenAfter("#custom-font-controls");
+        await specimenAfter("#custom-font-draft-actions");
+        await noIdleFiller();
         expect((await stats()).previews).toBe(0);
         expect((await stats()).retries).toBe(0);
         expect((await stats()).consent).toBe(0);

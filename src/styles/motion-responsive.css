@@ -76,8 +76,27 @@
     justify-content: center;
     padding: 10px;
   }
-  .settings-content {
-    padding: 16px;
+  #settings-sheet[data-presentation="modal"] .sheet__panel {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    height: min(640px, calc(100dvh - 24px));
+    max-height: calc(100dvh - 24px);
+  }
+  #settings-sheet[data-presentation="modal"] .sheet__head {
+    padding: 12px 16px;
+  }
+  #settings-sheet[data-presentation="modal"] .settings-content {
+    padding: 12px;
+  }
+  #settings-sheet[data-presentation="drawer"] .sheet__head {
+    padding: max(12px, var(--sheet-safe-area-top))
+      max(16px, var(--sheet-safe-area-right)) 12px 16px;
+  }
+  #settings-sheet[data-presentation="drawer"] .settings-content {
+    padding: 12px max(12px, var(--sheet-safe-area-right))
+      max(12px, var(--sheet-safe-area-bottom))
+      max(12px, var(--sheet-safe-area-left));
+    gap: 16px;
   }
   #settings-sheet[data-presentation="modal"] .presentation-row .segmented {
     flex-direction: column;

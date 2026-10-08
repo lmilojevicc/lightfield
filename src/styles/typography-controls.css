@@ -1,5 +1,13 @@
 /* ---------------------------------------------------------------- Font Grid & Specimen */
 
+#panel-fonts > [role="tablist"] {
+  width: 100%;
+}
+#panel-fonts > [role="tablist"] > [role="tab"] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .font-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

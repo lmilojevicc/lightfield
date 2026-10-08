@@ -235,6 +235,18 @@ test.skipIf(!binary)(
             `document.querySelector('#font-panel-${tab === "custom" ? "presets" : "custom"}').checkVisibility()`,
           ),
         ).toBe(false);
+        expect(
+          await evaluate<boolean>(`(() => {
+            const panel = document.querySelector('#panel-fonts');
+            const bar = panel.querySelector('[role="tablist"]');
+            const tabs = [...bar.querySelectorAll('[role="tab"]')].map(e => parseFloat(getComputedStyle(e).width));
+            const style = getComputedStyle(bar);
+            const available = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            return Math.abs(tabs[0] - tabs[1]) < 1
+              && Math.abs(tabs[0] + tabs[1] + parseFloat(style.columnGap) - available) < 1
+              && Math.abs(bar.offsetWidth - panel.clientWidth) < 1;
+          })()`),
+        ).toBe(true);
         if (focused)
           expect(await evaluate<string>("document.activeElement.id")).toBe(
             `font-tab-${tab}`,

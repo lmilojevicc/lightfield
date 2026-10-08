@@ -1,6 +1,16 @@
-import { expect, test } from "bun:test";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { expect, spyOn, test } from "bun:test";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  rmdir,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import { resolve } from "node:path";
+import { watch } from "node:fs";
 import { launchBrowsers } from "./dev-browsers";
 import { root } from "./paths";
 import { developmentGeckoId } from "./manifest";
@@ -12,8 +22,16 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
     const source = resolve(root, "src/styles/index.css");
     const original = await readFile(source, "utf8");
     const unrelated = Bun.spawn(
-      [process.execPath, "-e", "await Bun.sleep(120000)"],
+      [process.execPath, "-e", "await Bun.sleep(240000)"],
       { stdout: "ignore", stderr: "ignore" },
+    );
+    let reloads = 0;
+    const log = console.log.bind(console);
+    const logging = spyOn(console, "log").mockImplementation(
+      (...args: unknown[]) => {
+        if (String(args[0]).startsWith("lightfield: rebuilt both targets")) reloads++;
+        log(...args);
+      },
     );
     const session = await launchBrowsers(true);
     if (!session.chromium) throw new Error("Startup stopped unexpectedly");
@@ -102,7 +120,48 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
       await firefoxEval(
         "browser.storage.local.set({lightfieldDevSmoke: 'preserved'}); true",
       );
-      await Bun.sleep(300);
+      async function idle(label: string) {
+        const start = new Date().toISOString();
+        const before = reloads;
+        await Bun.sleep(32000);
+        expect(reloads).toBe(before);
+        console.log(
+          `IDLE ${label}: ${start} to ${new Date().toISOString()}; extra rebuild/reloads=${String(reloads - before)}`,
+        );
+      }
+      await idle("ready");
+      const generated: {
+        parent: string;
+        directory: string;
+        parentExisted: boolean;
+      }[] = [];
+      try {
+        for (const parent of [
+          resolve(root, "dist"),
+          resolve(root, "node_modules/.vite"),
+        ]) {
+          const parentExisted = await access(parent).then(
+            () => true,
+            () => false,
+          );
+          await mkdir(parent, { recursive: true });
+          const directory = await mkdtemp(resolve(parent, "lightfield-dev-smoke-"));
+          generated.push({ parent, directory, parentExisted });
+          await writeFile(resolve(directory, "generated.css"), "/* noise */");
+          console.log(
+            `EXCLUDED ROOT NOISE: ${new Date().toISOString()}; path=${directory}`,
+          );
+        }
+        await utimes(source, new Date(), new Date());
+        await writeFile(source, original);
+        await idle("generated/metadata/identical-content noise");
+      } finally {
+        for (const { parent, directory, parentExisted } of generated) {
+          await rm(directory, { recursive: true, force: true });
+          if (!parentExisted) await rmdir(parent);
+        }
+      }
+      expect(reloads).toBe(0);
       await writeFile(
         source,
         original + "\n:root { --lightfield-dev-smoke: reloaded; }\n",
@@ -116,6 +175,9 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
             "getComputedStyle(document.documentElement).getPropertyValue('--lightfield-dev-smoke').trim()",
           )) === "reloaded",
       );
+      await waitFor(() => Promise.resolve(reloads === 1));
+      await idle("one real edit");
+      expect(reloads).toBe(1);
       expect(chromium.chromiumInstance.process.pid).toBe(chromiumPid);
       expect(firefox.pid).toBe(firefoxPid);
       expect(
@@ -130,6 +192,44 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
       expect(await firefoxEval("globalThis.lightfieldDevSmokeResult")).toBe(
         "preserved",
       );
+      const beforeActiveEdit = reloads;
+      let activeEdit: Promise<void> | undefined;
+      const building = watch(
+        session.owned,
+        { recursive: true },
+        (_event, filename) => {
+          if (String(filename) !== "stage/chromium/newtab.html" || activeEdit)
+            return;
+          console.log(
+            `ACTIVE BUILD EDIT: ${new Date().toISOString()}; trigger=${String(filename)}`,
+          );
+          activeEdit = writeFile(
+            source,
+            original + "\n:root { --lightfield-dev-smoke: latest; }\n",
+          );
+        },
+      );
+      try {
+        await writeFile(
+          source,
+          original + "\n:root { --lightfield-dev-smoke: intermediate; }\n",
+        );
+        await waitFor(
+          async () =>
+            (await chromiumEval(
+              "getComputedStyle(document.documentElement).getPropertyValue('--lightfield-dev-smoke').trim()",
+            )) === "latest" &&
+            (await firefoxEval(
+              "getComputedStyle(document.documentElement).getPropertyValue('--lightfield-dev-smoke').trim()",
+            )) === "latest",
+        );
+        await activeEdit;
+      } finally {
+        building.close();
+      }
+      await waitFor(() => Promise.resolve(reloads === beforeActiveEdit + 2));
+      await idle("edit during active build");
+      expect(reloads).toBe(beforeActiveEdit + 2);
       const workingHtml = await readFile(
         resolve(session.owned, "extension/chromium/newtab.html"),
         "utf8",
@@ -150,7 +250,7 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
         await chromiumEval(
           "getComputedStyle(document.documentElement).getPropertyValue('--lightfield-dev-smoke').trim()",
         ),
-      ).toBe("reloaded");
+      ).toBe("latest");
       await writeFile(source, original);
       await waitFor(
         async () =>
@@ -167,6 +267,7 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
     } finally {
       await writeFile(source, original);
       await session.stop();
+      logging.mockRestore();
       expect(unrelated.exitCode).toBeNull();
       unrelated.kill();
       await unrelated.exited;
@@ -175,7 +276,7 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
     expect(() => process.kill(firefoxPid, 0)).toThrow();
     expect(() => process.kill(chromiumPid, 0)).toThrow();
   },
-  90000,
+  240000,
 );
 
 test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(

@@ -89,6 +89,82 @@ test("protocol deadlines settle stalled replies", async () => {
   expect(Date.now() - start).toBeLessThan(500);
 });
 
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  test(`cancellation during suspended initial snapshot creates no watchers (${signal})`, async () => {
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        "-e",
+        `
+import { mock } from 'bun:test';
+import fs from 'node:fs';
+import { access } from 'node:fs/promises';
+let watchers = 0;
+mock.module('node:fs', () => ({ ...fs, watch: (...args) => { watchers++; return fs.watch(...args); } }));
+mock.module('./tooling/managed-browsers.ts', () => ({ resolveManagedBinary: async () => '/unused-owned-browser' }));
+const { DevelopmentInputs } = await import('./tooling/dev-inputs.ts');
+let release;
+DevelopmentInputs.prototype.changed = () => new Promise(resolve => {
+  release = () => resolve(true);
+  console.log('SNAPSHOT_SUSPENDED');
+});
+process.once('${signal}', () => { setTimeout(() => release(), 0); });
+const { launchBrowsers } = await import('./tooling/dev-browsers.ts');
+const start = Date.now();
+const session = await launchBrowsers(true);
+await session.stop();
+const removed = await access(session.owned).then(() => false, () => true);
+console.log('SNAPSHOT_CANCELLED:' + JSON.stringify({ watchers, removed, owned: session.owned, elapsed: Date.now() - start }));
+`,
+      ],
+      { cwd: root, stdout: "pipe", stderr: "pipe" },
+    );
+    let output = "";
+    const collecting = (async () => {
+      for await (const chunk of child.stdout)
+        output += new TextDecoder().decode(chunk);
+    })();
+    const errors = new Response(child.stderr).text();
+    try {
+      await until(() => Promise.resolve(output.includes("SNAPSHOT_SUSPENDED")));
+      const started = Date.now();
+      child.kill(signal);
+      expect(
+        await waitForBrowser(
+          child.exited,
+          "Suspended snapshot cleanup",
+          undefined,
+          3000,
+        ),
+      ).toBe(0);
+      await collecting;
+      const line = output
+        .split("\n")
+        .find((line) => line.startsWith("SNAPSHOT_CANCELLED:"));
+      if (!line) throw new Error(`${output}\n${await errors}`);
+      const result = JSON.parse(line.slice("SNAPSHOT_CANCELLED:".length)) as {
+        watchers: number;
+        removed: boolean;
+        owned: string;
+        elapsed: number;
+      };
+      expect(result.watchers).toBe(0);
+      expect(result.removed).toBe(true);
+      expect(Date.now() - started).toBeLessThan(3000);
+      expect(access(result.owned)).rejects.toThrow();
+      console.log(
+        `${signal} suspended snapshot: watchers=${String(result.watchers)}; owned removed=${String(result.removed)}; shutdown=${String(Date.now() - started)}ms.`,
+      );
+    } finally {
+      if (child.exitCode === null && child.signalCode === null)
+        child.kill("SIGKILL");
+      await child.exited;
+      await collecting;
+      await errors;
+    }
+  }, 10000);
+}
+
 // Protocol-only executable doubles exercise the actual pinned adapters and owner,
 // with real owned processes/pipes/sockets. They are never application consumers.
 const browserFixture = `
@@ -212,6 +288,7 @@ for (const mode of [
           );
       const config = resolve(root, "vite.config.ts");
       const previousTimes = await stat(config);
+      const originalConfig = await readFile(config, "utf8");
       try {
         if (mode.startsWith("startup-"))
           await until(async () =>
@@ -228,7 +305,10 @@ for (const mode of [
         if (mode.startsWith("reload-") || mode === "ready-close") {
           await until(() => Promise.resolve(output.includes("lightfield ready")));
           if (mode.startsWith("reload-")) {
-            await utimes(config, new Date(), new Date());
+            await writeFile(
+              config,
+              originalConfig + "\n// cancellation fixture source edit\n",
+            );
             await until(async () =>
               (await events()).some((event) => event.event === "Page.reload"),
             );
@@ -293,6 +373,7 @@ for (const mode of [
         );
         await collecting;
         await errors;
+        if (mode.startsWith("reload-")) await writeFile(config, originalConfig);
         await utimes(config, previousTimes.atime, previousTimes.mtime);
         await rm(directory, { recursive: true, force: true });
       }

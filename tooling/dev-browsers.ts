@@ -27,6 +27,7 @@ import {
 } from "./web-ext";
 
 import { resolveManagedBinary } from "./managed-browsers";
+import { DevelopmentInputs, developmentInputs } from "./dev-inputs";
 
 export async function launchBrowsers(headless: boolean) {
   const owned = await mkdtemp(resolve(tmpdir(), "lightfield-dev-"));
@@ -151,9 +152,10 @@ export async function launchBrowsers(headless: boolean) {
     await rm(resolve(owned, "previous"), { recursive: true, force: true });
   };
   let readyReload: (() => Promise<void>) | undefined;
+  const inputs = new DevelopmentInputs(root);
   const queue = new RebuildQueue(async () => {
     await startupDone;
-    if (!isStopped()) await readyReload?.();
+    if (!isStopped() && (await inputs.changed())) await readyReload?.();
   }, console.error);
   try {
     const chromiumBinary = await resolveManagedBinary(
@@ -165,19 +167,9 @@ export async function launchBrowsers(headless: boolean) {
       cancellation.signal,
     );
     cancellation.signal.throwIfAborted();
-    for (const path of [
-      "src",
-      "public",
-      "tooling",
-      "vite.config.ts",
-      "svelte.config.js",
-      "package.json",
-      "bun.lock",
-      "newtab.html",
-      "THIRD_PARTY_NOTICES.md",
-      "tsconfig.app.json",
-      "tsconfig.base.json",
-    ]) {
+    await inputs.changed();
+    cancellation.signal.throwIfAborted();
+    for (const path of developmentInputs) {
       watchers.push(
         watch(resolve(root, path), { recursive: true }, () => {
           queue.request();

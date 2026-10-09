@@ -455,6 +455,7 @@ test.skipIf(!binary)(
             - header.getBoundingClientRect().bottom >= 10);
         })()`),
         ).toBe(true);
+        await click("#theme-tab-custom");
         await click("#custom-create");
         expect(
           await evaluate<

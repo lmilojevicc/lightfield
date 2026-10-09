@@ -561,9 +561,6 @@
   flex-direction: column;
   min-width: 0;
 }
-.pick-card__select {
-  min-width: 0;
-}
 .pick-card__swatches {
   display: flex;
   gap: 4px;
@@ -731,10 +728,6 @@ select:disabled,
   min-height: 40px;
 }
 
-.picker--themes .pick-card:has(input:disabled) .pick-card__edit {
-  opacity: 1;
-}
-
 /* custom font picker */
 .custom-font__grid {
   display: grid;
@@ -784,17 +777,6 @@ select:disabled,
   );
 }
 
-/* Custom cards keep Edit outside the native radio label. */
-.picker--themes [data-custom-theme] {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-[data-custom-theme] .pick-card__edit {
-  align-self: flex-end;
-  min-height: 28px;
-}
 #custom-theme-status:has(#custom-theme-status-text:empty):has(
     #custom-theme-undo[hidden]
   ) {
@@ -840,4 +822,131 @@ select:disabled,
 #custom-font-draft-actions[hidden],
 #custom-font-open[hidden] {
   display: none;
+}
+
+/* Theme management shares the original compact card, never a footer row. */
+.theme-library-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.theme-library-tabs button {
+  font: inherit;
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ui-muted, var(--color-muted));
+  cursor: pointer;
+}
+.theme-library-tabs button[aria-selected="true"] {
+  color: var(--ui-ink, var(--color-ink));
+  border-bottom-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+}
+.picker--themes .theme-library-card {
+  display: block;
+  padding: 0;
+  position: relative;
+  min-width: 0;
+}
+.picker--themes .theme-library-card[hidden] {
+  display: none;
+}
+.theme-library-card.is-selected {
+  border-color: var(--ui-accent-boundary, var(--color-accent-boundary));
+  background: var(--surface-selected);
+  box-shadow: 0 0 0 1px var(--ui-accent-boundary, var(--color-accent-boundary));
+}
+.theme-card-select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+.theme-library-card .pick-card__swatches {
+  padding-right: 88px;
+  height: 14px;
+}
+.theme-library-card .pick-card__swatches i {
+  flex-shrink: 0;
+}
+.theme-library-card .pick-card__info {
+  flex-wrap: nowrap;
+  height: 14.4px;
+}
+.theme-library-card .pick-card__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 14.4px;
+}
+.theme-library-card .theme-card__tone-badge {
+  flex-shrink: 0;
+}
+.theme-card-actions {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  display: flex;
+  gap: 3px;
+}
+.theme-library-card .theme-card-actions .btn {
+  min-height: 24px;
+  height: 24px;
+  padding: 2px 5px;
+  font-size: 10px;
+  line-height: 14px;
+}
+.theme-card-actions .theme-more {
+  width: 24px;
+}
+.theme-card-menu {
+  position: absolute;
+  right: 6px;
+  top: 31px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: 4px;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  background: var(--surface-solid);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+}
+.theme-card-menu button {
+  font: inherit;
+  padding: 8px;
+  border: 0;
+  color: var(--ui-ink, var(--color-ink));
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.theme-card-menu button:hover {
+  background: var(--surface-hover);
+}
+.theme-exit-guard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+.theme-exit-guard span {
+  flex: 1 1 100%;
+}
+@media (max-width: 420px) {
+  .picker--themes.theme-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.theme-library-card:has(.theme-card-menu) {
+  z-index: 11;
 }

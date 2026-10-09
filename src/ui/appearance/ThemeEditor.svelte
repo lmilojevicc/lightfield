@@ -12,8 +12,6 @@
     onchange,
     onsave,
     oncancel,
-    onduplicate,
-    ondelete,
   }: {
     draft: CustomTheme;
     editing: boolean;
@@ -21,8 +19,6 @@
     onchange: (draft: CustomTheme) => void;
     onsave: () => void;
     oncancel: () => void;
-    onduplicate: () => void;
-    ondelete: () => void;
   } = $props();
   let lastValid = $state<CustomTheme | undefined>();
   const valid = $derived(themeDraft(draft));
@@ -47,7 +43,7 @@
         class="control__input"
         id="custom-name"
         type="text"
-        maxlength="32"
+        maxlength="40"
         autocomplete="off"
         spellcheck="false"
         placeholder="Theme name"
@@ -113,7 +109,7 @@
   </div>
   <p class="control__hint" id="custom-draft-note">
     {valid
-      ? "Draft preview. Changes apply only when saved."
+      ? "Local sample."
       : "Preview shows the last valid colors. Correct the highlighted hex field."}
   </p>
   {#if valid}{#each analyzeCustomThemeContrast(valid) as warning (warning.label)}<p
@@ -121,16 +117,13 @@
       >
         {warning.label}: {warning.ratio.toFixed(2)}:1
       </p>{/each}{/if}
-  <p class="control__hint" id="custom-duplicate-note" hidden={!editing}>
-    Duplicate creates a copy with a new name and ID.
-  </p>
   <div class="custom-theme-buttons">
     <button
       class="btn"
       id="custom-save"
       type="button"
       disabled={busy || !valid || !draft.name.trim()}
-      onclick={onsave}>{editing ? "Save changes" : "Save & apply"}</button
+      onclick={onsave}>{editing ? "Save changes" : "Save theme"}</button
     >
     <button
       class="btn btn--ghost"
@@ -138,22 +131,6 @@
       type="button"
       disabled={busy}
       onclick={oncancel}>Cancel</button
-    >
-    <button
-      class="btn btn--ghost"
-      id="custom-duplicate"
-      type="button"
-      hidden={!editing}
-      disabled={busy || !valid}
-      onclick={onduplicate}>Duplicate</button
-    >
-    <button
-      class="btn btn--ghost"
-      id="custom-delete"
-      type="button"
-      hidden={!editing}
-      disabled={busy}
-      onclick={ondelete}>Delete</button
     >
   </div>
 </div>

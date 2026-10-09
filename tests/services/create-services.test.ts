@@ -516,7 +516,7 @@ for (const reason of ["hidden", "pagehide", "superseded", "dispose"] as const)
     expect(services.settings.current().durable.localImage.assetId).toBeNull();
     services.dispose();
   });
-test("validated transient theme preview never writes settings/themes; cancel applies latest committed selection", async () => {
+test("theme application uses committed selection, not a staged selection", async () => {
   const h = fixture(),
     services = createServices({ dependencies: h.deps });
   await services.ready;
@@ -550,22 +550,10 @@ test("validated transient theme preview never writes settings/themes; cancel app
     value: () => ({ getPropertyValue: (key: string) => values.get(key) ?? "" }),
   });
   try {
-    const draft = {
-      id: "custom:draft",
-      name: "Draft",
-      paper: "#eeeeee",
-      ink: "#111111",
-      accent: "#0055aa",
-    };
-    services.applyTheme(root, draft);
-    expect(root.dataset.theme).toBe(draft.id);
-    expect(values.get("--color-paper")).toBe(draft.paper);
+    services.applyTheme(root);
+    expect(root.dataset.theme).toBe("midnight");
     expect(h.values.size).toBe(0);
     expect(services.themes.current()).toEqual([]);
-    expect(() =>
-      services.applyTheme(root, { ...draft, paper: "invalid" }),
-    ).toThrow("Invalid");
-    expect(root.dataset.theme).toBe(draft.id);
     const pending = services.settings.stage({ theme: "ivory" });
     services.applyTheme(root);
     expect(root.dataset.theme).toBe("midnight");

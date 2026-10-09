@@ -3,12 +3,10 @@
   import { createServices } from "../services/create-services";
   import type { AppServices } from "../services/contracts";
   import type { LocalImageAssetId } from "../shared/local-image";
-  import type { CustomTheme } from "../shared/theme";
   import { BackgroundController } from "../effects/runtime/controller";
   import { readThemeColors } from "../platform/theme";
   import { createBootReveal } from "../app/boot-reveal";
   import { createNetworkConsent } from "../app/network-consent";
-  import { createPreviewSurfaces } from "../app/preview-surfaces";
   import Island from "./shell/Island.svelte";
   import SettingsShell from "./shell/SettingsShell.svelte";
   import SearchSection from "./shell/SearchSection.svelte";
@@ -57,7 +55,11 @@
   let island: {
     restoreSettingsFocus(): void;
   };
-  let appearance: { cancelEditor(): boolean; isCloseBlocked(): boolean };
+  let appearance: {
+    cancelEditor(): boolean;
+    isCloseBlocked(): boolean;
+    requestExit(next: () => void): boolean;
+  };
   let fonts: { cancelEditor(): boolean; isCloseBlocked(): boolean };
   let shell: {
     tunerReturnScroll(): number;
@@ -75,8 +77,6 @@
   let tunerActions = $state<HTMLElement | null>(null);
   let saved: HTMLParagraphElement;
   let failure = $state("");
-  let preview: CustomTheme | undefined;
-  let surfaces: ReturnType<typeof createPreviewSurfaces> | undefined;
   const busy = $derived(
     editorOpen ||
       editorBusy ||
@@ -100,7 +100,7 @@
     if (!alive) return;
     try {
       const root = document.documentElement;
-      const palette = services.applyTheme(root, preview);
+      const palette = services.applyTheme(root);
       applyUiMaterial(root, snapshot.settings, palette);
       services.applyFonts(root);
       root.dataset.dateExpanded = String(snapshot.settings.dateExpanded);
@@ -118,12 +118,6 @@
       report(error);
     }
   }
-  function onThemePreview(draft: CustomTheme | undefined) {
-    if (draft) surfaces?.capture();
-    else surfaces?.clear();
-    preview = draft;
-    synchronize();
-  }
   function showSettings() {
     navigationRevision++;
     sessionOpen = true;
@@ -134,7 +128,13 @@
     if (tunerOpen || (sessionOpen && !settingsOpen)) returnSettings();
     else showSettings();
   }
-  function canClose(reason: "escape" | "close", owner = category) {
+  function canClose(
+    reason: "escape" | "close",
+    owner = category,
+    resume = () => {
+      changeOpen(false);
+    },
+  ) {
     if (
       appearance.isCloseBlocked() ||
       fonts.isCloseBlocked() ||
@@ -142,10 +142,17 @@
     )
       return false;
     if (reason === "escape") {
-      if (owner === "appearance" && appearance.cancelEditor()) return false;
       if (owner === "fonts" && fonts.cancelEditor()) return false;
+      if (appearance.cancelEditor()) return false;
     } else {
-      appearance.cancelEditor();
+      const revision = navigationRevision;
+      if (
+        !appearance.requestExit(() => {
+          if (alive && settingsOpen && revision === navigationRevision)
+            resume();
+        })
+      )
+        return false;
       fonts.cancelEditor();
     }
     return true;
@@ -154,7 +161,6 @@
     navigationRevision++;
     settingsOpen = open;
     sessionOpen = open;
-    if (!open) onThemePreview(undefined);
   }
   function openTuner() {
     if (!tuningScope(snapshot.settings)) return;
@@ -198,11 +204,8 @@
   });
   onMount(() => {
     const host = document.getElementById("background-host");
-    const panel = document.querySelector<HTMLElement>(".sheet__panel");
     const tuner = document.getElementById("effect-tuner");
-    if (!host || !panel || !tuner)
-      throw new Error("Missing lightfield composition host");
-    surfaces = createPreviewSurfaces(document.documentElement, [panel, tuner]);
+    if (!host || !tuner) throw new Error("Missing lightfield composition host");
     controller = new BackgroundController(host, {
       activity: services.activity,
       images: services.images,
@@ -255,7 +258,6 @@
     return () => {
       alive = false;
       boot.dispose();
-      surfaces?.clear();
       for (const stop of stops) stop();
       controller?.destroy();
       services.dispose();
@@ -282,6 +284,14 @@
   open={settingsOpen}
   {category}
   {canClose}
+  canNavigate={(next: SettingsCategory, resume: () => void) => {
+    if (next === category) return true;
+    if (fonts.isCloseBlocked() || imageState.state === "saving") return false;
+    const revision = navigationRevision;
+    return appearance.requestExit(() => {
+      if (alive && settingsOpen && revision === navigationRevision) resume();
+    });
+  }}
   onOpenChange={changeOpen}
   onCategoryChange={(next: SettingsCategory) => {
     if (category !== next) navigationRevision++;
@@ -301,7 +311,6 @@
       active={settingsOpen &&
         (category === "appearance" ||
           snapshot.settings.settingsPresentation === "drawer")}
-      {onThemePreview}
       readThemeColors={() => readThemeColors(document.documentElement)}
       onEditorStateChange={(open: boolean, busy: boolean) => {
         themeEditor = { open, busy };

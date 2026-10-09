@@ -122,7 +122,7 @@ export interface AppServices {
     refresh(): Promise<void>;
   };
   /** Supply the styled root after mounting; built-in CSS remains UI-owned. */
-  applyTheme(root: HTMLElement, draft?: CustomTheme): ThemePalette;
+  applyTheme(root: HTMLElement): ThemePalette;
   notifyConsentChanged(): void;
   applyFonts(root: HTMLElement): void;
   observeClockFont(element: HTMLElement): { refresh(): void; dispose(): void };

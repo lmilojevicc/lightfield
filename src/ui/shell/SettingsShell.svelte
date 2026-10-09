@@ -19,6 +19,7 @@
     content,
     scene,
     canClose = () => true,
+    canNavigate = () => true,
     onRestoreFocus,
   }: {
     services: AppServices;
@@ -32,7 +33,9 @@
     canClose?: (
       reason: "escape" | "close",
       owner?: SettingsCategory,
+      resume?: () => void,
     ) => boolean;
+    canNavigate?: (next: SettingsCategory, resume: () => void) => boolean;
     onRestoreFocus?: () => void;
   } = $props();
   let sheet: HTMLDivElement;
@@ -179,12 +182,25 @@
     reason: "escape" | "close" = "close",
     owner?: SettingsCategory,
   ) {
-    if (canClose(reason, owner)) onOpenChange(false);
+    if (
+      canClose(reason, owner, () => {
+        if (open) onOpenChange(false);
+      })
+    )
+      onOpenChange(false);
   }
   function select(next: SettingsCategory) {
-    onCategoryChange(next);
-    if (snapshot.settings.settingsPresentation === "modal")
-      scroll.scrollTo({ top: 0 });
+    const navigate = () => {
+      if (!open) return;
+      onCategoryChange(next);
+      if (snapshot.settings.settingsPresentation === "modal")
+        scroll.scrollTo({ top: 0 });
+      sheet
+        .querySelector<HTMLButtonElement>(`[data-settings-nav="${next}"]`)
+        ?.focus();
+    };
+    if (!canNavigate(next, navigate)) return;
+    navigate();
   }
   function navKey(event: KeyboardEvent, id: SettingsCategory) {
     if (snapshot.settings.settingsPresentation !== "modal") return;
@@ -192,9 +208,6 @@
     if (!next) return;
     event.preventDefault();
     select(next);
-    sheet
-      .querySelector<HTMLButtonElement>(`[data-settings-nav="${next}"]`)
-      ?.focus();
   }
   function keydown(event: KeyboardEvent) {
     if (!open || event.defaultPrevented) return;

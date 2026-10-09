@@ -9,10 +9,6 @@ import {
   themeMatchesSearch,
 } from "../../../src/ui/appearance/theme-cards";
 import { BUILTIN_THEME_IDS } from "../../../src/shared/theme";
-import {
-  createCustomThemePreviewState,
-  customThemePreviewTransition,
-} from "../../../src/domain/themes/custom-theme-workflow";
 const selected = {
   id: "custom:one",
   name: "One",
@@ -22,25 +18,11 @@ const selected = {
 };
 
 describe("appearance draft interaction", () => {
-  test("invalid hex retains last applied draft; cancel resolves newest external selection", () => {
+  test("local specimen draft validates hex without mutating saved colors", () => {
     const draft = themeDraft({ ...selected, name: "", accent: "#ff8800" });
     expect(draft?.name).toBe("Preview");
-    if (!draft) throw new Error("Invalid fixture");
-    let state = customThemePreviewTransition(
-      createCustomThemePreviewState(selected),
-      { type: "preview", theme: draft },
-    );
-    expect(themeDraft({ ...draft, paper: "#bad" })).toBeNull();
-    state = customThemePreviewTransition(state, { type: "invalid-draft" });
-    expect(state.applied).toBe(draft);
-    const external = { ...selected, id: "custom:external", name: "External" };
-    state = customThemePreviewTransition(state, {
-      type: "select",
-      theme: external,
-    });
-    state = customThemePreviewTransition(state, { type: "cancel" });
-    expect(state.applied).toBe(external);
-    expect(state.draft).toBeNull();
+    expect(themeDraft({ ...selected, paper: "#bad" })).toBeNull();
+    expect(selected.accent).toBe("#38bdf8");
   });
   test("derived specimen and swatches use real theme values without mutating draft", () => {
     const original = { ...selected };

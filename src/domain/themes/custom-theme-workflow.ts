@@ -1,43 +1,5 @@
 import type { CustomTheme } from "../settings/schema";
 
-export interface CustomThemePreviewState {
-  selected: CustomTheme | null;
-  draft: CustomTheme | null;
-  applied: CustomTheme | null;
-}
-
-export type CustomThemePreviewEvent =
-  | { type: "select"; theme: CustomTheme | null }
-  | { type: "preview"; theme: CustomTheme }
-  | { type: "invalid-draft" }
-  | { type: "cancel" }
-  | { type: "save"; theme: CustomTheme };
-
-export function createCustomThemePreviewState(
-  selected: CustomTheme | null,
-): CustomThemePreviewState {
-  return { selected, draft: null, applied: selected };
-}
-
-/** Pure draft lifecycle used by the live editor and fast behavioral checks. */
-export function customThemePreviewTransition(
-  state: CustomThemePreviewState,
-  event: CustomThemePreviewEvent,
-): CustomThemePreviewState {
-  switch (event.type) {
-    case "select":
-      return { selected: event.theme, draft: null, applied: event.theme };
-    case "preview":
-      return { ...state, draft: event.theme, applied: event.theme };
-    case "invalid-draft":
-      return { ...state, draft: null };
-    case "cancel":
-      return { ...state, draft: null, applied: state.selected };
-    case "save":
-      return { selected: event.theme, draft: null, applied: event.theme };
-  }
-}
-
 export function saveCustomThemeDraft(
   themes: readonly CustomTheme[],
   editingId: string | null,

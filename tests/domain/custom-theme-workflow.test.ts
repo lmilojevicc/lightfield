@@ -11,8 +11,6 @@ import {
   evaluateCustomThemeContrast,
 } from "../../src/domain/themes/custom-themes";
 import {
-  createCustomThemePreviewState,
-  customThemePreviewTransition,
   deleteCustomTheme,
   restoreDeletedCustomTheme,
 } from "../../src/domain/themes/custom-theme-workflow";
@@ -83,16 +81,7 @@ test("semantic roles preserve source contrast constraints, low contrast remains 
     ),
   ).toBe(true);
 });
-test("preview cancel and delete/undo collision remap", () => {
-  const state = createCustomThemePreviewState(theme);
-  const draft = { ...theme, accent: "#ff0000" };
-  const preview = customThemePreviewTransition(state, {
-    type: "preview",
-    theme: draft,
-  });
-  expect(
-    customThemePreviewTransition(preview, { type: "cancel" }).applied,
-  ).toEqual(theme);
+test("delete/undo collision remap", () => {
   const deleted = deleteCustomTheme([theme], theme.id, theme.id, "midnight");
   if (!deleted.undo) throw new Error("Missing undo");
   expect(

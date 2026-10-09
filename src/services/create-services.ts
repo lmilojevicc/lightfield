@@ -3,8 +3,6 @@ import { createSettingsLock } from "../platform/storage/settings-lock";
 import { observeClockFont } from "../platform/clock-digits";
 import { applyTheme } from "../platform/theme";
 import type { PermissionSession } from "../platform/permissions";
-import type { CustomTheme } from "../shared/theme";
-import { normalizeCustomTheme } from "../domain/themes/custom-themes";
 import type { PageVisibility } from "../platform/page-visibility";
 import type { Settings } from "../domain/settings/schema";
 import type { StorageAdapter } from "../platform/storage/browser-storage";
@@ -355,12 +353,7 @@ export function createServices(
       },
       refresh: () => weather.refresh(),
     },
-    applyTheme(root: HTMLElement, draft?: CustomTheme) {
-      if (draft !== undefined) {
-        const valid = normalizeCustomTheme(draft);
-        if (!valid) throw new Error("Invalid custom theme draft.");
-        return applyTheme(root, valid.id, [valid]);
-      }
+    applyTheme(root: HTMLElement) {
       return applyTheme(
         root,
         settings.current().durable.theme,

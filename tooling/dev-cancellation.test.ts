@@ -176,7 +176,7 @@ const log = (event, extra = {}) => appendFileSync(process.env.LIGHTFIELD_TEST_RE
 if (args.includes('--version')) { console.log(browser === 'chromium' ? 'Chromium 151.0.0.0' : 'Mozilla Firefox 157.0.1'); process.exit(0); }
 const profile = browser === 'chromium' ? args.find(a => a.startsWith('--user-data-dir=')).split('=').slice(1).join('=') : args[args.indexOf('-profile') + 1];
 if (!profile || !(browser === 'chromium' ? args.includes('--headless=new') : args.includes('--headless') && process.env.MOZ_HEADLESS === '1')) process.exit(90);
-log('spawn', {profile});
+log('spawn', {profile, ...(browser === 'firefox' ? {port:Number(args[args.indexOf('-start-debugger-server') + 1])} : {})});
 if (browser === 'firefox' && process.env.LIGHTFIELD_TEST_MODE === 'early-exit') process.exit(23);
 let url = 'about:blank';
 if (browser === 'chromium') {
@@ -194,6 +194,7 @@ if (browser === 'chromium') {
       if (message.method === 'Target.getTargets') result = {targetInfos:[{targetId:'page',type:'page',url}]};
       if (message.method === 'Target.attachToTarget') result = {sessionId:'session'};
       if (message.method === 'Page.navigate') url = message.params.url;
+      if (message.method === 'Runtime.evaluate') result = {result:{value: message.params.expression === 'location.href' ? url : message.params.expression.includes('JSON.stringify') ? JSON.stringify({status:'done'}) : true}};
       outgoing.write(JSON.stringify({id:message.id,result}) + '\\0');
     }
   });
@@ -216,6 +217,12 @@ if (browser === 'chromium') {
         if (message.type === 'listAddons') result.addons=[{id:'lightfield-development@example.invalid',actor:'addon',manifestURL:'moz-extension://lightfieldtest/manifest.json'}];
         if (message.type === 'listTabs') result.tabs=[{actor:'tab',url,traits:{supportsNavigation:true}}];
         if (message.type === 'navigateTo') url=message.url;
+        if (message.type === 'getTarget') result.frame={webExtensionInspectedWindowActor:'inspected-window'};
+        if (message.type === 'eval') {
+          log('fixture-eval');
+          if (process.env.LIGHTFIELD_TEST_MODE === 'fixture-stall') continue;
+          result.evalResult={value:message.expression.startsWith('JSON.stringify') ? JSON.stringify({status:'pending'}) : true};
+        }
         send(result);
       }
     });
@@ -232,6 +239,8 @@ for (const mode of [
   "handshake-timeout",
   "early-exit",
   "ready-close",
+  "fixture-stall",
+  "fixture-timeout",
 ] as const) {
   test.skipIf(process.platform === "win32")(
     `owned cleanup for ${mode}`,
@@ -252,7 +261,14 @@ for (const mode of [
         await chmod(executable, 0o700);
       }
       const child = Bun.spawn(
-        [process.execPath, "tooling/dev-browsers.ts", "--headless"],
+        // Existing non-app cases bypass fixtures. Fixture-phase cases implement
+        // only seed completion replies, with a deferred/pending Firefox eval.
+        [
+          process.execPath,
+          "tooling/dev-browsers.ts",
+          "--headless",
+          ...(mode.startsWith("fixture-") ? [] : ["--no-fixtures"]),
+        ],
         {
           cwd: root,
           env: {
@@ -284,6 +300,7 @@ for (const mode of [
                 browser: string;
                 pid: number;
                 profile?: string;
+                port?: number;
               },
           );
       const config = resolve(root, "vite.config.ts");
@@ -314,6 +331,10 @@ for (const mode of [
             );
           }
         }
+        if (mode.startsWith("fixture-"))
+          await until(async () =>
+            (await events()).some((event) => event.event === "fixture-eval"),
+          );
         if (mode === "early-exit")
           await until(async () =>
             (await events()).some(
@@ -349,7 +370,8 @@ for (const mode of [
         expect(exit).toBe(
           mode === "early-exit" ||
             mode === "startup-timeout" ||
-            mode === "handshake-timeout"
+            mode === "handshake-timeout" ||
+            mode === "fixture-timeout"
             ? 1
             : 0,
         );
@@ -357,6 +379,42 @@ for (const mode of [
           expect(await errors).toContain(
             "Firefox exited before readiness (exit code 23",
           );
+        if (mode.startsWith("fixture-")) {
+          await collecting;
+          expect(output).not.toContain("lightfield ready");
+          const recorded = await events();
+          expect(
+            recorded
+              .filter((event) => event.event === "spawn")
+              .map((event) => event.browser)
+              .sort(),
+          ).toEqual(["chromium", "firefox"]);
+          const port = recorded.find(
+            (event) => event.browser === "firefox" && event.event === "spawn",
+          )?.port;
+          if (!port) throw new Error("Missing owned Firefox transport port");
+          // Probe TCP directly: the pinned RDP client does not reject connect
+          // on a refused socket until its handshake deadline.
+          const result = await waitForBrowser(
+            Bun.connect({
+              hostname: "127.0.0.1",
+              port,
+              socket: { data() {} },
+            }).then((socket) => {
+              socket.end();
+              return "unexpected connection";
+            }),
+            "Closed fixture transport",
+            undefined,
+            1000,
+          ).catch((error: unknown) => error);
+          expect(result).toBeInstanceOf(Error);
+          expect(result).toMatchObject({ code: "ECONNREFUSED" });
+          if (mode === "fixture-timeout")
+            expect(await errors).toContain(
+              "Development theme fixtures timed out awaiting extension storage",
+            );
+        }
         for (const event of await events()) {
           if (event.event !== "spawn" || !event.profile) continue;
           expect(() => process.kill(event.pid, 0)).toThrow();

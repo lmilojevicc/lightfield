@@ -13,6 +13,9 @@ import { resolve } from "node:path";
 import { watch } from "node:fs";
 import { launchBrowsers } from "./dev-browsers";
 import { root } from "./paths";
+import { CUSTOM_THEMES_KEY } from "../src/domain/themes/custom-themes";
+import { DEFAULT_SETTINGS } from "../src/domain/settings/schema";
+import { devThemeFixtures } from "./dev-theme-fixtures";
 import { developmentGeckoId } from "./manifest";
 
 // Opt-in real browsers only, always literal headless flags; no normal profiles.
@@ -91,6 +94,25 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
         throw new Error(JSON.stringify(response.evalResult.exceptionInfo));
       return response.evalResult.value;
     }
+    async function firefoxAsync(expression: string) {
+      await firefoxEval(
+        `globalThis.__fixtureSmoke = undefined; (${expression}).then(value => globalThis.__fixtureSmoke = JSON.stringify(value)); true`,
+      );
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const value = await firefoxEval("globalThis.__fixtureSmoke");
+        if (typeof value === "string")
+          return JSON.parse(value) as Record<string, unknown>;
+        await Bun.sleep(100);
+      }
+      throw new Error("Firefox asynchronous storage read timed out");
+    }
+    async function stored() {
+      const expression = `storage.local.get(null)`;
+      return [
+        await chromiumEval(`chrome.${expression}`),
+        await firefoxAsync(`browser.${expression}`),
+      ] as Record<string, unknown>[];
+    }
     async function waitFor(check: () => Promise<boolean>) {
       for (let attempt = 0; attempt < 150; attempt++) {
         try {
@@ -114,6 +136,27 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
       expect(String(await firefoxEval("document.body.innerText"))).toContain(
         "Effect settings",
       );
+      for (const values of await stored()) {
+        expect(values[CUSTOM_THEMES_KEY]).toEqual(devThemeFixtures);
+        // No persisted selection is required: the app's domain default remains active.
+        expect(
+          await chromiumEval("document.documentElement.dataset.theme"),
+        ).toBe(DEFAULT_SETTINGS.theme);
+        expect(
+          await firefoxEval("document.documentElement.dataset.theme"),
+        ).toBe(DEFAULT_SETTINGS.theme);
+        expect(
+          (values["lightfield:settings"] as { theme?: string } | undefined)?.theme ??
+            DEFAULT_SETTINGS.theme,
+        ).toBe(DEFAULT_SETTINGS.theme);
+      }
+      const edited = [{ ...devThemeFixtures[0], name: "Dev Ocean edited" }];
+      await chromiumEval(
+        `chrome.storage.local.set(${JSON.stringify({ [CUSTOM_THEMES_KEY]: edited })})`,
+      );
+      await firefoxAsync(
+        `browser.storage.local.set(${JSON.stringify({ [CUSTOM_THEMES_KEY]: [] })}).then(() => true)`,
+      );
       await chromiumEval(
         "chrome.storage.local.set({lightfieldDevSmoke: 'preserved'})",
       );
@@ -136,10 +179,7 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
         parentExisted: boolean;
       }[] = [];
       try {
-        for (const parent of [
-          resolve(root, "dist"),
-          resolve(root, "node_modules/.vite"),
-        ]) {
+        for (const parent of [resolve(root, "dist")]) {
           const parentExisted = await access(parent).then(
             () => true,
             () => false,
@@ -192,6 +232,9 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
       expect(await firefoxEval("globalThis.lightfieldDevSmokeResult")).toBe(
         "preserved",
       );
+      const preserved = await stored();
+      expect(preserved[0]?.[CUSTOM_THEMES_KEY]).toEqual(edited);
+      expect(preserved[1]?.[CUSTOM_THEMES_KEY]).toEqual([]);
       const beforeActiveEdit = reloads;
       let activeEdit: Promise<void> | undefined;
       const building = watch(
@@ -332,4 +375,78 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
     }
   },
   90000,
+);
+
+test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
+  "owned headless --no-fixtures startup leaves both collections absent",
+  async () => {
+    const session = await launchBrowsers(true, { fixtures: false });
+    if (!session.chromium) throw new Error("Startup stopped unexpectedly");
+    const { chromium, remote, chromiumUrl, firefoxUrl } = session;
+    try {
+      const targets = await chromium.cdp.sendCommand("Target.getTargets", {});
+      const page = targets.targetInfos?.find(
+        (page) => page.url === chromiumUrl,
+      );
+      if (!page) throw new Error("Owned Chromium page missing");
+      const attached = await chromium.cdp.sendCommand("Target.attachToTarget", {
+        targetId: page.targetId,
+        flatten: true,
+      });
+      try {
+        const value = await chromium.cdp.sendCommand(
+          "Runtime.evaluate",
+          {
+            expression: `chrome.storage.local.get(${JSON.stringify(CUSTOM_THEMES_KEY)}).then(v => Object.hasOwn(v, ${JSON.stringify(CUSTOM_THEMES_KEY)}))`,
+            awaitPromise: true,
+            returnByValue: true,
+          },
+          attached.sessionId,
+        );
+        expect(value.result?.value).toBe(false);
+      } finally {
+        await chromium.cdp.sendCommand("Target.detachFromTarget", {
+          sessionId: attached.sessionId,
+        });
+      }
+      const tabs = (await remote.client.request("listTabs")) as {
+        tabs: { actor: string; url: string }[];
+      };
+      const tab = tabs.tabs.find((tab) => tab.url === firefoxUrl);
+      if (!tab) throw new Error("Owned Firefox page missing");
+      const target = (await remote.client.request({
+        to: tab.actor,
+        type: "getTarget",
+      })) as { frame: { webExtensionInspectedWindowActor: string } };
+      const evaluate = async (expression: string) => {
+        const response = (await remote.client.request({
+          to: target.frame.webExtensionInspectedWindowActor,
+          type: "eval",
+          expression,
+          options: {},
+          webExtensionCallerInfo: {
+            addonId: developmentGeckoId,
+            url: firefoxUrl,
+            lineNumber: 1,
+          },
+        })) as { evalResult: { value?: unknown; exceptionInfo?: unknown } };
+        if (response.evalResult.exceptionInfo)
+          throw new Error(JSON.stringify(response.evalResult.exceptionInfo));
+        return response.evalResult.value;
+      };
+      await evaluate(
+        `browser.storage.local.get(${JSON.stringify(CUSTOM_THEMES_KEY)}).then(v => globalThis.__fixtureAbsent = !Object.hasOwn(v, ${JSON.stringify(CUSTOM_THEMES_KEY)})); true`,
+      );
+      let result: unknown;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        result = await evaluate("globalThis.__fixtureAbsent");
+        if (result !== undefined) break;
+        await Bun.sleep(100);
+      }
+      expect(result).toBe(true);
+    } finally {
+      await session.stop();
+    }
+  },
+  60000,
 );

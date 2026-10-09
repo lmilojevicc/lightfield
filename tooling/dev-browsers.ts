@@ -29,7 +29,12 @@ import {
 import { resolveManagedBinary } from "./managed-browsers";
 import { DevelopmentInputs, developmentInputs } from "./dev-inputs";
 
-export async function launchBrowsers(headless: boolean) {
+import { seedDevThemes } from "./dev-theme-fixtures";
+
+export async function launchBrowsers(
+  headless: boolean,
+  options: { fixtures?: boolean } = {},
+) {
   const owned = await mkdtemp(resolve(tmpdir(), "lightfield-dev-"));
   const live = resolve(owned, "extension");
   let chromium: ChromiumRunner | undefined;
@@ -237,6 +242,32 @@ export async function launchBrowsers(headless: boolean) {
     });
     await send("Page.navigate", { url: chromiumUrl }, attached.sessionId);
 
+    if (options.fixtures !== false) {
+      // Navigation is asynchronous in CDP; never evaluate in about:blank.
+      let navigated = false;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const result = await send(
+          "Runtime.evaluate",
+          { expression: "location.href", returnByValue: true },
+          attached.sessionId,
+        );
+        if (result.result?.value === chromiumUrl) {
+          navigated = true;
+          break;
+        }
+        await Bun.sleep(100);
+      }
+      if (!navigated)
+        throw new Error("Chromium fixture page navigation timed out");
+      await seedDevThemes(async (expression) => {
+        const result = await send(
+          "Runtime.evaluate",
+          { expression, returnByValue: true },
+          attached.sessionId,
+        );
+        return result.result?.value;
+      }, cancellation.signal);
+    }
     await send("Target.detachFromTarget", {
       sessionId: attached.sessionId,
     });
@@ -401,6 +432,29 @@ export async function launchBrowsers(headless: boolean) {
           "Firefox could not open the installed lightfield new-tab page.",
         );
     }
+    if (options.fixtures !== false) {
+      const target = (await request({ to: tab.actor, type: "getTarget" })) as {
+        frame: { webExtensionInspectedWindowActor: string };
+      };
+      await seedDevThemes(async (expression) => {
+        const response = (await request({
+          to: target.frame.webExtensionInspectedWindowActor,
+          type: "eval",
+          webExtensionCallerInfo: {
+            addonId: developmentGeckoId,
+            url: firefoxUrl,
+            lineNumber: 1,
+          },
+          expression,
+          options: {},
+        })) as { evalResult: { value?: unknown; exceptionInfo?: unknown } };
+        if (response.evalResult.exceptionInfo)
+          throw new Error(
+            `Firefox fixture evaluation failed: ${JSON.stringify(response.evalResult.exceptionInfo)}`,
+          );
+        return response.evalResult.value;
+      }, cancellation.signal);
+    }
     const extensionId = loaded.id;
     const reload = async () => {
       await compile();
@@ -469,14 +523,18 @@ if (import.meta.main) {
   const args = Bun.argv.slice(2);
   if (args.includes("--help")) {
     console.log(
-      "Usage: bun run dev [--headless]\nBuild and watch both MV3 targets in isolated Chromium/CfT and Firefox profiles.\nVisible by default; --headless is for automation. Ctrl+C cleans up owned browsers/data.\nFirst run downloads pinned Chrome for Testing + Firefox into the lightfield OS user cache; later runs reuse it without provisioning network.\nOptional strict LIGHTFIELD_CHROMIUM_BINARY / LIGHTFIELD_FIREFOX_BINARY executable overrides. Linux needs browser OS libraries; extraction tools and a desktop/display are prerequisites. Manifest changes require restart; successful page builds reload without focus.",
+      "Usage: bun run dev [--headless] [--no-fixtures]\nDevelopment custom themes are seeded once in disposable owned profiles; --no-fixtures leaves the collection empty. Selection is unchanged.\nBuild and watch both MV3 targets in isolated Chromium/CfT and Firefox profiles.\nVisible by default; --headless is for automation. Ctrl+C cleans up owned browsers/data.\nFirst run downloads pinned Chrome for Testing + Firefox into the lightfield OS user cache; later runs reuse it without provisioning network.\nOptional strict LIGHTFIELD_CHROMIUM_BINARY / LIGHTFIELD_FIREFOX_BINARY executable overrides. Linux needs browser OS libraries; extraction tools and a desktop/display are prerequisites. Manifest changes require restart; successful page builds reload without focus.",
     );
-  } else if (args.some((arg) => arg !== "--headless")) {
+  } else if (
+    args.some((arg) => arg !== "--headless" && arg !== "--no-fixtures")
+  ) {
     console.error("Unknown option. Use bun run dev:browsers --help.");
     process.exitCode = 1;
   } else {
     try {
-      await launchBrowsers(args.includes("--headless"));
+      await launchBrowsers(args.includes("--headless"), {
+        fixtures: !args.includes("--no-fixtures"),
+      });
     } catch (error) {
       console.error(error);
       process.exitCode = 1;

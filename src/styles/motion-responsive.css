@@ -79,7 +79,7 @@
   #settings-sheet[data-presentation="modal"] .sheet__panel {
     width: calc(100vw - 16px);
     max-width: calc(100vw - 16px);
-    height: min(640px, calc(100dvh - 24px));
+    height: min(600px, calc(100dvh - 24px));
     max-height: calc(100dvh - 24px);
   }
   #settings-sheet[data-presentation="modal"] .sheet__head {

@@ -639,7 +639,7 @@
 .custom-color-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--settings-field-gap);
   min-width: 0;
 }
 .custom-color-label {

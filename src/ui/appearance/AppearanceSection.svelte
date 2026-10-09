@@ -64,8 +64,8 @@
       label: "Settings Presentation",
       id: "settings-presentation-label",
       values: [
-        ["modal", "Floating Modal"],
-        ["drawer", "Sidebar Drawer"],
+        ["modal", "Modal"],
+        ["drawer", "Drawer"],
       ],
     },
     {
@@ -397,7 +397,7 @@
       />
     </div>
   </div>
-  <div class="control">
+  <div class="control control--stacked">
     <div class="control__row">
       <span class="control__label">Colorway Themes</span>
     </div>

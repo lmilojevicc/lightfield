@@ -282,10 +282,10 @@ test.skipIf(!binary)(
       await click('[data-settings-nav="appearance"]');
       await wait(350);
       expect(await bounds()).toEqual({
-        x: 270,
-        y: 180,
-        width: 740,
-        height: 540,
+        x: 240,
+        y: 150,
+        width: 800,
+        height: 600,
       });
       await evaluate(
         `window.__search=document.querySelector('#theme-search');window.__search.focus();window.__search.value='lightfield';window.__search.setSelectionRange(1,3)`,
@@ -330,19 +330,25 @@ test.skipIf(!binary)(
       ).toBe(0);
       await outside();
       expect(await opened()).toBe(false);
-      for (const width of [1280, 320, 360, 390, 430]) {
+      const layouts = [1440, 620, 320, 360, 390, 430].flatMap((width) =>
+        ["inherit", "ui-monospace, monospace"].map((font) => ({ width, font })),
+      );
+      for (const { width, font } of layouts) {
+        await evaluate(
+          `document.querySelector('.sheet__panel').style.setProperty('--font-body', ${JSON.stringify(font)})`,
+        );
         await browser.command("Emulation.setDeviceMetricsOverride", {
           width,
-          height: width === 1280 ? 900 : 568,
+          height: width === 1440 ? 900 : 568,
           deviceScaleFactor: 1,
-          mobile: width !== 1280,
+          mobile: width < 600,
         });
         await browser.command("Emulation.setTouchEmulationEnabled", {
-          enabled: width !== 1280,
+          enabled: width < 600,
         });
         expect(
           await evaluate<boolean>("matchMedia('(pointer: coarse)').matches"),
-        ).toBe(width !== 1280);
+        ).toBe(width < 600);
         await click("#settings-open");
         await click('[data-settings-nav="appearance"]');
         await click('input[name="settingsPresentation"][value="modal"]');
@@ -350,8 +356,9 @@ test.skipIf(!binary)(
           const geometry = await evaluate<{
             presentation: string;
             checked: string[];
-            compactEqualHalves: boolean;
-            fullWidth: boolean;
+            sameInlinePattern: boolean;
+            wrapsOnlyWhenNeeded: boolean;
+            headingGap: number;
             noOverflow: boolean;
             selectedStyle: boolean;
             otherControlsUnchanged: boolean;
@@ -362,7 +369,15 @@ test.skipIf(!binary)(
             const buttons = labels.map(e => e.querySelector('.segmented-btn'));
             const rects = buttons.map(e => e.getBoundingClientRect());
             const style = getComputedStyle(bar);
-            const available = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            const label = row.querySelector('.control__label');
+            const labelRect = label.getBoundingClientRect();
+            const barRect = bar.getBoundingClientRect();
+            const islandBar = document.querySelector('input[name="islandMode"]').closest('.segmented');
+            const islandButton = islandBar.querySelector('.segmented-btn');
+            const required = labelRect.width + barRect.width + parseFloat(getComputedStyle(row).columnGap);
+            const inline = Math.abs(labelRect.top + labelRect.height / 2 - barRect.top - barRect.height / 2) < 1;
+            const heading = document.querySelector('.control--stacked .control__row');
+            const filter = document.querySelector('.control--stacked .filter-row');
             const inputs = [...bar.querySelectorAll('input')];
             const selected = inputs.find(e => e.checked).nextElementSibling;
             const unselected = inputs.find(e => !e.checked).nextElementSibling;
@@ -370,26 +385,27 @@ test.skipIf(!binary)(
             return {
               presentation: document.querySelector('#settings-sheet').dataset.presentation,
               checked: inputs.filter(e => e.checked).map(e => e.value),
-              compactEqualHalves: rects.every(r => r.height === 36)
-                && bar.offsetHeight === 44
-                && Math.abs(rects[0].width - rects[1].width) < 1
+              sameInlinePattern: rects.every(r => r.height === islandButton.getBoundingClientRect().height)
+                && bar.offsetHeight === islandBar.offsetHeight
                 && Math.abs(rects[0].top - rects[1].top) < 1
-                && Math.abs(rects[0].width + rects[1].width + parseFloat(style.columnGap) - available) < 1,
-              fullWidth: Math.abs(bar.offsetWidth - row.clientWidth) < 1,
+                && style.padding === getComputedStyle(islandBar).padding,
+              wrapsOnlyWhenNeeded: required <= row.clientWidth + 0.1 ? inline : barRect.top - labelRect.bottom >= 12,
+              headingGap: filter.getBoundingClientRect().top - heading.getBoundingClientRect().bottom,
               noOverflow: buttons.every(e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1)
                 && rects.every(r => r.left >= content.getBoundingClientRect().left && r.right <= content.getBoundingClientRect().right)
                 && content.scrollWidth <= content.clientWidth + 1
                 && document.documentElement.scrollWidth <= innerWidth,
               selectedStyle: getComputedStyle(selected).backgroundColor !== getComputedStyle(unselected).backgroundColor,
-              otherControlsUnchanged: innerWidth > 600 || [...document.querySelectorAll('#panel-themes .segmented-btn')]
+              otherControlsUnchanged: !matchMedia("(pointer: coarse)").matches || [...document.querySelectorAll('#panel-themes .segmented-btn')]
                 .filter(e => !bar.contains(e)).every(e => e.getBoundingClientRect().height >= 44),
             };
           })()`);
           expect(geometry).toEqual({
             presentation,
             checked: [presentation],
-            compactEqualHalves: true,
-            fullWidth: true,
+            sameInlinePattern: true,
+            wrapsOnlyWhenNeeded: true,
+            headingGap: 8,
             noOverflow: true,
             selectedStyle: true,
             otherControlsUnchanged: true,
@@ -429,9 +445,29 @@ test.skipIf(!binary)(
               && style.outlineStyle === 'solid' && style.outlineWidth === '2px';
           })()`),
         ).toBe(true);
+        await click('input[name="settingsPresentation"][value="drawer"]');
+        // The drawer mounts every category together: audit heading rhythm without
+        // assigning margins to inline labels or changing existing font-tab sizing.
+        expect(
+          await evaluate<boolean>(`(() => {
+          const headers = [...document.querySelectorAll('.modal__panel > .panel__header')];
+          return headers.every(header => header.nextElementSibling.getBoundingClientRect().top
+            - header.getBoundingClientRect().bottom >= 10);
+        })()`),
+        ).toBe(true);
+        await click("#custom-create");
+        expect(
+          await evaluate<
+            number[]
+          >(`[...document.querySelectorAll('.custom-color-field')].map(field =>
+          field.querySelector('.custom-color-picker-wrap').getBoundingClientRect().top
+            - field.querySelector('.custom-color-label').getBoundingClientRect().bottom)`),
+        ).toEqual([8, 8, 8]);
+        await click("#custom-cancel");
+
         await click("#settings-close");
         console.log(
-          `Production position segments ${String(width)}px: 36px segments / 44px bar, horizontal equal full-width halves, no overflow, native label/keyboard switching and focus ring passed`,
+          `Production position segments ${String(width)}px (${font}): Island-mode inline geometry, intrinsic wrapping, 8px Colorway gap, no overflow, native label/keyboard switching and focus ring passed`,
         );
       }
       console.log(

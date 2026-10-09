@@ -43,6 +43,7 @@
   border-top-color: var(--surface-border-top);
 }
 .control-surface {
+  --settings-field-gap: 8px;
   font-family: var(--font-body);
   font-size: 12px;
 }
@@ -109,6 +110,16 @@
   padding: 4px 0;
   margin: 0;
   min-width: 0;
+}
+
+/* Stacked field headings own spacing; inline label/control rows do not. */
+.control--stacked > .filter-row {
+  margin-top: var(--settings-field-gap);
+}
+
+/* Keep the position label intact; the shared inline row wraps at its natural fit. */
+.presentation-row > .control__label {
+  flex-shrink: 0;
 }
 
 /* ---------------------------------------------------------------- Segmented Controls */
@@ -205,15 +216,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-/* Font modes and settings position share compact, full-width segments. */
-#panel-fonts > [role="tablist"],
-#settings-sheet .presentation-row .segmented {
+/* Font modes retain compact, full-width segments. */
+#panel-fonts > [role="tablist"] {
   width: 100%;
   padding: 3px;
   align-items: stretch;
 }
-#panel-fonts > [role="tablist"] > [role="tab"],
-#settings-sheet .presentation-row .segmented-btn {
+#panel-fonts > [role="tablist"] > [role="tab"] {
   min-width: 0;
   min-height: 36px;
   height: auto;
@@ -526,8 +535,8 @@
 #settings-sheet[data-presentation="modal"] .sheet__panel {
   top: 50%;
   left: 50%;
-  width: min(740px, 94vw);
-  height: min(540px, 86vh);
+  width: min(800px, 94vw);
+  height: min(600px, 86vh);
   max-width: 94vw;
   max-height: 86vh;
   border-radius: 16px;

@@ -9,7 +9,6 @@ import {
   validateCustomThemes,
   parseStoredCustomThemes,
   normalizeCustomTheme,
-  duplicateCustomTheme,
   parseCustomThemeExport,
   serializeCustomThemeExport,
   createUniqueCustomThemeId,
@@ -24,10 +23,19 @@ import type { CustomTheme, CustomThemeImportResult } from "../shared/theme";
 import type { StorageAdapter } from "../platform/storage/browser-storage";
 import type { NativeSettingsSession } from "./settings-session";
 import type { ThemeSession } from "./contracts";
+interface ThemeUndo {
+  deleted: DeletedCustomTheme;
+  fallback: string;
+  epoch: number;
+}
 export class NativeThemeSession implements ThemeSession {
   private themes: CustomTheme[] = [];
   private listeners = new Set<(themes: readonly CustomTheme[]) => void>();
-  private deleted: DeletedCustomTheme | null = null;
+  private deleted: ThemeUndo | null = null;
+  private selectionEpoch = 0;
+  private durableSelectionEpoch = 0;
+  private deleting: ThemeUndo | null = null;
+  private unsubscribeSettings: () => void;
   private disposed = false;
   private generation = 0;
   private unsubscribe: () => void;
@@ -37,6 +45,30 @@ export class NativeThemeSession implements ThemeSession {
     private readonly exclusive: ExclusiveRunner,
     private readonly randomUUID: () => string,
   ) {
+    let previous = settings.current();
+    this.unsubscribeSettings = settings.subscribe((snapshot) => {
+      const effectiveChanged =
+        snapshot.settings.theme !== previous.settings.theme;
+      const durableChanged = snapshot.durable.theme !== previous.durable.theme;
+      if (durableChanged) this.durableSelectionEpoch++;
+      if (effectiveChanged || durableChanged) {
+        const epoch = this.selectionEpoch++;
+        const deleting = this.deleting;
+        // Count our fallback publication, but never absorb an intervening selection.
+        // This runs at publication, not after the awaited transaction completes.
+        if (
+          deleting &&
+          deleting.epoch === epoch &&
+          deleting.deleted.selected &&
+          previous.settings.theme === deleting.deleted.theme.id &&
+          previous.durable.theme === deleting.deleted.theme.id &&
+          snapshot.settings.theme === deleting.fallback &&
+          snapshot.durable.theme === deleting.fallback
+        )
+          deleting.epoch = this.selectionEpoch;
+      }
+      previous = snapshot;
+    });
     this.unsubscribe = storage.subscribe(CUSTOM_THEMES_KEY, (raw) => {
       this.accept(raw);
     });
@@ -78,7 +110,11 @@ export class NativeThemeSession implements ThemeSession {
     build: (
       themes: CustomTheme[],
       selected: string,
-    ) => { themes: CustomTheme[]; selected: string },
+    ) => {
+      themes: CustomTheme[];
+      selected: string;
+      selectionAtWrite?: () => string;
+    },
   ): Promise<void> {
     if (this.disposed)
       return Promise.reject(new Error("Theme session disposed."));
@@ -95,8 +131,10 @@ export class NativeThemeSession implements ThemeSession {
       const selected = normalize(current).theme;
       const change = build(previous, selected);
       const valid = validateCustomThemes(change.themes);
-      const next = mergeSettingsPatch(current, { theme: change.selected });
       await this.storage.write(CUSTOM_THEMES_KEY, valid);
+      const next = mergeSettingsPatch(current, {
+        theme: change.selectionAtWrite?.() ?? change.selected,
+      });
       try {
         await this.settings.store.write(next);
       } catch (error) {
@@ -120,52 +158,74 @@ export class NativeThemeSession implements ThemeSession {
   save(theme: CustomTheme, editingId: string | null): Promise<void> {
     const valid = normalizeCustomTheme(theme);
     if (!valid) return Promise.reject(new Error("A custom theme is invalid."));
-    return this.mutate((themes) => {
+    return this.mutate((themes, selected) => {
       if (editingId && !themes.some((theme) => theme.id === editingId))
         throw new Error(
           "This custom theme was removed in another tab. Create a new theme from the draft.",
         );
       return {
         themes: saveCustomThemeDraft(themes, editingId, valid),
-        selected: editingId ?? valid.id,
+        selected,
       };
     });
   }
-  duplicate(theme: CustomTheme): Promise<void> {
-    return this.mutate((themes) => {
-      const copy = duplicateCustomTheme(
-        theme,
-        this.randomUUID,
-        themes.map((value) => value.id),
-      );
-      return { themes: [...themes, copy], selected: copy.id };
-    });
-  }
   async remove(id: string): Promise<void> {
-    let undo: DeletedCustomTheme | null = null;
-    await this.mutate((themes, selected) => {
-      const result = deleteCustomTheme(
-        themes,
-        id,
-        selected,
-        DEFAULT_SETTINGS.theme,
-      );
-      undo = result.undo;
-      return { themes: result.themes, selected: result.nextThemeId };
-    });
-    this.deleted = undo;
+    let undo: ThemeUndo | null = null;
+    try {
+      await this.mutate((themes, selected) => {
+        const result = deleteCustomTheme(
+          themes,
+          id,
+          selected,
+          DEFAULT_SETTINGS.theme,
+        );
+        undo = result.undo
+          ? {
+              deleted: result.undo,
+              fallback: result.nextThemeId,
+              epoch:
+                this.settings.current().settings.theme === selected
+                  ? this.selectionEpoch
+                  : -1,
+            }
+          : null;
+        this.deleting = undo;
+        return { themes: result.themes, selected: result.nextThemeId };
+      });
+      this.deleted = undo;
+    } finally {
+      this.deleting = null;
+    }
   }
   async undo(): Promise<void> {
     const deleted = this.deleted;
     if (!deleted) return;
     await this.mutate((themes, selected) => {
+      const durableEpoch = this.durableSelectionEpoch;
       const result = restoreDeletedCustomTheme(
         themes,
-        deleted,
+        deleted.deleted,
         (used) => createUniqueCustomThemeId(used, this.randomUUID),
         selected,
+        selected === deleted.fallback && this.selectionEpoch === deleted.epoch,
       );
-      return { themes: result.themes, selected: result.nextThemeId };
+      return {
+        themes: result.themes,
+        selected: result.nextThemeId,
+        selectionAtWrite: () => {
+          // Collection persistence can yield to optimistic or external selection.
+          // Recheck synchronously at settings submission, not before that await.
+          if (
+            selected === deleted.fallback &&
+            this.selectionEpoch === deleted.epoch
+          )
+            return result.nextThemeId;
+          // Optimistic-only changes invalidate reselection, not the fresh locked read.
+          return this.durableSelectionEpoch === durableEpoch
+            ? selected
+            : this.settings.current().durable.theme;
+        },
+      };
     });
     this.deleted = null;
   }
@@ -181,9 +241,15 @@ export class NativeThemeSession implements ThemeSession {
   export(): string {
     return serializeCustomThemeExport(this.themes);
   }
+  exportOne(id: string): string {
+    const theme = this.themes.find((theme) => theme.id === id);
+    if (!theme) throw new Error("This custom theme no longer exists.");
+    return serializeCustomThemeExport([theme]);
+  }
   dispose(): void {
     this.disposed = true;
     this.unsubscribe();
+    this.unsubscribeSettings();
     this.listeners.clear();
   }
 }

@@ -46,11 +46,11 @@ export interface ThemeSession {
   current(): readonly CustomTheme[];
   subscribe(listener: (themes: readonly CustomTheme[]) => void): () => void;
   save(theme: CustomTheme, editingId: string | null): Promise<void>;
-  duplicate(theme: CustomTheme): Promise<void>;
   remove(id: string): Promise<void>;
   undo(): Promise<void>;
   import(raw: string): Promise<CustomThemeImportResult>;
   export(): string;
+  exportOne(id: string): string;
 }
 export interface FontSnapshot {
   state: "idle" | "loading" | "ready" | "error";

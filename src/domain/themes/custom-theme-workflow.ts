@@ -80,6 +80,7 @@ export function restoreDeletedCustomTheme(
   undo: DeletedCustomTheme,
   createUniqueId: (usedIds: Iterable<string>) => string,
   selectedThemeId: string,
+  reselect = true,
 ): {
   themes: CustomTheme[];
   restored: CustomTheme;
@@ -93,7 +94,7 @@ export function restoreDeletedCustomTheme(
   return {
     themes: [...themes, restored],
     restored,
-    nextThemeId: undo.selected ? restored.id : selectedThemeId,
+    nextThemeId: undo.selected && reselect ? restored.id : selectedThemeId,
     remapped: collision,
   };
 }

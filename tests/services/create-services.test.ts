@@ -191,7 +191,7 @@ test("unknown image schema retained verbatim; Web Locks absence is fail-closed",
   );
   services.dispose();
 });
-test("theme create/edit/duplicate/delete/undo/import transactions and readback reconciliation", async () => {
+test("theme create/edit/delete/undo/import transactions and readback reconciliation", async () => {
   const h = fixture(),
     services = createServices({ dependencies: h.deps });
   await services.ready;
@@ -203,19 +203,19 @@ test("theme create/edit/duplicate/delete/undo/import transactions and readback r
     accent: "#74c7ec",
   };
   await services.themes.save(theme, null);
-  expect(services.settings.current().durable.theme).toBe(theme.id);
+  expect(services.settings.current().durable.theme).toBe("midnight");
+  await services.settings.patch({ theme: theme.id });
   await services.themes.save({ ...theme, name: "Edited" }, theme.id);
   expect(services.themes.current()[0]?.name).toBe("Edited");
-  await services.themes.duplicate(theme);
-  expect(services.themes.current()).toHaveLength(2);
+
   await services.themes.remove(services.settings.current().durable.theme);
   expect(services.settings.current().durable.theme).toBe("midnight");
   await services.themes.undo();
-  expect(services.themes.current()).toHaveLength(2);
+  expect(services.themes.current()).toHaveLength(1);
   const exported = services.themes.export();
   const imported = await services.themes.import(exported);
-  expect(imported.remappedCount).toBe(2);
-  expect(services.themes.current()).toHaveLength(4);
+  expect(imported.remappedCount).toBe(1);
+  expect(services.themes.current()).toHaveLength(2);
   expect(Array.isArray(h.values.get(CUSTOM_THEMES_KEY))).toBe(true);
   services.dispose();
 });

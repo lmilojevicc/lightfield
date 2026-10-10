@@ -124,6 +124,8 @@
     cancel() {},
   };
   const services = {
+    reducedMotion: () => true,
+    subscribeReducedMotion: () => () => {},
     fonts: fontService,
     activity: {
       subscribe(callback: (active: boolean) => void) {

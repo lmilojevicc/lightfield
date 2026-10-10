@@ -940,3 +940,8 @@ textarea {
 .background-picker-control {
   padding-top: 0;
 }
+
+/* The handoff owns opacity/translate, not the endpoint or open/close transforms. */
+#settings-sheet[data-presentation] .sheet__panel[data-presentation-handoff] {
+  transition: none;
+}

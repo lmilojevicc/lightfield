@@ -1,12 +1,15 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 // Opt-in production smoke owns only its disposable, explicitly headless browser.
 const binary = process.env.LIGHTFIELD_UI_HEADLESS_CHROME;
+const motionEvidence = process.env.LIGHTFIELD_MOTION_EVIDENCE;
 const wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
 class CDP {
+  onEvent:
+    ((method: string, params: Record<string, unknown>) => void) | undefined;
   private sequence = 0;
   private pending = new Map<
     number,
@@ -22,8 +25,14 @@ class CDP {
         id?: number;
         result?: unknown;
         error?: { message: string };
+        method?: string;
+        params?: Record<string, unknown>;
       };
-      if (!message.id) return;
+      if (!message.id) {
+        if (message.method)
+          this.onEvent?.(message.method, message.params ?? {});
+        return;
+      }
       const ticket = this.pending.get(message.id);
       if (!ticket) return;
       clearTimeout(ticket.timer);
@@ -288,7 +297,7 @@ test.skipIf(!binary)(
         height: 600,
       });
       await evaluate(
-        `window.__search=document.querySelector('#theme-search');window.__search.focus();window.__search.value='lightfield';window.__search.setSelectionRange(1,3)`,
+        `window.__search=document.querySelector('#theme-search');window.__search.focus();window.__search.value='lightfield';window.__search.setSelectionRange(1,3);window.__scroll=document.querySelector('.settings-content');window.__scroll.scrollTop=100;window.__top=window.__scroll.scrollTop`,
       );
       await click('input[name="settingsPresentation"][value="drawer"]');
       expect(
@@ -296,12 +305,360 @@ test.skipIf(!binary)(
           `document.activeElement===window.__search && window.__search.selectionStart===1 && window.__search.selectionEnd===3`,
         ),
       ).toBe(true);
-      // The restored CSS drawer transition takes 400ms.
-      await wait(450);
+      await wait(240);
+      expect(
+        await evaluate<boolean>(
+          `document.querySelector('#theme-search')===window.__search && document.activeElement===window.__search && window.__search.value==='lightfield' && window.__search.selectionStart===1 && window.__search.selectionEnd===3 && window.__scroll.scrollTop===window.__top`,
+        ),
+      ).toBe(true);
       expect(await bounds()).toEqual({ x: 840, y: 0, width: 440, height: 900 });
+      type Sample = {
+        t: number;
+        opacity: number;
+        translate: string;
+        transform: string;
+        width: number;
+        height: number;
+        mode: string;
+        moving: boolean;
+        scrim: string;
+        sections: {
+          id: string;
+          hidden: boolean;
+          inert: boolean;
+          aria: string;
+          width: number;
+          height: number;
+          display: string;
+        }[];
+        focus: string;
+        selection: number[] | null;
+      };
+      const trajectories: {
+        destination: string;
+        samples: Sample[];
+        commits: Sample[];
+      }[] = [];
+      async function beginTrace() {
+        await evaluate(`(() => {
+          const panel = document.querySelector('.sheet__panel');
+          const sheet = document.querySelector('#settings-sheet');
+          const start = performance.now();
+          window.__samples = []; window.__commits = [];
+          const sample = t => { const r = panel.getBoundingClientRect(); const s = getComputedStyle(panel); return { t: t-start, opacity: Number(s.opacity), translate: s.translate, transform: s.transform, width: r.width, height: r.height, mode: sheet.dataset.presentation, moving: panel.hasAttribute('data-presentation-handoff'), scrim: getComputedStyle(document.querySelector('#settings-scrim')).opacity, sections: [...sheet.querySelectorAll('[data-settings-category]')].map(e=>{const r=e.getBoundingClientRect();return {id:e.dataset.settingsCategory,hidden:e.hidden,inert:e.inert,aria:e.getAttribute('aria-hidden'),width:r.width,height:r.height,display:getComputedStyle(e).display}}), focus: document.activeElement.id, selection: document.activeElement instanceof HTMLInputElement ? [document.activeElement.selectionStart,document.activeElement.selectionEnd] : null }; };
+          const observer = new MutationObserver(() => window.__commits.push(sample(performance.now())));
+          observer.observe(sheet, { attributes: true, attributeFilter: ['data-presentation'] });
+          const frame = t => { window.__samples.push(sample(t)); if(t-start<350) requestAnimationFrame(frame); else observer.disconnect(); }; requestAnimationFrame(frame);
+        })()`);
+      }
+      function sectionOwnership(
+        samples: Sample[],
+        modalCategory = "appearance",
+      ) {
+        const layouts = new Map<string, { width: number; height: number }>();
+        for (const sample of samples.filter((s) => s.opacity > 0)) {
+          for (const section of sample.sections) {
+            const hidden =
+              sample.mode === "modal" && section.id !== modalCategory;
+            expect(section.hidden).toBe(hidden);
+            expect(section.inert).toBe(hidden);
+            expect(section.aria).toBe(String(hidden));
+            expect(section.display === "none").toBe(hidden);
+            if (!hidden) {
+              expect(section.width).toBeGreaterThan(0);
+              const key = `${sample.mode}-${section.id}`;
+              const previous = layouts.get(key);
+              if (previous) {
+                expect(section.width).toBeCloseTo(previous.width, 3);
+                expect(section.height).toBeCloseTo(previous.height, 3);
+              } else layouts.set(key, section);
+            }
+          }
+        }
+      }
+      async function trace(
+        destination: "modal" | "drawer",
+        native = true,
+        modalCategory = "appearance",
+      ) {
+        await beginTrace();
+        if (native) {
+          const point = await evaluate<{ x: number; y: number }>(
+            `(() => { const e=document.querySelector('input[name="settingsPresentation"][value="${destination}"]').nextElementSibling; e.scrollIntoView({block:'center'}); const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`,
+          );
+          await pointer("mousePressed", point.x, point.y);
+          await pointer("mouseReleased", point.x, point.y);
+        } else
+          await evaluate(
+            `(()=>{const input=document.querySelector('input[name="settingsPresentation"][value="${destination}"]');input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}));})()`,
+          );
+        await wait(380);
+        const samples = await evaluate<Sample[]>("window.__samples");
+        const commits = await evaluate<Sample[]>("window.__commits");
+        expect(
+          samples.filter((s) => s.opacity > 0 && s.opacity < 1).length,
+        ).toBeGreaterThan(2);
+        sectionOwnership(samples, modalCategory);
+        if (!native && modalCategory === "fonts") {
+          for (const sample of samples) {
+            expect(sample.focus).toBe("custom-display-font");
+            expect(sample.selection).toEqual([2, 7]);
+          }
+        }
+        expect(commits).toHaveLength(1);
+        expect(commits[0]?.opacity).toBe(0);
+        for (const s of samples) {
+          expect(s.transform.startsWith("matrix(1, 0, 0, 1,")).toBe(true);
+          expect(s.width).toBeCloseTo(s.mode === "modal" ? 800 : 440, 3);
+          expect(s.height).toBeCloseTo(s.mode === "modal" ? 600 : 900, 3);
+          expect(s.scrim).toBe("1");
+          expect(
+            s.translate === "none" ? 0 : Math.abs(parseFloat(s.translate)),
+          ).toBeLessThanOrEqual(8);
+        }
+        expect(
+          samples.some(
+            (s) =>
+              s.t < 300 &&
+              s.mode === destination &&
+              s.opacity === 1 &&
+              !s.moving,
+          ),
+        ).toBe(true);
+        expect(samples.at(-1)?.opacity).toBe(1);
+        expect(samples.at(-1)?.moving).toBe(false);
+        expect(samples.at(-1)?.mode).toBe(destination);
+        trajectories.push({ destination, samples, commits });
+      }
+      await trace("modal");
+      await trace("drawer");
+      // True custom Fonts editor: programmatic radio event must not move focus or deactivate its owner.
+      await click("#font-tab-custom");
+      await evaluate(
+        `window.__font=document.querySelector('#custom-display-font');window.__font.value='Owned font draft';window.__font.dispatchEvent(new Event('input',{bubbles:true}));window.__font.focus({preventScroll:true});window.__font.setSelectionRange(2,7)`,
+      );
+      await trace("modal", false, "fonts");
+      expect(
+        await evaluate<boolean>(
+          `document.activeElement===window.__font && document.querySelector('#custom-display-font')===window.__font && window.__font.value==='Owned font draft' && window.__font.selectionStart===2 && window.__font.selectionEnd===7 && document.querySelector('#tab-btn-fonts').getAttribute('aria-selected')==='true'`,
+        ),
+      ).toBe(true);
+      await trace("drawer", false, "fonts");
+      // Synthetic zero-opacity condition: pause the owned arrival animation, not native pointer coverage.
+      await evaluate(
+        `document.querySelector('#settings-close').focus({preventScroll:true});document.querySelector('input[name="settingsPresentation"][value="modal"]').click();window.__pausedZero=new Promise(resolve=>{function frame(){const p=document.querySelector('.sheet__panel');if(document.querySelector('#settings-sheet').dataset.presentation==='modal'&&p.hasAttribute('data-presentation-handoff')){const a=p.getAnimations()[0];if(a){a.pause();a.currentTime=0;resolve(true);return;}}requestAnimationFrame(frame);}requestAnimationFrame(frame);})`,
+      );
+      await evaluate("window.__pausedZero");
+      const svgGuard = await evaluate<{
+        opacity: string;
+        canceled: boolean;
+        sameCategory: boolean;
+      }>(
+        `(()=>{const before=document.querySelector('[data-settings-nav][aria-selected="true"]').dataset.settingsNav;const path=document.querySelector('[data-settings-nav="background"] svg path');const event=new MouseEvent('click',{bubbles:true,cancelable:true});const canceled=!path.dispatchEvent(event);return {opacity:getComputedStyle(document.querySelector('.sheet__panel')).opacity,canceled,sameCategory:document.querySelector('[data-settings-nav][aria-selected="true"]').dataset.settingsNav===before};})()`,
+      );
+      expect(svgGuard).toEqual({
+        opacity: "0",
+        canceled: true,
+        sameCategory: true,
+      });
+      await evaluate(
+        `document.querySelector('#settings-close svg line').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`,
+      );
+      expect(await opened()).toBe(false);
+      await click("#settings-open");
+      await wait(450);
+      await click('[data-settings-nav="appearance"]');
+      await click('input[name="settingsPresentation"][value="drawer"]');
+      await wait(250);
+      async function rest(mode: "modal" | "drawer") {
+        await wait(260);
+        expect(
+          await evaluate<boolean>(
+            `(() => { const p=document.querySelector('.sheet__panel'); return document.querySelector('#settings-sheet').dataset.presentation==='${mode}' && getComputedStyle(p).opacity==='1' && !p.hasAttribute('data-presentation-handoff') && !p.style.opacity && !p.style.translate && p.getAnimations().length===0; })()`,
+          ),
+        ).toBe(true);
+      }
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+      );
+      await wait(20);
+      await evaluate(
+        `document.querySelector('#settings-close').focus({preventScroll:true})`,
+      );
+      await rest("modal");
+      expect(await evaluate<string>("document.activeElement.id")).toBe(
+        "settings-close",
+      );
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+      );
+      await rest("drawer");
+      // Native radio arrows animate too, without requiring input focus loss.
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').focus()`,
+      );
+      for (const type of ["keyDown", "keyUp"])
+        await browser.command("Input.dispatchKeyEvent", {
+          type,
+          key: "ArrowLeft",
+          code: "ArrowLeft",
+        });
+      await rest("modal");
+      expect(
+        await evaluate<boolean>(
+          `document.activeElement===document.querySelector('input[name="settingsPresentation"][value="modal"]') && document.activeElement.checked`,
+        ),
+      ).toBe(true);
+      for (const delay of [20, 100]) {
+        await beginTrace();
+        await evaluate(
+          `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+        );
+        await wait(delay);
+        await evaluate(
+          `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+        );
+        await rest("modal");
+        await wait(120);
+        const samples = await evaluate<Sample[]>("window.__samples");
+        const commits = await evaluate<Sample[]>("window.__commits");
+        sectionOwnership(samples);
+        expect(commits.every((s) => s.opacity === 0)).toBe(true);
+        trajectories.push({
+          destination: `reversal-${String(delay)}ms-modal`,
+          samples,
+          commits,
+        });
+      }
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+      );
+      await wait(100);
+      await click("#settings-close");
+      expect(await opened()).toBe(false);
+      await click("#settings-open");
+      await wait(450);
+      await rest("drawer");
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+      );
+      await wait(20);
+      await browser.command("Emulation.setDeviceMetricsOverride", {
+        width: 1280,
+        height: 901,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      await rest("modal");
+      await browser.command("Emulation.setDeviceMetricsOverride", {
+        width: 1280,
+        height: 900,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+      );
+      await wait(20);
+      await click('[data-settings-nav="fonts"]');
+      await rest("drawer");
+      await click('[data-settings-nav="appearance"]');
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+      );
+      await wait(20);
+      await browser.command("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+      });
+      await rest("modal");
+      await browser.command("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+      });
+      // A rejected close must settle visibly so the dirty guard remains usable.
+      await click("#theme-tab-custom");
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click(); document.querySelector('#custom-create').click()`,
+      );
+      await wait(20);
+      await evaluate(
+        `const name=document.querySelector('#custom-name');name.value='Handoff guard';name.dispatchEvent(new Event('input',{bubbles:true}))`,
+      );
+      await wait(5);
+      // Synthetic paused outgoing zero: the Close SVG must still reach the real dirty guard.
+      const zeroCloseOpacity = await evaluate<string>(
+        `(()=>{const p=document.querySelector('.sheet__panel'),a=p.getAnimations()[0];a.pause();a.currentTime=Number(a.effect.getTiming().duration);const opacity=getComputedStyle(p).opacity;document.querySelector('#settings-close svg line').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));return opacity;})()`,
+      );
+      expect(zeroCloseOpacity).toBe("0");
+      expect(await opened()).toBe(true);
+      await rest("drawer");
+      expect(
+        await evaluate<boolean>(
+          `!!document.querySelector('#custom-keep-editing')`,
+        ),
+      ).toBe(true);
+      await click("#custom-keep-editing");
+      await click("#custom-cancel");
+      await click("#custom-discard");
+      const evidence = motionEvidence;
+      if (evidence) {
+        await mkdir(evidence, { recursive: true });
+        await writeFile(
+          join(evidence, "trajectory.json"),
+          JSON.stringify(
+            {
+              viewport: [1280, 900],
+              dpr: 1,
+              visibility: await evaluate("document.visibilityState"),
+              trajectories,
+              syntheticGuards: {
+                svgGuard,
+                zeroCloseOpacity,
+                dirtyCloseBlocked: true,
+              },
+            },
+            null,
+            2,
+          ),
+        );
+        // Recording is deliberately separate from the non-recorded timing assertions.
+        await click('input[name="settingsPresentation"][value="modal"]');
+        await wait(250);
+        const images: { t: number; data: string }[] = [];
+        let firstTimestamp: number | undefined;
+        browser.onEvent = (method, params) => {
+          if (method !== "Page.screencastFrame") return;
+          const timestamp = (params.metadata as { timestamp: number })
+            .timestamp;
+          firstTimestamp ??= timestamp;
+          images.push({
+            t: (timestamp - firstTimestamp) * 1000,
+            data: params.data as string,
+          });
+          void browser.command("Page.screencastFrameAck", {
+            sessionId: params.sessionId,
+          });
+        };
+        await browser.command("Page.startScreencast", {
+          format: "png",
+          everyNthFrame: 1,
+        });
+        await wait(100);
+        await evaluate(
+          `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+        );
+        await wait(400);
+        await browser.command("Page.stopScreencast");
+        browser.onEvent = undefined;
+        expect(images.length).toBeGreaterThan(3);
+        await writeFile(join(evidence, "frames.json"), JSON.stringify(images));
+        await writeFile(
+          join(evidence, "filmstrip.html"),
+          `<!doctype html><title>Settings handoff: separately recorded frames</title><button onclick="play()">Play</button><span id="time"></span><img id="frame" style="width:100%"><script>const frames=${JSON.stringify(images)}; function show(i){frame.src='data:image/png;base64,'+frames[i].data; time.textContent=frames[i].t.toFixed(1)+' ms';} function play(){frames.forEach((f,i)=>setTimeout(()=>show(i),f.t));} show(0);</script>`,
+        );
+      }
       await click('input[name="settingsPresentation"][value="modal"]');
       await click('input[name="settingsPresentation"][value="drawer"]');
-      await wait(450);
+      await wait(240);
       expect(await bounds()).toEqual({ x: 840, y: 0, width: 440, height: 900 });
       expect(
         await evaluate<number>(
@@ -482,5 +839,5 @@ test.skipIf(!binary)(
       await rm(profile, { recursive: true, force: true });
     }
   },
-  30000,
+  40000,
 );

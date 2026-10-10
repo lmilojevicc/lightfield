@@ -17,7 +17,10 @@
   import EffectTuner from "./backgrounds/EffectTuner.svelte";
   import { tuningScope, attachToTuner } from "./backgrounds/control-state";
   import { applyUiMaterial } from "./shell/material";
-  import type { SettingsCategory } from "./shell/settings-presentation";
+  import type {
+    SettingsCategory,
+    SettingsPresentation,
+  } from "./shell/settings-presentation";
 
   let alive = true;
   const consent = createNetworkConsent({
@@ -49,6 +52,9 @@
     filterMessage: "",
     diagnostic: null,
   } as ReturnType<BackgroundController["current"]>);
+  let committedPresentation = $state<SettingsPresentation>(
+    untrack(() => snapshot.settings.settingsPresentation),
+  );
   let settingsOpen = $state(false);
   let tunerOpen = $state(false);
   let category = $state<SettingsCategory>("appearance");
@@ -292,6 +298,9 @@
       if (alive && settingsOpen && revision === navigationRevision) resume();
     });
   }}
+  onPresentationCommit={(mode: SettingsPresentation) => {
+    committedPresentation = mode;
+  }}
   onOpenChange={changeOpen}
   onCategoryChange={(next: SettingsCategory) => {
     if (category !== next) navigationRevision++;
@@ -309,8 +318,7 @@
       {snapshot}
       {sessionOpen}
       active={settingsOpen &&
-        (category === "appearance" ||
-          snapshot.settings.settingsPresentation === "drawer")}
+        (category === "appearance" || committedPresentation === "drawer")}
       readThemeColors={() => readThemeColors(document.documentElement)}
       onEditorStateChange={(open: boolean, busy: boolean) => {
         themeEditor = { open, busy };
@@ -321,8 +329,7 @@
       {snapshot}
       {backgroundStatus}
       visible={settingsOpen &&
-        (category === "background" ||
-          snapshot.settings.settingsPresentation === "drawer")}
+        (category === "background" || committedPresentation === "drawer")}
       {tunerTarget}
       {tunerFeedback}
       {tunerActions}
@@ -338,8 +345,7 @@
       {snapshot}
       {sessionOpen}
       active={settingsOpen &&
-        (category === "fonts" ||
-          snapshot.settings.settingsPresentation === "drawer")}
+        (category === "fonts" || committedPresentation === "drawer")}
       {navigationRevision}
       onRequestFontConsent={() => consent.requestFonts()}
       onEditorStateChange={(open: boolean, busy: boolean) => {

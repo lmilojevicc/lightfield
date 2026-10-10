@@ -1,5 +1,7 @@
 <script lang="ts">
   import { listenOutsideDismiss } from "./outside-dismiss";
+  import { createPresentationHandoff } from "./presentation-handoff";
+  import { untrack } from "svelte";
   import SectionIcon from "./SectionIcon.svelte";
   import { SvelteMap } from "svelte/reactivity";
   import { onMount, tick, type Snippet } from "svelte";
@@ -21,6 +23,7 @@
     canClose = () => true,
     canNavigate = () => true,
     onRestoreFocus,
+    onPresentationCommit = () => {},
   }: {
     services: AppServices;
     snapshot: SettingsSnapshot;
@@ -37,11 +40,48 @@
     ) => boolean;
     canNavigate?: (next: SettingsCategory, resume: () => void) => boolean;
     onRestoreFocus?: () => void;
+    onPresentationCommit?: (mode: "modal" | "drawer") => void;
   } = $props();
   let sheet: HTMLDivElement;
   let scroll: HTMLDivElement;
   let panel: HTMLElement;
+  let handoff: ReturnType<typeof createPresentationHandoff> | undefined;
+  let committedMode: "modal" | "drawer" | undefined;
   onMount(() => {
+    handoff = createPresentationHandoff(panel, project);
+    const settle = () =>
+      handoff?.settle(snapshot.settings.settingsPresentation);
+    const stopMotion = services.subscribeReducedMotion(settle);
+    window.addEventListener("resize", settle);
+    const preventHiddenActivation = (event: Event) => {
+      if (
+        !panel.hasAttribute("data-presentation-handoff") ||
+        !(event.target instanceof Element) ||
+        !panel.contains(event.target) ||
+        event.target.closest("#settings-close") ||
+        getComputedStyle(panel).opacity !== "0"
+      )
+        return;
+      if (
+        event instanceof KeyboardEvent &&
+        ![
+          "Enter",
+          " ",
+          "Tab",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+          "Home",
+          "End",
+        ].includes(event.key)
+      )
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    for (const type of ["pointerdown", "click", "keydown"])
+      sheet.addEventListener(type, preventHiddenActivation, true);
     const stopOutside = listenOutsideDismiss(
       window,
       () => (open ? panel : null),
@@ -54,6 +94,12 @@
     });
     return () => {
       stopOutside.destroy();
+      stopMotion();
+      window.removeEventListener("resize", settle);
+      for (const type of ["pointerdown", "click", "keydown"])
+        sheet.removeEventListener(type, preventHiddenActivation, true);
+      handoff?.destroy();
+      handoff = undefined;
     };
   });
   export function tunerReturnScroll(): number {
@@ -119,9 +165,10 @@
       clearTimeout(timer);
     };
   });
-  let previousMode: "modal" | "drawer" | undefined;
-  $effect(() => {
-    const mode = snapshot.settings.settingsPresentation;
+  let projectionRevision = 0;
+  function project(mode: "modal" | "drawer") {
+    const revision = ++projectionRevision;
+    const top = scroll.scrollTop;
     const sections = new SvelteMap<SettingsCategory, HTMLElement>();
     for (const item of categories) {
       const section = sheet.querySelector<HTMLElement>(
@@ -134,17 +181,29 @@
       sheet.contains(document.activeElement)
         ? document.activeElement
         : null;
+    const selection =
+      owner instanceof HTMLInputElement || owner instanceof HTMLTextAreaElement
+        ? {
+            start: owner.selectionStart,
+            end: owner.selectionEnd,
+            direction: owner.selectionDirection,
+          }
+        : undefined;
     const editorCategory = owner?.closest<HTMLElement>(
       "[data-settings-category]",
     )?.dataset.settingsCategory;
     const active =
-      mode !== previousMode &&
+      mode !== committedMode &&
       editorCategory &&
       categories.some((item) => item.id === editorCategory)
         ? (editorCategory as SettingsCategory)
         : category;
-    previousMode = mode;
-    if (active !== category) onCategoryChange(active);
+    committedMode = mode;
+    onPresentationCommit(mode);
+    if (active !== category) {
+      projectedCategory = active;
+      onCategoryChange(active);
+    }
     projectSettingsPresentation(
       sheet,
       Array.from(
@@ -154,8 +213,48 @@
       mode,
       active,
     );
-    if (owner?.closest("[hidden], [inert]"))
-      sheet.querySelector<HTMLButtonElement>("#settings-close")?.focus();
+    return tick().then(() => {
+      if (!sheet.isConnected || revision !== projectionRevision) return;
+      scroll.scrollTop = top;
+      if (
+        document.activeElement === owner &&
+        selection?.start !== null &&
+        selection?.end !== null &&
+        (owner instanceof HTMLInputElement ||
+          owner instanceof HTMLTextAreaElement) &&
+        selection
+      ) {
+        owner.setSelectionRange(
+          selection.start,
+          selection.end,
+          selection.direction ?? undefined,
+        );
+      }
+      if (owner?.closest("[hidden], [inert]"))
+        sheet
+          .querySelector<HTMLButtonElement>("#settings-close")
+          ?.focus({ preventScroll: true });
+    });
+  }
+  let requestedMode: "modal" | "drawer" | undefined;
+  let projectedCategory: SettingsCategory | undefined;
+  $effect(() => {
+    const mode = snapshot.settings.settingsPresentation;
+    const visible = open;
+    const activeCategory = category;
+    untrack(() => {
+      const changed = requestedMode !== undefined && requestedMode !== mode;
+      const navigated =
+        projectedCategory !== undefined && projectedCategory !== activeCategory;
+      requestedMode = mode;
+      projectedCategory = activeCategory;
+      if (committedMode === undefined || !handoff) void project(mode);
+      else if (!visible && mode !== committedMode) handoff.request(mode, true);
+      else if (!visible || navigated) handoff.settle(mode);
+      else if (changed) handoff.request(mode, services.reducedMotion());
+      else if (!panel.hasAttribute("data-presentation-handoff"))
+        void project(mode);
+    });
   });
   $effect(() => {
     if (!open) return;
@@ -182,16 +281,23 @@
     reason: "escape" | "close" = "close",
     owner?: SettingsCategory,
   ) {
+    handoff?.settle(snapshot.settings.settingsPresentation);
     if (
       canClose(reason, owner, () => {
-        if (open) onOpenChange(false);
+        if (open) {
+          handoff?.settle(snapshot.settings.settingsPresentation);
+          onOpenChange(false);
+        }
       })
-    )
+    ) {
+      handoff?.settle(snapshot.settings.settingsPresentation);
       onOpenChange(false);
+    }
   }
   function select(next: SettingsCategory) {
     const navigate = () => {
       if (!open) return;
+      handoff?.settle(snapshot.settings.settingsPresentation);
       onCategoryChange(next);
       if (snapshot.settings.settingsPresentation === "modal")
         scroll.scrollTo({ top: 0 });
@@ -203,7 +309,7 @@
     navigate();
   }
   function navKey(event: KeyboardEvent, id: SettingsCategory) {
-    if (snapshot.settings.settingsPresentation !== "modal") return;
+    if (committedMode !== "modal") return;
     const next = categoryForKey(id, event.key);
     if (!next) return;
     event.preventDefault();
@@ -252,7 +358,6 @@
 <div
   class="sheet"
   id="settings-sheet"
-  data-presentation={snapshot.settings.settingsPresentation}
   role="dialog"
   tabindex="-1"
   aria-modal={open}

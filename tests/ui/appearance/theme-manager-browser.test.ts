@@ -108,10 +108,20 @@ test.skipIf(!binary)(
         }
       }
       if (!port) throw new Error("Headless browser did not start");
-      const targets = (await (
-        await fetch(`http://127.0.0.1:${port}/json/list`)
-      ).json()) as { type: string; webSocketDebuggerUrl: string }[];
-      const target = targets.find((item) => item.type === "page");
+      // A loaded machine can answer /json/list before Chrome created its page,
+      // so retry the target lookup within the same bounded startup budget.
+      let target: { type: string; webSocketDebuggerUrl: string } | undefined;
+      for (let attempt = 0; attempt < 100 && !target; attempt += 1) {
+        try {
+          const targets = (await (
+            await fetch(`http://127.0.0.1:${port}/json/list`)
+          ).json()) as { type: string; webSocketDebuggerUrl: string }[];
+          target = targets.find((item) => item.type === "page");
+        } catch {
+          // The endpoint can also refuse while Chrome is still starting.
+        }
+        if (!target) await wait(50);
+      }
       if (!target) throw new Error("Missing disposable page");
       const socket = new WebSocket(target.webSocketDebuggerUrl);
       cdp = new CDP(socket);

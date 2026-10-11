@@ -584,7 +584,7 @@
               aria-label="Select search engine"
             >
               <span class="engine-btn__icon" id="search-engine-icon">
-                <EngineIcon engine={snapshot.settings.searchEngine} />
+                <EngineIcon engine={snapshot.settings.searchEngine} size={16} />
               </span>
               <span class="search__engine-tag" id="search-engine-tag"
                 >{SEARCH_ENGINES.find(
@@ -625,7 +625,7 @@
                   }}
                 >
                   <span class="engine-popover-item__icon"
-                    ><EngineIcon engine={engine.id} /></span
+                    ><EngineIcon engine={engine.id} size={20} /></span
                   >
                   <div class="engine-popover-item__info">
                     <span class="engine-popover-item__name">{engine.name}</span

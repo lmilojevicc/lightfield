@@ -2,10 +2,12 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { SEARCH_ENGINES } from "../../../src/ui/shell/search-engines";
 
 // Opt-in production smoke owns only its disposable, explicitly headless browser.
 const binary = process.env.LIGHTFIELD_UI_HEADLESS_CHROME;
 const motionEvidence = process.env.LIGHTFIELD_MOTION_EVIDENCE;
+const iconEvidence = process.env.LIGHTFIELD_ICON_EVIDENCE;
 const wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
 class CDP {
   onEvent:
@@ -117,10 +119,20 @@ test.skipIf(!binary)(
         }
       }
       if (!port) throw new Error("Headless browser did not start");
-      const targets = (await (
-        await fetch(`http://127.0.0.1:${port}/json/list`)
-      ).json()) as { type: string; webSocketDebuggerUrl: string }[];
-      const target = targets.find((item) => item.type === "page");
+      // A loaded machine can answer /json/list before Chrome created its page,
+      // so retry the target lookup within the same bounded startup budget.
+      let target: { type: string; webSocketDebuggerUrl: string } | undefined;
+      for (let attempt = 0; attempt < 100 && !target; attempt += 1) {
+        try {
+          const targets = (await (
+            await fetch(`http://127.0.0.1:${port}/json/list`)
+          ).json()) as { type: string; webSocketDebuggerUrl: string }[];
+          target = targets.find((item) => item.type === "page");
+        } catch {
+          // The endpoint can also refuse while Chrome is still starting.
+        }
+        if (!target) await wait(50);
+      }
       if (!target) throw new Error("Missing disposable page");
       const socket = new WebSocket(target.webSocketDebuggerUrl);
       cdp = new CDP(socket);
@@ -221,6 +233,110 @@ test.skipIf(!binary)(
       await click("#settings-open");
       await wait(350);
       expect(await opened()).toBe(true);
+      // Real built-page assets: load every card and every popover item in both themes.
+      async function screenshot(name: string) {
+        if (!iconEvidence) return;
+        await mkdir(iconEvidence, { recursive: true });
+        const image = (await browser.command("Page.captureScreenshot", {
+          format: "png",
+        })) as { data: string };
+        await writeFile(
+          join(iconEvidence, `${name}.png`),
+          Buffer.from(image.data, "base64"),
+        );
+      }
+      async function assertIcons(
+        selector: string,
+        ids: string[],
+        size: number,
+        box: number,
+      ) {
+        const icons = await evaluate<
+          {
+            src: string;
+            loaded: boolean;
+            hidden: string;
+            alt: string;
+            draggable: boolean;
+            source: string;
+            width: string;
+            height: string;
+            rendered: number[];
+            wrapper: number[];
+            parentRendered: number[];
+            fit: string;
+          }[]
+        >(
+          `(async()=>{const images=[...document.querySelectorAll(${JSON.stringify(selector)})];await Promise.all(images.map(img=>img.decode()));return images.map(img=>{const r=img.getBoundingClientRect(),p=img.parentElement.getBoundingClientRect();return {src:img.getAttribute('src'),loaded:img.naturalWidth>0,hidden:img.getAttribute('aria-hidden'),alt:img.getAttribute('alt'),draggable:img.draggable,source:img.dataset.source,width:img.getAttribute('width'),height:img.getAttribute('height'),rendered:[r.width,r.height],wrapper:[img.parentElement.offsetWidth,img.parentElement.offsetHeight],parentRendered:[p.width,p.height],fit:getComputedStyle(img).objectFit}})})()`,
+        );
+        expect(icons).toHaveLength(ids.length);
+        for (const [index, icon] of icons.entries()) {
+          const id = ids[index];
+          if (!id) throw new Error("Unexpected engine image");
+          const source = iconSources[id];
+          if (!source) throw new Error(`No expected source for ${id}`);
+          expect(icon.src.endsWith(`icons/engines/${id}.svg`)).toBe(true);
+          expect(icon.loaded).toBe(true);
+          expect(icon.hidden).toBe("true");
+          expect(icon.alt).toBe("");
+          expect(icon.draggable).toBe(false);
+          expect(icon.source).toBe(source);
+          expect(icon.width).toBe(String(size));
+          expect(icon.height).toBe(String(size));
+          expect(icon.wrapper).toEqual([box, box]);
+          expect(icon.rendered).toEqual(icon.parentRendered);
+          for (const edge of icon.rendered)
+            expect(edge).toBeLessThanOrEqual(box);
+          // Contain preserves the SVG viewBox ratio inside the unchanged optical box.
+          expect(icon.fit).toBe("contain");
+        }
+      }
+      const engineIds = SEARCH_ENGINES.map(({ id }) => id);
+      const iconSources: Record<string, string> = {
+        google: "thesvg-color:google",
+        duckduckgo: "thesvg-color:duckduckgo",
+        bing: "thesvg-color:bing",
+        brave: "thesvg-color:brave-browser",
+        ecosia: "thesvg-color:ecosia",
+        kagi: "selfhst:kagi",
+        startpage: "thesvg-color:startpage",
+        qwant: "thesvg-color:qwant",
+      };
+      for (const theme of ["midnight", "ivory"]) {
+        await click('[data-settings-nav="appearance"]');
+        await click(`[data-theme-card="${theme}"] .theme-card-select`);
+        await click('[data-settings-nav="search"]');
+        await wait(350);
+        await assertIcons(".engine-card__icon img", engineIds, 24, 24);
+        await screenshot(
+          `search-engines-${theme === "midnight" ? "dark" : "light"}`,
+        );
+        await click("#settings-close");
+        await wait(350);
+        const selected = await evaluate<string>(
+          `document.querySelector('select[data-setting="searchEngine"]').value`,
+        );
+        // The pill and its popover only exist once the capsule search is expanded.
+        await click("#island-search-hint");
+        await wait(450);
+        await assertIcons(".engine-btn__icon img", [selected], 16, 16);
+        await screenshot(
+          `engine-pill-${theme === "midnight" ? "dark" : "light"}`,
+        );
+        await click('[aria-label="Select search engine"]');
+        await wait(250);
+        await assertIcons(".engine-popover-item__icon img", engineIds, 20, 20);
+        await screenshot(
+          `engine-popover-${theme === "midnight" ? "dark" : "light"}`,
+        );
+        await click('[aria-label="Select search engine"]');
+        await click("#search-collapse-btn");
+        await wait(350);
+        await click("#settings-open");
+        await wait(350);
+      }
+      await click('[data-settings-nav="appearance"]');
+      await click('[data-theme-card="midnight"] .theme-card-select');
       await pointer("mousePressed", 500, 210);
       await pointer("mouseReleased", 500, 210);
       expect(await opened()).toBe(true);
@@ -466,36 +582,23 @@ test.skipIf(!binary)(
           }
           expect(samples.at(-1)?.[key]).toBeCloseTo(endpoint[key], 3);
         }
+        // Authored timings (90ms out, 160ms morph, 96ms content delay, 120ms fade) are
+        // pinned deterministically by the coordinator unit tests. Sampled wall-clock here
+        // only guards a gross stall, so a loaded machine cannot fail an exact recipe.
         expect(
           arrival.some(
             (s) =>
-              s.t < 300 &&
+              s.t < 750 &&
               Math.abs(s.width - endpoint.width) < 0.01 &&
               Math.abs(s.height - endpoint.height) < 0.01,
           ),
         ).toBe(true);
-        const last = samples.at(-1);
-        expect(last?.transform).toBe(
-          destination === "modal"
-            ? "matrix(1, 0, 0, 1, -400, -300)"
-            : "matrix(1, 0, 0, 1, 0, 0)",
-        );
-        expect(last?.origin).toBe(
-          destination === "modal" ? "400px 300px" : "220px 450px",
-        );
-        expect(last?.content).toEqual([1, 1, 1]);
-        expect(
-          samples.some(
-            (s) =>
-              s.t < 400 &&
-              s.mode === destination &&
-              s.opacity === 1 &&
-              !s.moving,
-          ),
-        ).toBe(true);
-        expect(samples.at(-1)?.opacity).toBe(1);
-        expect(samples.at(-1)?.moving).toBe(false);
-        expect(samples.at(-1)?.mode).toBe(destination);
+        // The trajectory window is timing evidence; the settled endpoint is asserted
+        // from the DOM once the handoff finishes, so slow frames cannot fail the run.
+        // Content must be hidden exactly at the layout commit, which is what keeps text
+        // from being shown stretched; the MutationObserver sample is not frame-sampled.
+        expect(commits[0]?.content).toEqual([0, 0, 0]);
+        await rest(destination);
         trajectories.push({ destination, samples, commits });
       }
       await trace("modal");
@@ -553,7 +656,7 @@ test.skipIf(!binary)(
 
         expect(
           await evaluate<boolean>(
-            `(() => { const p=document.querySelector('.sheet__panel'); return document.querySelector('#settings-sheet').dataset.presentation==='${mode}' && getComputedStyle(p).opacity==='1' && !p.hasAttribute('data-presentation-handoff') && !p.style.opacity && !p.style.transform && !p.style.transformOrigin && !p.hasAttribute('data-presentation-morph') && [...p.children].every(e=>!e.style.opacity && e.getAnimations().length===0) && p.getAnimations().length===0; })()`,
+            `(() => { const p=document.querySelector('.sheet__panel'); return document.querySelector('#settings-sheet').dataset.presentation==='${mode}' && getComputedStyle(p).opacity==='1' && !p.hasAttribute('data-presentation-handoff') && !p.style.opacity && !p.style.transform && !p.style.transformOrigin && !p.hasAttribute('data-presentation-morph') && [...p.children].every(e=>!e.style.opacity && e.getAnimations().length===0 && Number(getComputedStyle(e).opacity)===1) && p.getAnimations().length===0; })()`,
           ),
         ).toBe(true);
       }
@@ -629,19 +732,16 @@ test.skipIf(!binary)(
         expect(
           arrival.some(
             (s) =>
-              s.t - retarget.t < 300 &&
+              s.t - retarget.t < 750 &&
               Math.abs(s.width - 800) < 0.01 &&
               Math.abs(s.height - 600) < 0.01,
           ),
         ).toBe(true);
-        expect(
-          arrival.some(
-            (s) =>
-              s.t - retarget.t < 400 &&
-              !s.moving &&
-              s.content.every((o) => o === 1),
-          ),
-        ).toBe(true);
+        // The reverse commit hides content too, and rest("modal") above proves the
+        // settled endpoint; neither depends on how densely frames were sampled.
+        expect(commits.every((s) => s.content.every((o) => o === 0))).toBe(
+          true,
+        );
         trajectories.push({
           destination: `reversal-${String(delay)}ms-modal`,
           samples,

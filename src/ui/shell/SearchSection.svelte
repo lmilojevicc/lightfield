@@ -101,7 +101,7 @@
             }}
           />
           <div class="engine-card__icon" aria-hidden="true">
-            <EngineIcon engine={engine.id} size={20} />
+            <EngineIcon engine={engine.id} size={24} />
           </div>
           <div class="engine-card__info">
             <span class="engine-card__name">{engine.name}</span><span

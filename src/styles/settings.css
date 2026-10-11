@@ -308,8 +308,8 @@
   overflow: hidden;
 }
 
-.engine-card__icon svg,
-.search-engine-card__icon svg {
+.engine-card__icon img,
+.search-engine-card__icon img {
   width: 100%;
   height: 100%;
   display: block;
@@ -722,7 +722,8 @@ textarea {
   flex-shrink: 0;
 }
 
-.search__engine-icon svg {
+.engine-btn__icon img,
+.search__engine-icon img {
   width: 100%;
   height: 100%;
   border-radius: 3px;
@@ -819,7 +820,7 @@ textarea {
   flex-shrink: 0;
 }
 
-.engine-popover-item__icon svg {
+.engine-popover-item__icon img {
   width: 100%;
   height: 100%;
   display: block;

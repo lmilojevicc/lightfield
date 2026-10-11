@@ -18,3 +18,6 @@ src/vendor/orbs/engine.d.ts
 public/fonts/README.md
 public/fonts/sources.json
 public/icon.svg
+
+# Byte-pinned upstream brand assets; preserve art and provenance hashes.
+public/icons/engines/

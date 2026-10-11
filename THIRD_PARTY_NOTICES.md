@@ -1047,3 +1047,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Search-engine colour brand marks
+
+Retrieved through the [icons0.dev](https://icons0.dev/?q=duckduckgo) search/API on 2026-10-11. Each shipped file is a minimal `<svg xmlns>` wrapper around the upstream body with no other modification.
+
+The `thesvg-color` collection is by [glincker/thesvg](https://github.com/glincker/thesvg), licensed under **MIT** ([license](https://github.com/glincker/thesvg/blob/main/LICENSE)). The `selfhst` collection is by [selfh.st](https://github.com/selfhst/icons), licensed under **CC BY 4.0** ([license](https://github.com/selfhst/icons/blob/main/LICENSE)).
+
+| Shipped file | Upstream full icon name | Collection | License | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `public/icons/engines/google.svg` | `thesvg-color:google` | `thesvg-color` | MIT | `5f649e396a095d692ce643e4f9be145f23d8d301cbc766b8f65268ab44cddd50` |
+| `public/icons/engines/duckduckgo.svg` | `thesvg-color:duckduckgo` | `thesvg-color` | MIT | `4b8fd9e1eb0dfd43ff02dc4a0056234da40a27983f15098eedd7f0585243e762` |
+| `public/icons/engines/bing.svg` | `thesvg-color:bing` | `thesvg-color` | MIT | `6f5e62a269daec1b7253aebbc59a8bdb57142d535ffe6eb7c8f8b70a953b3ccd` |
+| `public/icons/engines/brave.svg` | `thesvg-color:brave-browser` | `thesvg-color` | MIT | `315b4cde86323e082a50029069e5cbc5ea5c8096409aa28546d5ea8107dc6a2c` |
+| `public/icons/engines/ecosia.svg` | `thesvg-color:ecosia` | `thesvg-color` | MIT | `30788887407d47658e8cc56be36852a545ff1bd6420e7f085591521ebacf96a9` |
+| `public/icons/engines/kagi.svg` | `selfhst:kagi` | `selfhst` | CC BY 4.0 | `7cf8c5212c2981137adf78e14c3bd96801316939bf02ef810c677593fa2cf097` |
+| `public/icons/engines/startpage.svg` | `thesvg-color:startpage` | `thesvg-color` | MIT | `18c1388fbe89af54bf9363e24225e237dab3da1b1feaa2cefcf25f421c726515` |
+| `public/icons/engines/qwant.svg` | `thesvg-color:qwant` | `thesvg-color` | MIT | `cf9e50a9311a3c1e7d4a482d1bb8abf23a454003b5fa5ae70d4587faa49c326b` |
+
+These are third-party brand marks used for identification only, owned by their respective companies, with no endorsement implied.

@@ -205,6 +205,12 @@ test.skipIf(!binary)(
         deviceScaleFactor: 1,
         mobile: false,
       });
+      await browser.command("Emulation.setEmulatedMedia", {
+        features: [
+          { name: "prefers-reduced-transparency", value: "no-preference" },
+          { name: "prefers-contrast", value: "no-preference" },
+        ],
+      });
       await browser.command("Page.navigate", {
         url: `http://127.0.0.1:${String(server.port)}/newtab.html`,
       });
@@ -305,7 +311,7 @@ test.skipIf(!binary)(
           `document.activeElement===window.__search && window.__search.selectionStart===1 && window.__search.selectionEnd===3`,
         ),
       ).toBe(true);
-      await wait(240);
+      await wait(360);
       expect(
         await evaluate<boolean>(
           `document.querySelector('#theme-search')===window.__search && document.activeElement===window.__search && window.__search.value==='lightfield' && window.__search.selectionStart===1 && window.__search.selectionEnd===3 && window.__scroll.scrollTop===window.__top`,
@@ -317,6 +323,12 @@ test.skipIf(!binary)(
         opacity: number;
         translate: string;
         transform: string;
+        left: number;
+        top: number;
+        content: number[];
+        backdrop: string;
+        inline: string;
+        origin: string;
         width: number;
         height: number;
         mode: string;
@@ -339,16 +351,20 @@ test.skipIf(!binary)(
         samples: Sample[];
         commits: Sample[];
       }[] = [];
-      async function beginTrace() {
+      async function beginTrace(duration = 430) {
         await evaluate(`(() => {
           const panel = document.querySelector('.sheet__panel');
           const sheet = document.querySelector('#settings-sheet');
-          const start = performance.now();
+          const generation = window.__traceRevision = (window.__traceRevision ?? 0) + 1;
+          window.__traceObserver?.disconnect();
+          let start = performance.now();
+          document.addEventListener('change',()=>{start=performance.now();window.__samples=[];}, {capture:true,once:true});
           window.__samples = []; window.__commits = [];
-          const sample = t => { const r = panel.getBoundingClientRect(); const s = getComputedStyle(panel); return { t: t-start, opacity: Number(s.opacity), translate: s.translate, transform: s.transform, width: r.width, height: r.height, mode: sheet.dataset.presentation, moving: panel.hasAttribute('data-presentation-handoff'), scrim: getComputedStyle(document.querySelector('#settings-scrim')).opacity, sections: [...sheet.querySelectorAll('[data-settings-category]')].map(e=>{const r=e.getBoundingClientRect();return {id:e.dataset.settingsCategory,hidden:e.hidden,inert:e.inert,aria:e.getAttribute('aria-hidden'),width:r.width,height:r.height,display:getComputedStyle(e).display}}), focus: document.activeElement.id, selection: document.activeElement instanceof HTMLInputElement ? [document.activeElement.selectionStart,document.activeElement.selectionEnd] : null }; };
+          const sample = t => { const r = panel.getBoundingClientRect(); const s = getComputedStyle(panel); return { t: t-start, opacity: Number(s.opacity), translate: s.translate, transform: s.transform, left:r.left,top:r.top,content:[...panel.children].map(e=>Number(getComputedStyle(e).opacity)),backdrop:getComputedStyle(document.querySelector('#settings-scrim')).backdropFilter,inline:panel.style.cssText,origin:s.transformOrigin,width: r.width, height: r.height, mode: sheet.dataset.presentation, moving: panel.hasAttribute('data-presentation-handoff'), scrim: getComputedStyle(document.querySelector('#settings-scrim')).opacity, sections: [...sheet.querySelectorAll('[data-settings-category]')].map(e=>{const r=e.getBoundingClientRect();return {id:e.dataset.settingsCategory,hidden:e.hidden,inert:e.inert,aria:e.getAttribute('aria-hidden'),width:r.width,height:r.height,display:getComputedStyle(e).display}}), focus: document.activeElement.id, selection: document.activeElement instanceof HTMLInputElement ? [document.activeElement.selectionStart,document.activeElement.selectionEnd] : null }; };
           const observer = new MutationObserver(() => window.__commits.push(sample(performance.now())));
+          window.__traceObserver = observer;
           observer.observe(sheet, { attributes: true, attributeFilter: ['data-presentation'] });
-          const frame = t => { window.__samples.push(sample(t)); if(t-start<350) requestAnimationFrame(frame); else observer.disconnect(); }; requestAnimationFrame(frame);
+          const frame = t => { if(generation !== window.__traceRevision) return; window.__samples.push(sample(t)); if(t-start<${String(duration)}) requestAnimationFrame(frame); else observer.disconnect(); }; requestAnimationFrame(frame);
         })()`);
       }
       function sectionOwnership(
@@ -366,12 +382,14 @@ test.skipIf(!binary)(
             expect(section.display === "none").toBe(hidden);
             if (!hidden) {
               expect(section.width).toBeGreaterThan(0);
-              const key = `${sample.mode}-${section.id}`;
-              const previous = layouts.get(key);
-              if (previous) {
-                expect(section.width).toBeCloseTo(previous.width, 3);
-                expect(section.height).toBeCloseTo(previous.height, 3);
-              } else layouts.set(key, section);
+              if (!sample.moving) {
+                const key = `${sample.mode}-${section.id}`;
+                const previous = layouts.get(key);
+                if (previous) {
+                  expect(section.width).toBeCloseTo(previous.width, 3);
+                  expect(section.height).toBeCloseTo(previous.height, 3);
+                } else layouts.set(key, section);
+              }
             }
           }
         }
@@ -392,7 +410,7 @@ test.skipIf(!binary)(
           await evaluate(
             `(()=>{const input=document.querySelector('input[name="settingsPresentation"][value="${destination}"]');input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}));})()`,
           );
-        await wait(380);
+        await wait(460);
         const samples = await evaluate<Sample[]>("window.__samples");
         const commits = await evaluate<Sample[]>("window.__commits");
         expect(
@@ -407,19 +425,69 @@ test.skipIf(!binary)(
         }
         expect(commits).toHaveLength(1);
         expect(commits[0]?.opacity).toBe(0);
+        const endpoint =
+          destination === "modal"
+            ? { left: 240, top: 150, width: 800, height: 600 }
+            : { left: 840, top: 0, width: 440, height: 900 };
+        const arrival = samples.filter((s) => s.mode === destination);
+        // A 2D matrix(a, b, c, d, e, f) carries its scale on the a and d axes.
+        const scaleAxes = (s: Sample) => {
+          const parts = s.transform.slice(7, -1).split(",").map(Number);
+          return [parts[0] ?? 1, parts[3] ?? 1];
+        };
+        // Text must never be shown off-scale: every sample with visible content
+        // has to be within 5% of the rest scale (measured worst case is ~0.6%).
+        const offScale = arrival.filter((s) => {
+          if (!s.content.some((o) => o > 0)) return false;
+          const axes = scaleAxes(s);
+          return axes.some((scale) => Math.abs(scale - 1) >= 0.05);
+        });
+        expect(
+          offScale.map((s) => ({
+            t: Math.round(s.t),
+            transform: s.transform,
+            content: s.content,
+          })),
+        ).toEqual([]);
+
         for (const s of samples) {
-          expect(s.transform.startsWith("matrix(1, 0, 0, 1,")).toBe(true);
-          expect(s.width).toBeCloseTo(s.mode === "modal" ? 800 : 440, 3);
-          expect(s.height).toBeCloseTo(s.mode === "modal" ? 600 : 900, 3);
           expect(s.scrim).toBe("1");
-          expect(
-            s.translate === "none" ? 0 : Math.abs(parseFloat(s.translate)),
-          ).toBeLessThanOrEqual(8);
+          expect(s.backdrop).toBe("blur(6px)");
+          expect(s.inline).not.toMatch(
+            /(?:^|;)\s*(?:width|height|top|left|inset|translate):/,
+          );
         }
+        for (const key of ["left", "top", "width", "height"] as const) {
+          let previous = Infinity;
+          for (const s of arrival) {
+            const distance = Math.abs(s[key] - endpoint[key]);
+            expect(distance).toBeLessThanOrEqual(previous + 0.1);
+            previous = distance;
+          }
+          expect(samples.at(-1)?.[key]).toBeCloseTo(endpoint[key], 3);
+        }
+        expect(
+          arrival.some(
+            (s) =>
+              s.t < 300 &&
+              Math.abs(s.width - endpoint.width) < 0.01 &&
+              Math.abs(s.height - endpoint.height) < 0.01,
+          ),
+        ).toBe(true);
+        const last = samples.at(-1);
+        expect(last?.transform).toBe(
+          destination === "modal"
+            ? "matrix(1, 0, 0, 1, -400, -300)"
+            : "matrix(1, 0, 0, 1, 0, 0)",
+        );
+        expect(last?.origin).toBe(
+          destination === "modal" ? "400px 300px" : "220px 450px",
+        );
+        expect(last?.content).toEqual([1, 1, 1]);
         expect(
           samples.some(
             (s) =>
-              s.t < 300 &&
+              s.t < 400 &&
               s.mode === destination &&
               s.opacity === 1 &&
               !s.moving,
@@ -461,6 +529,16 @@ test.skipIf(!binary)(
         canceled: true,
         sameCategory: true,
       });
+      const positiveGuard = await evaluate<{
+        opacity: number;
+        canceled: boolean;
+        sameCategory: boolean;
+      }>(
+        `(()=>{const p=document.querySelector('.sheet__panel');for(const a of p.getAnimations()){a.pause();a.currentTime=60;}for(const e of p.children)for(const a of e.getAnimations()){a.pause();a.currentTime=0;}const before=document.querySelector('[data-settings-nav][aria-selected="true"]').dataset.settingsNav;const event=new MouseEvent('click',{bubbles:true,cancelable:true});const canceled=!document.querySelector('[data-settings-nav="background"] svg path').dispatchEvent(event);return {opacity:Number(getComputedStyle(p).opacity),canceled,sameCategory:document.querySelector('[data-settings-nav][aria-selected="true"]').dataset.settingsNav===before}})()`,
+      );
+      expect(positiveGuard.opacity).toBeGreaterThan(0);
+      expect(positiveGuard.canceled).toBe(true);
+      expect(positiveGuard.sameCategory).toBe(true);
       await evaluate(
         `document.querySelector('#settings-close svg line').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`,
       );
@@ -469,12 +547,13 @@ test.skipIf(!binary)(
       await wait(450);
       await click('[data-settings-nav="appearance"]');
       await click('input[name="settingsPresentation"][value="drawer"]');
-      await wait(250);
+      await wait(360);
       async function rest(mode: "modal" | "drawer") {
-        await wait(260);
+        await wait(450);
+
         expect(
           await evaluate<boolean>(
-            `(() => { const p=document.querySelector('.sheet__panel'); return document.querySelector('#settings-sheet').dataset.presentation==='${mode}' && getComputedStyle(p).opacity==='1' && !p.hasAttribute('data-presentation-handoff') && !p.style.opacity && !p.style.translate && p.getAnimations().length===0; })()`,
+            `(() => { const p=document.querySelector('.sheet__panel'); return document.querySelector('#settings-sheet').dataset.presentation==='${mode}' && getComputedStyle(p).opacity==='1' && !p.hasAttribute('data-presentation-handoff') && !p.style.opacity && !p.style.transform && !p.style.transformOrigin && !p.hasAttribute('data-presentation-morph') && [...p.children].every(e=>!e.style.opacity && e.getAnimations().length===0) && p.getAnimations().length===0; })()`,
           ),
         ).toBe(true);
       }
@@ -509,27 +588,104 @@ test.skipIf(!binary)(
           `document.activeElement===document.querySelector('input[name="settingsPresentation"][value="modal"]') && document.activeElement.checked`,
         ),
       ).toBe(true);
-      for (const delay of [20, 100]) {
-        await beginTrace();
+      for (const delay of [20, 170]) {
+        await beginTrace(700);
         await evaluate(
           `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
         );
         await wait(delay);
-        await evaluate(
-          `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+        const retarget = await evaluate<{
+          before: number[];
+          after: number[];
+          t: number;
+        }>(
+          `(async()=>{const p=document.querySelector('.sheet__panel');const rect=()=>{const r=p.getBoundingClientRect();return [r.left,r.top,r.width,r.height]};const before=rect();const input=document.querySelector('input[name="settingsPresentation"][value="modal"]');input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}));await Promise.resolve();return {before,after:rect(),t:window.__samples.at(-1).t};})()`,
         );
+        // Computed matrices serialize with six-digit precision; allow <0.01 CSS px.
+        for (let i = 0; i < 4; i++)
+          expect(
+            Math.abs((retarget.after[i] ?? 0) - (retarget.before[i] ?? 0)),
+          ).toBeLessThan(0.01);
         await rest("modal");
         await wait(120);
         const samples = await evaluate<Sample[]>("window.__samples");
         const commits = await evaluate<Sample[]>("window.__commits");
         sectionOwnership(samples);
+        expect(commits).toHaveLength(delay === 20 ? 1 : 2);
         expect(commits.every((s) => s.opacity === 0)).toBe(true);
+        const arrival = samples.filter(
+          (s) => s.t > retarget.t && s.mode === "modal",
+        );
+        for (const key of ["left", "top", "width", "height"] as const) {
+          let distance = Infinity;
+          const target = { left: 240, top: 150, width: 800, height: 600 }[key];
+          for (const s of arrival) {
+            expect(Math.abs(s[key] - target)).toBeLessThanOrEqual(
+              distance + 0.1,
+            );
+            distance = Math.abs(s[key] - target);
+          }
+        }
+        expect(
+          arrival.some(
+            (s) =>
+              s.t - retarget.t < 300 &&
+              Math.abs(s.width - 800) < 0.01 &&
+              Math.abs(s.height - 600) < 0.01,
+          ),
+        ).toBe(true);
+        expect(
+          arrival.some(
+            (s) =>
+              s.t - retarget.t < 400 &&
+              !s.moving &&
+              s.content.every((o) => o === 1),
+          ),
+        ).toBe(true);
         trajectories.push({
           destination: `reversal-${String(delay)}ms-modal`,
           samples,
           commits,
         });
       }
+      // Reversing while the content is mid-fade must fade the rendered text out with
+      // the surface instead of collapsing it to the morph rule's zero.
+      await beginTrace(700);
+      await evaluate(
+        `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
+      );
+      await wait(250);
+      expect(
+        await evaluate<boolean>(
+          `document.querySelector('.sheet__panel').hasAttribute('data-presentation-morph')`,
+        ),
+      ).toBe(true);
+      await evaluate(
+        `(()=>{const input=document.querySelector('input[name="settingsPresentation"][value="modal"]');input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}));})()`,
+      );
+      await wait(40);
+      const departing = await evaluate<{ content: number[]; opacity: number }>(
+        `(()=>{const p=document.querySelector('.sheet__panel');return {content:[...p.children].map(e=>Number(getComputedStyle(e).opacity)),opacity:Number(getComputedStyle(p).opacity)};})()`,
+      );
+      expect(departing.opacity).toBeGreaterThan(0);
+      expect(Math.min(...departing.content)).toBeGreaterThan(0.05);
+      await rest("modal");
+      const midSamples = await evaluate<Sample[]>("window.__samples");
+      const midCommits = await evaluate<Sample[]>("window.__commits");
+      sectionOwnership(midSamples);
+      expect(midCommits.every((s) => s.opacity === 0)).toBe(true);
+      let departure: { t: number; visible: number } | undefined;
+      for (const s of midSamples) {
+        const visible = s.opacity * Math.min(...s.content);
+        if (departure && s.t - departure.t < 40)
+          expect(visible).toBeGreaterThanOrEqual(departure.visible - 0.34);
+        departure = { t: s.t, visible };
+      }
+      trajectories.push({
+        destination: "reversal-mid-content-modal",
+        samples: midSamples,
+        commits: midCommits,
+      });
       await evaluate(
         `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
       );
@@ -612,6 +768,7 @@ test.skipIf(!binary)(
               trajectories,
               syntheticGuards: {
                 svgGuard,
+                positiveGuard,
                 zeroCloseOpacity,
                 dirtyCloseBlocked: true,
               },
@@ -646,7 +803,11 @@ test.skipIf(!binary)(
         await evaluate(
           `document.querySelector('input[name="settingsPresentation"][value="drawer"]').click()`,
         );
-        await wait(400);
+        await wait(450);
+        await evaluate(
+          `document.querySelector('input[name="settingsPresentation"][value="modal"]').click()`,
+        );
+        await wait(450);
         await browser.command("Page.stopScreencast");
         browser.onEvent = undefined;
         expect(images.length).toBeGreaterThan(3);
@@ -658,7 +819,7 @@ test.skipIf(!binary)(
       }
       await click('input[name="settingsPresentation"][value="modal"]');
       await click('input[name="settingsPresentation"][value="drawer"]');
-      await wait(240);
+      await wait(360);
       expect(await bounds()).toEqual({ x: 840, y: 0, width: 440, height: 900 });
       expect(
         await evaluate<number>(

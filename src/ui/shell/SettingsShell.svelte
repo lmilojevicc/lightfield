@@ -59,7 +59,8 @@
         !(event.target instanceof Element) ||
         !panel.contains(event.target) ||
         event.target.closest("#settings-close") ||
-        getComputedStyle(panel).opacity !== "0"
+        (!panel.hasAttribute("data-presentation-morph") &&
+          getComputedStyle(panel).opacity !== "0")
       )
         return;
       if (

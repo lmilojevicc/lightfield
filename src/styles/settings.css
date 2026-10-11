@@ -20,9 +20,9 @@
 .sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: rgb(0 0 0 / 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgb(0 0 0 / 0.54);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -579,9 +579,6 @@
   transform: translateX(0);
 }
 #settings-sheet[data-presentation="drawer"] .sheet__backdrop {
-  background: rgb(0 0 0 / 0.52);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
   transition: opacity 0.35s ease;
 }
 #settings-sheet[data-presentation="drawer"] .sheet__head {
@@ -941,7 +938,10 @@ textarea {
   padding-top: 0;
 }
 
-/* The handoff owns opacity/translate, not the endpoint or open/close transforms. */
+/* Resolve static endpoints before releasing competing transitions. */
 #settings-sheet[data-presentation] .sheet__panel[data-presentation-handoff] {
   transition: none;
+}
+#settings-sheet[data-presentation] .sheet__panel[data-presentation-morph] > * {
+  opacity: 0;
 }

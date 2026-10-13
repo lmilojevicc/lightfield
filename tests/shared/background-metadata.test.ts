@@ -37,7 +37,7 @@ test("catalog.ts exported descriptor and collection parity", () => {
   expect(
     BACKGROUND_COLLECTIONS.find((collection) => collection.id === "meridian")
       ?.name,
-  ).toBe("lightfield");
+  ).toBe("Lightfield");
 });
 
 test("86 selections, 84 derived procedural IDs, all families including release-blocked Pixel Perfect", () => {

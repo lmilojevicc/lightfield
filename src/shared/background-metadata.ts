@@ -182,7 +182,7 @@ export const NEAT_COLLECTION: BackgroundCollection = {
 export const LIGHTFIELD_COLLECTION: BackgroundCollection = {
   // Collection/effect IDs retain source semantics even though the application is lightfield.
   id: "meridian",
-  name: "lightfield",
+  name: "Lightfield",
   ids: LIGHTFIELD_BACKGROUND_IDS,
 };
 

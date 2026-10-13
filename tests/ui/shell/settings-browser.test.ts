@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { SEARCH_ENGINES } from "../../../src/ui/shell/search-engines";
+import { assertSearchFocus } from "./search-focus-browser";
 
 // Opt-in production smoke owns only its disposable, explicitly headless browser.
 const binary = process.env.LIGHTFIELD_UI_HEADLESS_CHROME;
@@ -73,9 +74,9 @@ class CDP {
   }
 }
 
-test.skipIf(!binary)(
-  "headless production settings: dismissal, footer identity and presentation geometry",
-  async () => {
+test.skipIf(!binary).each(["search focus", "settings"] as const)(
+  "headless production %s: keyboard focus, dismissal and presentation geometry",
+  async (suite) => {
     if (!binary) throw new Error("Explicit headless binary required");
     const profile = await mkdtemp(join(tmpdir(), "lightfield-ui-headless-"));
     const root = resolve("dist/chromium");
@@ -227,6 +228,10 @@ test.skipIf(!binary)(
         url: `http://127.0.0.1:${String(server.port)}/newtab.html`,
       });
       await wait(1000);
+      if (suite === "search focus") {
+        await assertSearchFocus(browser);
+        return;
+      }
       await evaluate(
         `for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,event=>{if(window.__gestureEvents)window.__gestureEvents.push({type,inside:event.composedPath().includes(window.__gesturePanel)})},true)`,
       );

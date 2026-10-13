@@ -191,7 +191,7 @@
     filter 0.32s ease,
     transform 0.32s var(--motion-drawer),
     gap 0.3s var(--spring-smooth),
-    visibility 0.25s;
+    visibility 0s;
 }
 
 .island.is-searching .island__content {
@@ -201,6 +201,8 @@
   position: absolute;
   max-width: calc(100% - 24px);
   visibility: hidden;
+  /* Delay hiding only; collapse must restore focus before the first frame. */
+  transition-delay: 0s, 0s, 0s, 0s, 0.25s;
 }
 
 /* Time & Date Group */
@@ -520,13 +522,15 @@
   transition:
     opacity 0.25s var(--ease-out),
     transform 0.3s var(--spring-smooth),
-    visibility 0.25s;
+    visibility 0s 0.25s;
 }
 .island.is-searching .island__search-expanded {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transform: scale(1);
+  /* Opening must allow synchronous focus before the first frame. */
+  transition-delay: 0s;
 }
 .search__form {
   display: flex;

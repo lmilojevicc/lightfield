@@ -23,9 +23,9 @@ describe("Island demo shader ports & palette transitions", () => {
     expect(
       (BACKGROUND_IMPLEMENTATION_IDS as readonly string[]).includes("clemta"),
     ).toBe(false);
-    expect((LIGHTFIELD_COLLECTION.ids as readonly string[]).includes("clemta")).toBe(
-      false,
-    );
+    expect(
+      (LIGHTFIELD_COLLECTION.ids as readonly string[]).includes("clemta"),
+    ).toBe(false);
     expect(
       (backgroundLoaders as Record<string, unknown>)["clemta"],
     ).toBeUndefined();

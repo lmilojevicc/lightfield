@@ -40,10 +40,14 @@ describe("developer browser lifecycle", () => {
   });
   test("missing explicit binaries fail actionably without falling back", () => {
     expect(
-      discoverBinary("firefox", { LIGHTFIELD_FIREFOX_BINARY: "/does-not-exist" }),
+      discoverBinary("firefox", {
+        LIGHTFIELD_FIREFOX_BINARY: "/does-not-exist",
+      }),
     ).rejects.toThrow("LIGHTFIELD_FIREFOX_BINARY");
     expect(
-      discoverBinary("chromium", { LIGHTFIELD_CHROMIUM_BINARY: "/does-not-exist" }),
+      discoverBinary("chromium", {
+        LIGHTFIELD_CHROMIUM_BINARY: "/does-not-exist",
+      }),
     ).rejects.toThrow("regular Google Chrome is not supported");
   });
   test.skipIf(process.platform === "win32")(
@@ -62,7 +66,9 @@ describe("developer browser lifecycle", () => {
           "#!/bin/sh\necho 'Google Chrome for Testing 151.0.0.0'\n",
         );
         expect(
-          await discoverBinary("chromium", { LIGHTFIELD_CHROMIUM_BINARY: binary }),
+          await discoverBinary("chromium", {
+            LIGHTFIELD_CHROMIUM_BINARY: binary,
+          }),
         ).toBe(binary);
       } finally {
         await rm(dir, { recursive: true, force: true });

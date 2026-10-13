@@ -195,7 +195,10 @@ describe("package inspection invariants", () => {
 
   test("ZIP must contain the exact inspected bytes, with manifest at root", async () => {
     const path = await fixture();
-    const archive = join(tmpdir(), `lightfield-zip-test-${crypto.randomUUID()}.zip`);
+    const archive = join(
+      tmpdir(),
+      `lightfield-zip-test-${crypto.randomUUID()}.zip`,
+    );
     temporary.push(archive);
     const zip = Bun.spawn(["zip", "-q", "-r", archive, "."], {
       cwd: path,

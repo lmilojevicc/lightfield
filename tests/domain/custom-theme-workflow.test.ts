@@ -42,7 +42,11 @@ test("lightfield exports, explicit Meridian imports, collisions, unknown keys an
   expect(result.themes[1]?.id).toBe("custom:two");
   for (const raw of [
     "not json",
-    JSON.stringify({ schema: "lightfield.custom-themes", version: 2, themes: [] }),
+    JSON.stringify({
+      schema: "lightfield.custom-themes",
+      version: 2,
+      themes: [],
+    }),
     JSON.stringify({
       schema: "lightfield.custom-themes",
       version: 1,

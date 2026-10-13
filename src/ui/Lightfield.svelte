@@ -100,7 +100,8 @@
   const resolveAsset = (path: string) => new URL(path, document.baseURI).href;
   function report(error: unknown) {
     if (alive)
-      failure = error instanceof Error ? error.message : "Couldn’t load lightfield.";
+      failure =
+        error instanceof Error ? error.message : "Couldn’t load lightfield.";
   }
   function synchronize() {
     if (!alive) return;

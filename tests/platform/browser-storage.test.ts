@@ -78,7 +78,9 @@ for (const key of ["browser", "chrome"] as const)
     ns.fail();
     await expectRejected(storage.read(STORAGE_KEY), "read denied");
     await expectRejected(storage.write(STORAGE_KEY, {}), "write denied");
-    expect(ns.reads.every((value) => value === "lightfield:settings")).toBe(true);
+    expect(ns.reads.every((value) => value === "lightfield:settings")).toBe(
+      true,
+    );
   });
 test("both namespaces prefer Firefox browser without duplicate reads/writes", async () => {
   const browser = namespace(),

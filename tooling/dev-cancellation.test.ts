@@ -320,7 +320,9 @@ for (const mode of [
                 .length >= 2,
           );
         if (mode.startsWith("reload-") || mode === "ready-close") {
-          await until(() => Promise.resolve(output.includes("lightfield ready")));
+          await until(() =>
+            Promise.resolve(output.includes("lightfield ready")),
+          );
           if (mode.startsWith("reload-")) {
             await writeFile(
               config,

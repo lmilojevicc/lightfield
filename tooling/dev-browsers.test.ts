@@ -32,7 +32,8 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
     const log = console.log.bind(console);
     const logging = spyOn(console, "log").mockImplementation(
       (...args: unknown[]) => {
-        if (String(args[0]).startsWith("lightfield: rebuilt both targets")) reloads++;
+        if (String(args[0]).startsWith("lightfield: rebuilt both targets"))
+          reloads++;
         log(...args);
       },
     );
@@ -74,7 +75,9 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
       };
       const page = tabs.tabs.find((page) => page.url === firefoxUrl);
       if (!page)
-        throw new Error(`lightfield Firefox page missing: ${JSON.stringify(tabs)}`);
+        throw new Error(
+          `lightfield Firefox page missing: ${JSON.stringify(tabs)}`,
+        );
       const target = (await remote.client.request({
         to: page.actor,
         type: "getTarget",
@@ -146,8 +149,8 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
           await firefoxEval("document.documentElement.dataset.theme"),
         ).toBe(DEFAULT_SETTINGS.theme);
         expect(
-          (values["lightfield:settings"] as { theme?: string } | undefined)?.theme ??
-            DEFAULT_SETTINGS.theme,
+          (values["lightfield:settings"] as { theme?: string } | undefined)
+            ?.theme ?? DEFAULT_SETTINGS.theme,
         ).toBe(DEFAULT_SETTINGS.theme);
       }
       const edited = [{ ...devThemeFixtures[0], name: "Dev Ocean edited" }];
@@ -185,7 +188,9 @@ test.skipIf(process.env.LIGHTFIELD_DEV_SMOKE !== "1")(
             () => false,
           );
           await mkdir(parent, { recursive: true });
-          const directory = await mkdtemp(resolve(parent, "lightfield-dev-smoke-"));
+          const directory = await mkdtemp(
+            resolve(parent, "lightfield-dev-smoke-"),
+          );
           generated.push({ parent, directory, parentExisted });
           await writeFile(resolve(directory, "generated.css"), "/* noise */");
           console.log(

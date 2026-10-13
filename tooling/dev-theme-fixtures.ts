@@ -60,7 +60,9 @@ export async function seedDevThemes(
   await evaluate(seedDevThemesExpression);
   while (Date.now() < deadline) {
     signal.throwIfAborted();
-    const raw = await evaluate("JSON.stringify(globalThis.__lightfieldDevThemeSeed)");
+    const raw = await evaluate(
+      "JSON.stringify(globalThis.__lightfieldDevThemeSeed)",
+    );
     const result =
       typeof raw === "string"
         ? (JSON.parse(raw) as { status: string; message?: string })

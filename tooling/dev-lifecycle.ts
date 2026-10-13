@@ -10,7 +10,9 @@ export async function discoverBinary(
   expectedVersion?: string,
 ): Promise<string> {
   const key =
-    browser === "chromium" ? "LIGHTFIELD_CHROMIUM_BINARY" : "LIGHTFIELD_FIREFOX_BINARY";
+    browser === "chromium"
+      ? "LIGHTFIELD_CHROMIUM_BINARY"
+      : "LIGHTFIELD_FIREFOX_BINARY";
   const override = env[key];
   if (override) {
     signal?.throwIfAborted();

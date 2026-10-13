@@ -123,7 +123,9 @@ export async function resolveManagedBinary(
   signal = AbortSignal.any([signal, lockCancellation.signal]);
   signal.throwIfAborted();
   const key =
-    target === "chromium" ? "LIGHTFIELD_CHROMIUM_BINARY" : "LIGHTFIELD_FIREFOX_BINARY";
+    target === "chromium"
+      ? "LIGHTFIELD_CHROMIUM_BINARY"
+      : "LIGHTFIELD_FIREFOX_BINARY";
   if (env[key] !== undefined) return discoverBinary(target, env, signal);
   const platform = managedPlatform();
   const browser = target === "chromium" ? Browser.CHROME : Browser.FIREFOX;

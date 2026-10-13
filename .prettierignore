@@ -17,7 +17,9 @@ src/vendor/orbs/engine.js
 src/vendor/orbs/engine.d.ts
 public/fonts/README.md
 public/fonts/sources.json
-public/icon.svg
+public/icons/icon.svg
+public/icons/sources/shader.svg
+public/icons/SOURCE.md
 
 # Byte-pinned upstream brand assets; preserve art and provenance hashes.
 public/icons/engines/

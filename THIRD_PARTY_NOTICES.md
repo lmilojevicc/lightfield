@@ -1013,21 +1013,31 @@ shaders and default palettes are retained. Exact source URLs, hashes,
 modifications and verification details: `docs/pixel-perfect-backgrounds.md`
 and `src/backgrounds/pixel-perfect/provenance.json`.
 
-## Phosphor Icons — Tabs Duotone (MIT)
+## Catppuccin VS Code Icons — Shader (MIT)
 
-The extension and favicon artwork (`public/icons/icon.svg` and its PNG exports)
-uses the user-supplied Phosphor Tabs Duotone paths, unchanged. The glyph is
-rendered white with its original 20% duotone fill, uniformly scaled and centered
-on a Meridian charcoal rounded-square background. No Phosphor runtime is bundled.
+The extension and favicon artwork (`public/icons/icon.svg` and its 16, 32, 48
+and 128-pixel PNG exports) uses the supplied adaptation of Catppuccin's shader
+glyph. The original path geometry, no fill, and round caps/joins are retained.
+The stroke is recolored from `#c6a0f6` to `#242523` with explicit original-width
+`stroke-width="1"`; the 16×16 glyph is placed in a 256×256 canvas with
+`translate(48 48) scale(10)`. A warm-white `#F4F3EE` rounded-square background
+(`rx="56"`) is added. The installed master and PNGs are copied unchanged from
+the supplied artwork. No Catppuccin runtime is bundled.
 
-Upstream: https://github.com/phosphor-icons/core
-Icon reference: https://github.com/phosphor-icons/core/blob/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/duotone/tabs-duotone.svg
-License source: https://github.com/phosphor-icons/core/blob/2b75f3ad12b420c9504ef05df8d2564a28f8500e/LICENSE
+Upstream: https://github.com/catppuccin/vscode-icons
+Pinned commit: `b6915da9f6889b683a110aa747de96c2820a537d`
+Icon reference: https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg
+License source: https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/LICENSE
+Retained source and modifications: `public/icons/SOURCE.md` and
+`public/icons/sources/shader.svg`. The license is also retained verbatim as
+`public/icons/LICENSE.txt`. Shipped asset hashes are pinned in
+`tooling/effects-provenance.json`.
 
 ```text
 MIT License
 
-Copyright (c) 2023 Phosphor Icons
+Copyright (c) 2023 Catppuccin
+Copyright (c) 2023 thang-nm
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

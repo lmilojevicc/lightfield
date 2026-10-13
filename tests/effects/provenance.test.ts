@@ -17,8 +17,8 @@ import {
 import { imageFilterLoaders } from "../../src/effects/paper/images/adapter";
 
 const root = new URL("../../", import.meta.url).pathname;
-test("source bytes: all quarantined engines, licenses, fixtures and 113 public assets stay pinned", async () => {
-  expect(await verifyEffectProvenance(root)).toBe(137);
+test("source bytes: all quarantined engines, licenses, fixtures and 116 public assets stay pinned", async () => {
+  expect(await verifyEffectProvenance(root)).toBe(140);
   const previews = await readdir(
     new URL("../../public/previews", import.meta.url),
   );

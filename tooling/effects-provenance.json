@@ -65,29 +65,34 @@
     "sha256": "d922b03969d8bfe192928d07faa871056c750825627e48f51dbbd9d4c174849a"
   },
   {
-    "source": "public/icons/icon-128.png",
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-128.png",
-    "sha256": "6f914f6b70401640a70d93ca6fd38eedf30cd0afd4a7cf5ee1eec927f6081338"
+    "sha256": "ae5c0c8409c63c8dcb6e7af2902b11633a7bf6521b67fe33a0c5c190bea60009",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
   },
   {
-    "source": "public/icons/icon-16.png",
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-16.png",
-    "sha256": "51882686faf8fd02c5a3e716beab3ee71aed7e83153c4e5d9469d1efbae9078e"
+    "sha256": "afad94f7e157e9dc3683e6876af13cbb33c7cfe66bb29c5cd2a0dec8c64a3f30",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
   },
   {
-    "source": "public/icons/icon-32.png",
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-32.png",
-    "sha256": "bcc92711c8296f211b0b7a991c5ebddad2c255fda5f1f557d44675b6256bdf6e"
+    "sha256": "3f0bf7134ff073feccb75bb4134483aafa6048800fae69634275fd7da6ad0888",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
   },
   {
-    "source": "public/icons/icon-48.png",
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-48.png",
-    "sha256": "98c92b3e1e25a6271ebf33164f963e7b4766279a8c85addfb176c0c0827bfa40"
+    "sha256": "bcd536fe8f10657fc14165b04261c6245946f2234a39b9bcc728005c4285d39c",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
   },
   {
-    "source": "public/icons/icon.svg",
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon.svg",
-    "sha256": "03a6a3f33f4cf0b328a9ab44d7da9ca7941b5f7998e4a9bc2c8a77d7670a61c6"
+    "sha256": "38ad9b69a03141bb0ba87d51400c6edb48d30205802204bcbecf8796f8f2653c",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
   },
   {
     "source": "public/previews/ascii.webp",
@@ -689,5 +694,20 @@
     "source": "scripts/capture/fixtures/pixel-perfect/contour-map.tsx.fixture",
     "path": "tests/effects/pixel-perfect/fixtures/contour-map.tsx.fixture",
     "sha256": "e660dddba5506795234234c33b6f8041dc9970b90b8614c2c8e9fb01a1791b85"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
+    "path": "public/icons/sources/shader.svg",
+    "sha256": "733aaaec5ce613aeffb4c4ca57136fadc3149dd2a87c96026d8d4ca3c9e90bdc"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/LICENSE",
+    "path": "public/icons/LICENSE.txt",
+    "sha256": "dab37945e3097e43c74c08437196152a50f8d5d5e1d0335f469b203e183e21b8"
+  },
+  {
+    "source": "public/icons/SOURCE.md",
+    "path": "public/icons/SOURCE.md",
+    "sha256": "5a4ee1c74a96bc68c1d9dfdc18f11c880a63f4fe1a5ea7eb9f83657e1029aeff"
   }
 ]

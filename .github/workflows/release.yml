@@ -1,0 +1,104 @@
+name: Draft release
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Require main
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      # No caches in the release path, including automatic runtime caches.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+          no-cache: true
+      - run: bun install --frozen-lockfile
+      - run: bun run validate
+      - run: bun audit --audit-level=high
+      - name: Check package and built manifest versions
+        id: version
+        run: |
+          VERSION=$(bun tooling/release-version.ts)
+          printf 'version=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Checksum the two local-use ZIPs
+        working-directory: artifacts
+        run: sha256sum lightfield-chromium.zip lightfield-firefox.zip > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned-local-use-release
+          path: |
+            artifacts/lightfield-chromium.zip
+            artifacts/lightfield-firefox.zip
+            artifacts/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    name: Create draft
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      # Defaults restrict downloads to this workflow run; never consume PR artifacts.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: unsigned-local-use-release
+          path: release-assets
+      - name: Verify assets and create draft only
+        working-directory: release-assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          TAG="v$VERSION"
+          # Refuse existing tags so --target cannot silently use another commit.
+          EXISTING_REFS=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" --jq 'length')
+          test "$EXISTING_REFS" = 0
+          sha256sum lightfield-chromium.zip lightfield-firefox.zip > "$RUNNER_TEMP/SHA256SUMS"
+          cmp SHA256SUMS "$RUNNER_TEMP/SHA256SUMS"
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          **UNSIGNED / LOCAL USE ONLY — not store-ready or cleared for redistribution.**
+
+          Firefox still uses a development Gecko identity; stable identity, signing and data-collection declarations remain blockers. Artwork and third-party source licences (including Commons Clause restrictions), source redistribution rights and packaged licence completeness require maintainer review. The project's MIT licence does not override bundled terms.
+
+          These ZIPs are for unpacked Chromium / temporary Firefox testing. SHA256SUMS covers exactly the two ZIPs, not GitHub-generated source archives. Checksums are not signatures or proof of reproducible builds.
+
+          This is a draft. Review the exact commit, validation/audit results, notices and all blockers before deciding whether publication is lawful and appropriate. No browser-store submission is automated.
+          NOTES
+          # gh release create fails for an existing release; never edit or clobber it.
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --draft \
+            --title "Lightfield $TAG — unsigned / local use" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            lightfield-chromium.zip lightfield-firefox.zip SHA256SUMS

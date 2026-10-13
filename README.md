@@ -9,6 +9,8 @@
   <a href="#install"><img alt="Firefox" src="https://shieldcn.dev/badge/firefox.svg?variant=outline&amp;logo=ri:FaFirefoxBrowser"></a>
   <a href="package.json"><img alt="Built with Bun 1.4.2" src="https://shieldcn.dev/badge/bun-1.4.2.svg?variant=outline&amp;logo=bun"></a>
   <img alt="Svelte 5" src="https://shieldcn.dev/badge/svelte-5.svg?variant=outline&amp;logo=svelte">
+  <a href="https://github.com/lmilojevicc/lightfield/blob/main/package.json"><img alt="Version on main" src="https://img.shields.io/github/package-json/v/lmilojevicc/lightfield/main?style=flat&amp;color=555"></a>
+  <a href="https://github.com/lmilojevicc/lightfield/actions/workflows/ci.yml"><img alt="CI on main" src="https://github.com/lmilojevicc/lightfield/actions/workflows/ci.yml/badge.svg?branch=main"></a>
 </p>
 
 ## What you get
@@ -22,7 +24,7 @@
 
 ## Install
 
-Lightfield is not on any browser store yet, so installs go through a packaged build. Grab the archives from the [latest release](../../releases/latest) — each one ships `lightfield-chromium.zip` and `lightfield-firefox.zip` — unzip, then load it unpacked below. (Until the first tagged release lands you can also [build it yourself](#building-it-yourself).)
+Lightfield is not on any browser store yet. Source publication and public releases are on hold pending licence review; badges are pending the first approved push. For local testing from an existing checkout, [build it yourself](#building-it-yourself), unzip the unsigned archives, then load them below.
 
 ### Chromium browsers (Chrome, Edge, Brave, Opera, Vivaldi, Arc)
 
@@ -42,11 +44,12 @@ Firefox only keeps temporary add-ons until you restart the browser. Permanent in
 ### Building it yourself
 
 ```sh
-bun install
-bun run build          # or: bun run build:chromium / bun run build:firefox
+bun install --frozen-lockfile
+bun run build          # builds both browser targets
+bun run package        # creates and inspects both ZIPs
 ```
 
-That writes `dist/chromium`, `dist/firefox` and the packaged archives `artifacts/lightfield-chromium.zip`, `artifacts/lightfield-firefox.zip`, which load with the same steps above.
+Build writes `dist/chromium` and `dist/firefox`; package writes `artifacts/lightfield-chromium.zip` and `artifacts/lightfield-firefox.zip`. These unsigned, local-use builds load with the steps above.
 
 ### After installing
 
@@ -71,10 +74,10 @@ Those hosts are exactly the ones declared in the manifest's `connect-src`; there
 
 ## Development
 
-Requires [Bun](https://bun.sh) 1.4.2 (Node 24+ is also understood).
+Requires [Bun](https://bun.sh) 1.4.2, Node 24+ and `zip` / `unzip`.
 
 ```sh
-bun install
+bun install --frozen-lockfile
 bun run dev        # builds both targets and opens isolated Chrome + Firefox with disposable profiles
 bun run dev --headless      # same, without windows (automation)
 bun run dev --no-fixtures   # start with an empty custom-theme collection
@@ -106,5 +109,5 @@ Known gaps before this can be published anywhere:
 
 - **Licence:** [MIT](LICENSE) for this project. Bundled third-party assets keep their own licences.
 - **Third-party notices:** [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) documents every bundled background, brand mark, icon and font with its upstream source, licence and hashes.
-- **Contributions:** issues and pull requests are welcome. Please run `bun run validate` before opening one; there is no CI yet, so local validation is the gate. Keep the existing structure and don't commit `dist/` or `artifacts/`.
+- **Contributions:** see [Contributing](CONTRIBUTING.md) for bootstrap, PRs and the **Validate** CI gate. Run `bun run validate` and `bun audit --audit-level=high` locally; don't commit `dist/` or `artifacts/`.
 - **Credits:** backgrounds adapted from [React Bits](https://github.com/DavidHDev/react-bits); search marks from [`thesvg-color`](https://github.com/glincker/thesvg) and [`selfhst`](https://github.com/selfhst/icons) found via [icons0.dev](https://icons0.dev); shader icon glyph from [Catppuccin VS Code Icons](https://github.com/catppuccin/vscode-icons); typefaces from [Google Fonts](https://fonts.google.com) (OFL); rendering via [Three.js](https://threejs.org), [OGL](https://github.com/oframe/ogl), [postprocessing](https://github.com/pmndrs/postprocessing) and [Paper shaders](https://github.com/paper-design/shaders).

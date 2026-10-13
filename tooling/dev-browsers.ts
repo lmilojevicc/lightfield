@@ -389,6 +389,18 @@ export async function launchBrowsers(
         cancellation.signal,
       );
     };
+    const listTabs = async () => {
+      const response = await request("listTabs");
+      if (!Array.isArray(response.tabs))
+        throw new Error(
+          `Firefox listTabs returned a malformed response (expected a tabs array): ${JSON.stringify(response)}. Restart bun run dev; if this persists, check Firefox/web-ext protocol compatibility.`,
+        );
+      return response.tabs as {
+        actor: string;
+        url: string;
+        traits?: { supportsNavigation?: boolean };
+      }[];
+    };
     await waitForBrowser(
       remote.installTemporaryAddon(resolve(live, "firefox"), false),
       "Firefox temporary installation",
@@ -400,14 +412,8 @@ export async function launchBrowsers(
       cancellation.signal,
     );
     const firefoxUrl = new URL("newtab.html", addon.manifestURL).href;
-    const tabs = (await request("listTabs")) as {
-      tabs: {
-        actor: string;
-        url: string;
-        traits?: { supportsNavigation?: boolean };
-      }[];
-    };
-    const tab = tabs.tabs.find((tab) => tab.url === "about:blank");
+    const tabs = await listTabs();
+    const tab = tabs.find((tab) => tab.url === "about:blank");
     if (!tab) throw new Error("Missing owned Firefox startup tab");
     if (!tab.traits?.supportsNavigation)
       throw new Error(
@@ -423,10 +429,8 @@ export async function launchBrowsers(
         waitForLoad: true,
       });
       await Bun.sleep(400);
-      const navigated = (await request("listTabs")) as {
-        tabs: { url: string }[];
-      };
-      if (navigated.tabs.some((page) => page.url === firefoxUrl)) break;
+      const navigated = await listTabs();
+      if (navigated.some((page) => page.url === firefoxUrl)) break;
       if (attempt === 4)
         throw new Error(
           "Firefox could not open the installed lightfield new-tab page.",
@@ -478,10 +482,8 @@ export async function launchBrowsers(
           });
         }
       }
-      const currentTabs = (await request("listTabs")) as {
-        tabs: { actor: string; url: string }[];
-      };
-      for (const page of currentTabs.tabs) {
+      const currentTabs = await listTabs();
+      for (const page of currentTabs) {
         if (!page.url.startsWith(new URL(".", firefoxUrl).href)) continue;
         await request({
           to: page.actor,

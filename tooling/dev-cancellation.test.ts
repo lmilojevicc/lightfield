@@ -66,6 +66,117 @@ test("interrupted Firefox root handshake rejects and destroys the owned socket",
   }
 });
 
+test("Firefox addonListChanged cannot consume root replies or desynchronize queued requests", async () => {
+  const sockets = new Set<Socket>();
+  const tabs = [{ actor: "tab", url: "about:blank" }];
+  const protocolError = {
+    from: "root",
+    type: "addonListChanged",
+    error: "testFailure",
+    message: "genuine request failure",
+  };
+  const server = createServer((socket) => {
+    sockets.add(socket);
+    socket.once("close", () => sockets.delete(socket));
+    const send = (packet: Record<string, unknown>) => {
+      const text = JSON.stringify(packet);
+      socket.write(`${String(Buffer.byteLength(text))}:${text}`);
+    };
+    send({ from: "root", applicationType: "browser", traits: {} });
+    let data = Buffer.alloc(0);
+    socket.on("data", (chunk) => {
+      data = Buffer.concat([data, Buffer.from(chunk)]);
+      while (data.includes(58)) {
+        const colon = data.indexOf(58);
+        const length = Number(data.subarray(0, colon).toString());
+        if (data.length < colon + 1 + length) break;
+        const request = JSON.parse(
+          data.subarray(colon + 1, colon + 1 + length).toString(),
+        ) as { to: string; type: string };
+        data = data.subarray(colon + 1 + length);
+        if (request.type === "listAddons") {
+          send({
+            from: "root",
+            addons: [
+              {
+                id: "test-addon",
+                actor: "addon",
+                manifestURL: "moz-extension://test/manifest.json",
+              },
+            ],
+          });
+        } else if (request.type === "listTabs") {
+          // listAddons subscribes to this one-shot root notification in Firefox.
+          send({ from: "root", type: "addonListChanged" });
+          send({ from: "root", tabs });
+        } else if (request.type === "getRoot") {
+          send({ from: "root", addonsActor: "addons" });
+        } else if (request.type === "failure") {
+          send(protocolError);
+        } else if (request.type === "actorReply") {
+          send({ from: request.to, type: "addonListChanged", value: true });
+        } else if (request.type === "disconnect") {
+          socket.end();
+        }
+      }
+    });
+  });
+  await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No test port");
+  const connection = createFirefoxConnection();
+  const bounded = <T>(work: Promise<T>) =>
+    waitForBrowser(work, "Firefox socket regression", undefined, 1000);
+  try {
+    await bounded(connection.connect(address.port));
+    const { remote } = connection;
+    expect((await bounded(remote.getInstalledAddon("test-addon"))).actor).toBe(
+      "addon",
+    );
+    // Queue another root request before the event and real tab reply arrive.
+    const replies = await bounded(
+      Promise.all([
+        remote.client.request("listTabs"),
+        remote.client.request("getRoot"),
+      ]),
+    );
+    expect(replies).toEqual([
+      { from: "root", tabs },
+      { from: "root", addonsActor: "addons" },
+    ]);
+    expect(
+      await bounded(
+        remote.client.request("failure").catch((error: unknown) => error),
+      ),
+    ).toEqual(protocolError);
+    expect(
+      await bounded(remote.client.request({ to: "addon", type: "actorReply" })),
+    ).toEqual({ from: "addon", type: "addonListChanged", value: true });
+    expect(await bounded(remote.client.request("listTabs"))).toEqual({
+      from: "root",
+      tabs,
+    });
+    const disconnected = await bounded(
+      Promise.all([
+        remote.client.request("disconnect").catch((error: unknown) => error),
+        remote.client.request("getRoot").catch((error: unknown) => error),
+      ]),
+    );
+    for (const error of disconnected) {
+      expect(error).toBeInstanceOf(Error);
+      expect(String(error)).toContain("RDP connection closed");
+    }
+  } finally {
+    connection.disconnect();
+    for (const socket of sockets) socket.destroy();
+    await new Promise<void>((done) => {
+      server.close(() => {
+        done();
+      });
+    });
+  }
+});
+
 test("late Chromium adapter setup refuses to launch after cancellation", async () => {
   const cancellation = new AbortController();
   const owner = createChromiumLaunch(cancellation.signal);
@@ -215,7 +326,11 @@ if (browser === 'chromium') {
         if (message.type === 'getRoot') result.addonsActor='addons';
         if (message.type === 'installTemporaryAddon') result.addon={id:'lightfield-development@example.invalid'};
         if (message.type === 'listAddons') result.addons=[{id:'lightfield-development@example.invalid',actor:'addon',manifestURL:'moz-extension://lightfieldtest/manifest.json'}];
-        if (message.type === 'listTabs') result.tabs=[{actor:'tab',url,traits:{supportsNavigation:true}}];
+        if (message.type === 'listTabs') {
+          send({from:'root',type:'addonListChanged'});
+          if (process.env.LIGHTFIELD_TEST_MODE !== 'tabs-missing') result.tabs=process.env.LIGHTFIELD_TEST_MODE === 'tabs-invalid' ? {} : [{actor:'tab',url,traits:{supportsNavigation:true}}];
+        }
+        if (message.type === 'reloadDescriptor') log('reloadDescriptor');
         if (message.type === 'navigateTo') url=message.url;
         if (message.type === 'getTarget') result.frame={webExtensionInspectedWindowActor:'inspected-window'};
         if (message.type === 'eval') {
@@ -241,6 +356,9 @@ for (const mode of [
   "ready-close",
   "fixture-stall",
   "fixture-timeout",
+  "tabs-missing",
+  "tabs-invalid",
+  "firefox-reload",
 ] as const) {
   test.skipIf(process.platform === "win32")(
     `owned cleanup for ${mode}`,
@@ -306,6 +424,8 @@ for (const mode of [
       const config = resolve(root, "vite.config.ts");
       const previousTimes = await stat(config);
       const originalConfig = await readFile(config, "utf8");
+      const editsSource =
+        mode.startsWith("reload-") || mode === "firefox-reload";
       try {
         if (mode.startsWith("startup-"))
           await until(async () =>
@@ -319,11 +439,11 @@ for (const mode of [
               (await events()).filter((event) => event.event === "connection")
                 .length >= 2,
           );
-        if (mode.startsWith("reload-") || mode === "ready-close") {
+        if (editsSource || mode === "ready-close") {
           await until(() =>
             Promise.resolve(output.includes("lightfield ready")),
           );
-          if (mode.startsWith("reload-")) {
+          if (editsSource) {
             await writeFile(
               config,
               originalConfig + "\n// cancellation fixture source edit\n",
@@ -331,6 +451,18 @@ for (const mode of [
             await until(async () =>
               (await events()).some((event) => event.event === "Page.reload"),
             );
+            if (mode === "firefox-reload") {
+              await until(() =>
+                Promise.resolve(
+                  output.includes("lightfield: rebuilt both targets"),
+                ),
+              );
+              expect(
+                (await events()).filter(
+                  (event) => event.event === "reloadDescriptor",
+                ),
+              ).toHaveLength(1);
+            }
           }
         }
         if (mode.startsWith("fixture-"))
@@ -350,7 +482,11 @@ for (const mode of [
           );
           if (!firefox) throw new Error("No owned Firefox");
           process.kill(firefox.pid, "SIGTERM");
-        } else if (mode !== "early-exit" && !mode.endsWith("timeout"))
+        } else if (
+          mode !== "early-exit" &&
+          !mode.endsWith("timeout") &&
+          !mode.startsWith("tabs-")
+        )
           child.kill("SIGTERM");
         const exit = await waitForBrowser(
           child.exited,
@@ -373,10 +509,26 @@ for (const mode of [
           mode === "early-exit" ||
             mode === "startup-timeout" ||
             mode === "handshake-timeout" ||
-            mode === "fixture-timeout"
+            mode === "fixture-timeout" ||
+            mode.startsWith("tabs-")
             ? 1
             : 0,
         );
+        if (mode.startsWith("tabs-")) {
+          const diagnostics = await errors;
+          expect(diagnostics).toContain(
+            "Firefox listTabs returned a malformed response (expected a tabs array)",
+          );
+          expect(diagnostics).toContain(
+            mode === "tabs-missing"
+              ? '{"from":"root"}'
+              : '{"from":"root","tabs":{}}',
+          );
+          expect(diagnostics).toContain("Restart bun run dev");
+          expect(diagnostics).not.toContain("TypeError");
+          await collecting;
+          expect(output).not.toContain("lightfield ready");
+        }
         if (mode === "early-exit")
           expect(await errors).toContain(
             "Firefox exited before readiness (exit code 23",
@@ -433,7 +585,7 @@ for (const mode of [
         );
         await collecting;
         await errors;
-        if (mode.startsWith("reload-")) await writeFile(config, originalConfig);
+        if (editsSource) await writeFile(config, originalConfig);
         await utimes(config, previousTimes.atime, previousTimes.mtime);
         await rm(directory, { recursive: true, force: true });
       }

@@ -56,6 +56,8 @@ interface FirefoxClient {
   connect(port: number): Promise<FirefoxClient>;
   disconnect(): void;
   on(event: string, listener: () => void): void;
+  emit(event: string, packet: Record<string, unknown>): boolean;
+  _handleMessage(packet: Record<string, unknown>): void;
   _rdpConnection?: Socket;
 }
 const firefoxClientModule = (await import(
@@ -64,10 +66,26 @@ const firefoxClientModule = (await import(
   default: new () => FirefoxClient;
 };
 
+class FirefoxNotificationClient extends firefoxClientModule.default {
+  override _handleMessage(packet: Record<string, unknown>) {
+    // Firefox listAddons subscribes to this root event, omitted by web-ext
+    // 10.7.0's unsolicited set. Otherwise it consumes the next root reply.
+    if (
+      packet.from === "root" &&
+      packet.type === "addonListChanged" &&
+      !packet.error
+    ) {
+      this.emit("unsolicited-event", packet);
+      return;
+    }
+    super._handleMessage(packet);
+  }
+}
+
 // Retain the client before its root handshake resolves. web-ext's onEnd only
 // emits an event; explicitly disconnect to reject its pending root/request replies.
 export function createFirefoxConnection() {
-  const client = new firefoxClientModule.default();
+  const client = new FirefoxNotificationClient();
   let disconnected = false;
   const disconnect = () => {
     if (disconnected) return;

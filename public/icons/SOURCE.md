@@ -8,13 +8,14 @@ commit `b6915da9f6889b683a110aa747de96c2820a537d`.
 - Adapted master: [icon.svg](icon.svg).
 
 The original path geometry, no fill, and round caps/joins are unchanged. The
-stroke is recolored from `#c6a0f6` to `#242523`, with explicit original-width
-`stroke-width="1"`. The 16×16 glyph is centered in a 256×256 canvas using
+stroke is recolored from `#c6a0f6` to `#242523`, and thickened 25% from the
+upstream default width of 1 to `stroke-width="1.25"`. The 16×16 glyph is centered in a 256×256 canvas using
 `translate(48 48) scale(10)`. The added warm-white `#F4F3EE` background has
 `rx="56"`; outer corners remain transparent.
 
-The installed PNGs (16, 32, 48 and 128 pixels) and master are copied unchanged
-from the supplied artwork. Each PNG was rendered directly from the master with
+The supplied master retains its geometry, transform, palette and background;
+only its stroke width is increased. The installed PNGs (16, 32, 48 and 128
+pixels) are rerendered directly from this thicker master with
 `rsvg-convert --width SIZE --height SIZE icon.svg`. No new geometry, shadow,
 gradient or generated artwork is introduced. Additional store-size exports
 remain in the external artwork archive, not the extension package.

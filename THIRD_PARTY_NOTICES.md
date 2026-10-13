@@ -204,7 +204,7 @@ For more information, please refer to <https://unlicense.org/>
 
 Official Google Fonts source distribution, pinned revision `5e35378e6bda803962ee6fd257e444a7d459660d`.
 Source paths, SHA-256 hashes, axis recipes and reproduction instructions are in
-`public/fonts/sources.json` and `public/fonts/README.md`. These are locally subset,
+`public/fonts/sources.json`. These are locally subset,
 instantiated and WOFF2-compressed derivatives, not unmodified upstream binaries.
 The four upstream notices below declare no Reserved Font Names; family names
 are retained. Their Markdown copies normalize only per-line trailing spaces/tabs
@@ -1018,11 +1018,12 @@ and `src/backgrounds/pixel-perfect/provenance.json`.
 The extension and favicon artwork (`public/icons/icon.svg` and its 16, 32, 48
 and 128-pixel PNG exports) uses the supplied adaptation of Catppuccin's shader
 glyph. The original path geometry, no fill, and round caps/joins are retained.
-The stroke is recolored from `#c6a0f6` to `#242523` with explicit original-width
-`stroke-width="1"`; the 16×16 glyph is placed in a 256×256 canvas with
+The stroke is recolored from `#c6a0f6` to `#242523` and increased 25% from the
+upstream default width of 1 to `stroke-width="1.25"`; the 16×16 glyph is placed in a 256×256 canvas with
 `translate(48 48) scale(10)`. A warm-white `#F4F3EE` rounded-square background
-(`rx="56"`) is added. The installed master and PNGs are copied unchanged from
-the supplied artwork. No Catppuccin runtime is bundled.
+(`rx="56"`) is added. The supplied master retains all geometry and styling
+except the thicker stroke; its installed PNGs are rerendered directly from
+this master. No Catppuccin runtime is bundled.
 
 Upstream: https://github.com/catppuccin/vscode-icons
 Pinned commit: `b6915da9f6889b683a110aa747de96c2820a537d`

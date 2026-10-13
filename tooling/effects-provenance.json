@@ -1,10 +1,5 @@
 [
   {
-    "source": "public/fonts/README.md",
-    "path": "public/fonts/README.md",
-    "sha256": "8e9f9baa9c18b860f0b4233f3fd66efb4b2aad532b9ef242c2b1e36b0146d775"
-  },
-  {
     "source": "public/fonts/bricolage-400-subset.woff2",
     "path": "public/fonts/bricolage-400-subset.woff2",
     "sha256": "9cb45b4aa111b6b914bf0445b2d48c4692e3f78e1d967b164bf829d84685c54e"
@@ -67,32 +62,32 @@
   {
     "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-128.png",
-    "sha256": "ae5c0c8409c63c8dcb6e7af2902b11633a7bf6521b67fe33a0c5c190bea60009",
-    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
+    "sha256": "a2c2e9359f2331f7106533149a60f00d151ac0addc0f01a9cd549b1bab920d94",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; stroke width increased from 1 to 1.25 (+25%); PNG exports rerendered directly from the master."
   },
   {
     "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-16.png",
-    "sha256": "afad94f7e157e9dc3683e6876af13cbb33c7cfe66bb29c5cd2a0dec8c64a3f30",
-    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
+    "sha256": "ed726d40687fc0141898ebfe2cf12da6b0fc74f99bd33a87bd7cc01cd66ead52",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; stroke width increased from 1 to 1.25 (+25%); PNG exports rerendered directly from the master."
   },
   {
     "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-32.png",
-    "sha256": "3f0bf7134ff073feccb75bb4134483aafa6048800fae69634275fd7da6ad0888",
-    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
+    "sha256": "317daf239135f01d20f5428375c57da93e8eea494088dcedf4f9a870c214c1c8",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; stroke width increased from 1 to 1.25 (+25%); PNG exports rerendered directly from the master."
   },
   {
     "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon-48.png",
-    "sha256": "bcd536fe8f10657fc14165b04261c6245946f2234a39b9bcc728005c4285d39c",
-    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
+    "sha256": "fa0694ee41a1aeff7f4d67b4b353291dc5a3a5b2d861efc55ebbdbe1e6442869",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; stroke width increased from 1 to 1.25 (+25%); PNG exports rerendered directly from the master."
   },
   {
     "source": "https://raw.githubusercontent.com/catppuccin/vscode-icons/b6915da9f6889b683a110aa747de96c2820a537d/icons/macchiato/shader.svg",
     "path": "public/icons/icon.svg",
-    "sha256": "38ad9b69a03141bb0ba87d51400c6edb48d30205802204bcbecf8796f8f2653c",
-    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; master/direct PNG exports copied verbatim."
+    "sha256": "a9cebe9f23acdd0483a5163e915e9e964b529fe348064c7407faa4be04a5b2a0",
+    "modification": "Supplied shader adaptation: unchanged glyph geometry, recolored stroke, warm-white rounded background; stroke width increased from 1 to 1.25 (+25%); PNG exports rerendered directly from the master."
   },
   {
     "source": "public/previews/ascii.webp",
@@ -708,6 +703,6 @@
   {
     "source": "public/icons/SOURCE.md",
     "path": "public/icons/SOURCE.md",
-    "sha256": "5a4ee1c74a96bc68c1d9dfdc18f11c880a63f4fe1a5ea7eb9f83657e1029aeff"
+    "sha256": "aa8c606b89d6e8dacad8211ef1349d53fb0ae4439614a46ff927f89c224c189e"
   }
 ]

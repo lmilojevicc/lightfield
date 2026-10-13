@@ -60,7 +60,7 @@ export async function inspectDirectory(
   const notices = [
     [
       "THIRD_PARTY_NOTICES.md",
-      "42cddbd87e9990286b078d99bce3bd4ff36bfb9cd83d953cbb2116f76c89a431",
+      "8c311608172666b43d9fcb9bbd73de7bbc666f3065f318f16305067e17241c9d",
     ],
     [
       "SVELTE_LICENSE.txt",

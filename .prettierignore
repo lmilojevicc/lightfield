@@ -15,7 +15,6 @@ src/vendor/neat/preset-provenance.json
 src/vendor/neat/NOTICE.md
 src/vendor/orbs/engine.js
 src/vendor/orbs/engine.d.ts
-public/fonts/README.md
 public/fonts/sources.json
 public/icons/icon.svg
 public/icons/sources/shader.svg

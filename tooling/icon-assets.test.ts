@@ -23,7 +23,7 @@ test("both manifests reference correctly sized RGBA shader icon exports", async 
   }
 });
 
-test("adapted shader master keeps upstream geometry and the supplied treatment", async () => {
+test("adapted shader master keeps upstream geometry and the approved thicker stroke", async () => {
   const master = (await asset("icon.svg")).toString();
   const source = (await asset("sources/shader.svg")).toString();
   const geometry = (svg: string) => /\bd="([^"]+)"/.exec(svg)?.[1];
@@ -32,7 +32,7 @@ test("adapted shader master keeps upstream geometry and the supplied treatment",
   expect(master).toContain('viewBox="0 0 256 256"');
   expect(master).toContain('rx="56" fill="#F4F3EE"');
   expect(master).toContain('transform="translate(48 48) scale(10)"');
-  expect(master).toContain('fill="none" stroke="#242523" stroke-width="1"');
+  expect(master).toContain('fill="none" stroke="#242523" stroke-width="1.25"');
   expect(master).toContain('stroke-linecap="round" stroke-linejoin="round"');
   expect(master.match(/<path\b/g)).toHaveLength(1);
 });

@@ -43,7 +43,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-svelte": "3.23.0",
     "knip": "6.40.0",
-    "parse5": "7.3.0",
+    "parse5": "8.0.1",
     "prettier": "3.9.9",
     "prettier-plugin-svelte": "4.1.1",
     "proper-lockfile": "4.1.2",

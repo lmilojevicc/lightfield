@@ -18,7 +18,9 @@ The required **Validate** check runs types, lint, formatting, dead-code checks, 
 
 ## Browsers (opt-in)
 
-`bun run dev` provisions pinned Chromium and Firefox in a user cache and uses disposable profiles. Baseline validation does not run real-browser smoke tests. Optional extension smoke tests:
+`bun run dev` provisions pinned Chromium and Firefox in a user cache and uses disposable profiles. Managed Firefox disables application self-updates with an app-local `distribution/policies.json` policy, installed before version probes or launches (including reuse of older, checksum-verified caches). Upgrade managed browsers by changing `browserPins` in `tooling/managed-browsers.ts`, not through Firefox's updater. Executable checksums and exact versions remain enforced; for a corrupt cache, remove only the directory named in the error and retry. Explicit executable overrides and normal browser installations are not modified.
+
+Baseline validation does not run real-browser smoke tests. Optional extension smoke tests:
 
 ```sh
 LIGHTFIELD_DEV_SMOKE=1 bun test tooling/dev-browsers.test.ts

@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import {
   access,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
@@ -16,7 +17,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { spawn } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 import lockfile from "proper-lockfile";
@@ -59,6 +60,84 @@ async function digest(path: string): Promise<string> {
   for await (const chunk of createReadStream(path))
     hash.update(chunk as Buffer);
   return hash.digest("hex");
+}
+
+// App-local enterprise policy, not a profile preference: Firefox no longer
+// honors app.update.enabled. Layout/policy: https://firefox-admin-docs.mozilla.org/
+// Call only for owned stages or checksum-verified caches, under the entry lock.
+export async function disableManagedFirefoxUpdates(
+  directory: string,
+  platform: BrowserPlatform,
+  signal: AbortSignal,
+): Promise<void> {
+  const executable = computeExecutablePath({
+    cacheDir: directory,
+    browser: Browser.FIREFOX,
+    buildId: browserPins.firefox,
+    platform,
+  });
+  const distribution = join(
+    platform === BrowserPlatform.MAC || platform === BrowserPlatform.MAC_ARM
+      ? join(dirname(executable), "..", "Resources")
+      : dirname(executable),
+    "distribution",
+  );
+  const policyPath = join(distribution, "policies.json");
+  let temporary: string | undefined;
+  try {
+    signal.throwIfAborted();
+    // Never follow an entry, app directory, distribution or policy symlink.
+    let current = directory;
+    for (const part of ["", ...relative(directory, distribution).split(sep)]) {
+      current = join(current, part);
+      if (current === distribution) {
+        await mkdir(current).catch((error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+        });
+      }
+      if (!(await lstat(current)).isDirectory())
+        throw new Error(`Expected owned directory, not a symlink: ${current}`);
+    }
+    const record = (value: unknown): value is Record<string, unknown> =>
+      typeof value === "object" && value !== null && !Array.isArray(value);
+    let document: Record<string, unknown> = {};
+    const existing = await lstat(policyPath).catch((error: unknown) => {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      return undefined;
+    });
+    if (existing) {
+      if (!existing.isFile())
+        throw new Error("Expected a regular policies.json, not a symlink");
+      const parsed: unknown = JSON.parse(await readFile(policyPath, "utf8"));
+      if (!record(parsed) || !record(parsed.policies))
+        throw new Error(
+          "Expected a policies.json object with a policies object",
+        );
+      document = parsed;
+    }
+    const policies = document.policies as Record<string, unknown> | undefined;
+    if (policies?.DisableAppUpdate === true) return;
+    if (
+      policies?.DisableAppUpdate !== undefined &&
+      typeof policies.DisableAppUpdate !== "boolean"
+    )
+      throw new Error("DisableAppUpdate must be a boolean");
+    document.policies = { ...policies, DisableAppUpdate: true };
+    signal.throwIfAborted();
+    temporary = await mkdtemp(join(distribution, ".lightfield-policy-"));
+    const pending = join(temporary, "policies.json");
+    await writeFile(pending, `${JSON.stringify(document, null, 2)}\n`);
+    signal.throwIfAborted();
+    await rename(pending, policyPath);
+  } catch (error) {
+    signal.throwIfAborted();
+    throw new Error(
+      `Could not disable managed Firefox application updates at ${policyPath}. Check policy JSON and cache permissions. ${String(error)}`,
+      { cause: error },
+    );
+  } finally {
+    if (temporary) await rm(temporary, { recursive: true, force: true });
+  }
 }
 
 // Installer has no cancellation or install lock API. Isolate it (including
@@ -147,6 +226,8 @@ export async function resolveManagedBinary(
       if (expected !== (await digest(binary(entry))))
         throw new Error("executable checksum differs");
       signal.throwIfAborted();
+      if (target === "firefox")
+        await disableManagedFirefoxUpdates(entry, platform, signal);
       await discoverBinary(
         target,
         { ...env, [key]: binary(entry) },
@@ -163,8 +244,11 @@ export async function resolveManagedBinary(
       );
     }
   };
-  const hit = await cached();
-  if (hit) return hit;
+  // Firefox cache reuse may migrate an older policy; serialize it with installs.
+  if (target !== "firefox") {
+    const hit = await cached();
+    if (hit) return hit;
+  }
   await mkdir(cache, { recursive: true });
   // Heartbeat-based stale recovery is supplied by proper-lockfile; lock files
   // are per pin/platform, never locks or deletes unrelated cache directories.
@@ -201,6 +285,8 @@ export async function resolveManagedBinary(
       `lightfield: downloading ${target} ${buildId} into ${cache}. First run needs network and archive extraction tools; Linux also needs browser system libraries.`,
     );
     await installer(target, stage, platform, signal);
+    if (target === "firefox")
+      await disableManagedFirefoxUpdates(stage, platform, signal);
     await discoverBinary(
       target,
       { ...env, [key]: binary(stage) },

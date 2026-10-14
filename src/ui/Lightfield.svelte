@@ -104,6 +104,10 @@
   }
   function synchronize() {
     if (!alive) return;
+    // The first snapshot is the built-in default (background "ink") until the
+    // persisted settings load. Painting it would mount one renderer only to
+    // destroy it for the saved one, which reads as a background flicker.
+    if (!snapshot.ready) return;
     try {
       const root = document.documentElement;
       const palette = services.applyTheme(root);

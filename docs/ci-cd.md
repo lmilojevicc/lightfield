@@ -2,14 +2,14 @@
 
 ## Bootstrap and settings
 
-`lmilojevicc/lightfield` exists but has no source yet. **No source push or public release until the maintainer completes licence review**, including third-party artwork/source redistribution rights, Commons Clause restrictions and packaged licence completeness. Automation does not establish permission to distribute. README badges are pending until the first approved push; the version badge reads `package.json` on `main`, not the latest release.
+`lmilojevicc/lightfield` is public with source published by maintainer approval. **Public releases remain on hold pending licence review**, including third-party artwork/source redistribution rights, Commons Clause restrictions and packaged licence completeness. Automation does not establish permission to distribute. The version badge reads `package.json` on `main`, not the latest release.
 
-The maintainer has configured read-only default workflow tokens, disabled Actions approval of pull requests, and created the `release` environment restricted to `main` with zero required reviewers. The remote remains empty. These settings do not clear the publication hold.
+The maintainer has configured read-only default workflow tokens, disabled Actions approval of pull requests, and created the `release` environment restricted to `main` with zero required reviewers. Source publication does not clear the release hold.
 
-After clearance, the maintainer owns the initial push and remaining GitHub settings. Workflow files alone do not enforce repository policy:
+The maintainer owns GitHub settings. Workflow files alone do not enforce repository policy:
 
 - Use Actions on GitHub-hosted runners and retain read-only default token permissions. Do not enable write tokens or secrets for fork PR workflows. Approve first-time contributor runs only after reviewing their changes.
-- After the first CI run registers **Validate**, require PRs and that check on `main`, with **zero required approvals** for a solo maintainer. Disallow force pushes and deletion, and enforce rules for administrators where supported. Do not require a second person or self-approval to unblock routine work. Until bootstrap and check registration, these protections are not fully enforceable.
+- `main` requires PRs, an up-to-date branch and **Validate**, with **zero required approvals** for a solo maintainer. Force pushes and deletion are disabled, and the rules include administrators. Retain these protections; do not require a second person or self-approval to unblock routine work.
 - Keep the **release** environment restricted to `main`, with zero required reviewers for solo maintenance. Restrict repository write/Actions dispatch access to the maintainer: environments do not independently provide a maintainer-only dispatch ACL. There is no approval pause after dispatch; successful validation proceeds to draft creation. Manual dispatch and later draft publication are the maintainer's decision points. No environment secrets are needed.
 - Enable dependency alerts and review Dependabot PRs manually. Keep release tags protected from modification/deletion where supported. Check plan/settings support rather than assuming YAML configures protections.
 
@@ -29,15 +29,20 @@ PR jobs receive only `contents: read`, no secrets, no persisted checkout credent
 
 Dependabot checks Bun and Actions weekly, groups minor/patch updates, and limits each ecosystem to three open PRs. Major updates stay separate. No automerge or cooldown is configured. Review the exact Bun runtime pins separately; do not assume dependency updates upgrade the runtime.
 
-### Current audit blockers — 2026-10-13
+### Current audit blocker — 2026-10-14
 
-With Bun 1.4.2, `bun run validate` passes (Firefox lint has two existing warnings), but `bun audit --audit-level=high` fails. **CI and draft releases are intentionally blocked.** The maintainer's dry run found no safe in-range remediation:
+With Bun 1.4.2, `bun run validate` passes (Firefox lint has two existing warnings), but the full `bun audit --audit-level=high` fails with one finding. **CI and draft releases are intentionally blocked.**
 
-- **High:** `basic-ftp@5.3.1` via `proxy-agent`: [GHSA-c475-qrg2-pj4r](https://github.com/advisories/GHSA-c475-qrg2-pj4r). Fix requires 6.2.1, but `get-uri@8.0.1` requires `^5.3.1`.
-- **High:** `node-forge@1.4.0` via `web-ext`: [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv). No published fixed version at this check.
-- **Critical:** `shell-quote@1.10.0` via `web-ext` / `fx-runner`: [GHSA-pqg4-j6r4-53mv](https://github.com/advisories/GHSA-pqg4-j6r4-53mv). Fix requires 1.11.0, but `fx-runner@1.6.0` pins 1.10.0.
+- **High:** `node-forge@1.4.0` via `web-ext@10.7.0` → `@devicefarmer/adbkit@3.3.9`: [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv). No published fixed version at this check. Wait for a reviewed published fix; no audit exception, fork or tooling replacement is authorized.
 
-Dependency remediation needs a separate maintainer-reviewed change. Do not ignore advisories or bypass the audit gate; recheck upstream fixes before updating this dated status.
+Exact root overrides resolve the other two advisories:
+
+- `basic-ftp@6.2.3`: `proxy-agent` → `pac-proxy-agent` → `get-uri@8.0.1` still requires `^5.3.1`, excluding patched releases. Local FTP checks cover MDTM, LIST fallback, cache, download completion/errors and same-host EPSV/PASV. Alternate PASV hosts remain denied by default. Existing get-uri limitations remain: Unix/DOS LIST raw timestamps lack `modifiedAt`, and its download promise has no rejection handler.
+- `shell-quote@1.12.0`: `web-ext@10.7.0` → `fx-runner@1.6.0` pins vulnerable `1.10.0`. Regression tests cover quoted arguments/profile paths and rejection of comment line terminators without executing input.
+
+Remove each override when the parent chain permits patched versions normally, after checking all resolved copies and rerunning compatibility tests, frozen installation, full validation and audit. Do not ignore advisories or bypass the audit gate; recheck upstream fixes before updating this dated status.
+
+TypeScript 6.0.3 is paired with `svelte-check@4.7.6` (supports TS 5/6) and `typescript-eslint@8.71.2` (supports `<6.1.0`). All seven configured projects remain checked. Dependabot ignores only TypeScript `>=7`: TS 7 lacks the legacy compiler API required by the current Svelte checker. Revisit that limit when both integrations support it; supported TS 6 and other ecosystem updates remain enabled.
 
 ## Draft release
 

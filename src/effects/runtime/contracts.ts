@@ -50,7 +50,6 @@ export interface BackgroundStatus {
   active: boolean;
   ready: boolean;
   mounting: boolean;
-  idleReleased: boolean;
   message: string;
   filterMessage: string;
   diagnostic: Readonly<BackgroundFailure> | null;

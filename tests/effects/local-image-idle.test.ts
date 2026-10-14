@@ -34,7 +34,7 @@ const settings: LocalImageSettings = {
   filterOverrides: {},
 };
 
-test("matching original candidate remains decoded and owned across warm inactivity, releases exactly once", async () => {
+test("matching original candidate remains decoded, owned and displayed across inactivity, releases exactly once", async () => {
   let disposed = 0,
     appended = 0,
     hidden = false;
@@ -105,7 +105,7 @@ test("matching original candidate remains decoded and owned across warm inactivi
     expect(disposed).toBe(0);
     expect(appended).toBe(1);
     instance.update({ ...state, visible: false });
-    expect(hidden).toBe(true);
+    expect(hidden).toBe(false);
     expect(disposed).toBe(0);
     instance.update(state);
     expect(hidden).toBe(false);

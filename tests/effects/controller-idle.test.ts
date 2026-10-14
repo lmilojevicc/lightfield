@@ -4,6 +4,7 @@ import { BackgroundController } from "../../src/effects/runtime/controller";
 import type {
   BackgroundContext,
   BackgroundInstance,
+  BackgroundUpdateContext,
   ThemePalette,
 } from "../../src/effects/runtime/contracts";
 import type { PageActivity } from "../../src/platform/page-activity";
@@ -127,18 +128,24 @@ function fixture(
   };
   const contexts: BackgroundContext[] = [],
     updates: boolean[] = [],
+    updateContexts: BackgroundUpdateContext[] = [],
     destroyed: number[] = [];
   const host = new Node();
+  let notifyMotion: (reduced: boolean) => void = () => {};
   const controller = new BackgroundController(host as unknown as HTMLElement, {
     loaders: {
       fractal: () =>
         Promise.resolve({
           default: (context: BackgroundContext) => {
             const index = contexts.push(context) - 1;
+            const canvas = new Node();
+            canvas.className = "background-canvas";
+            context.host.append(canvas as unknown as HTMLElement);
             return (
               loader?.(context) ?? {
                 update(state) {
                   updates.push(state.visible);
+                  updateContexts.push(state);
                 },
                 resize() {},
                 destroy() {
@@ -151,7 +158,10 @@ function fixture(
     },
     activity,
     reducedMotion: () => motion,
-    subscribeReducedMotion: () => () => {},
+    subscribeReducedMotion(listener) {
+      notifyMotion = listener;
+      return () => {};
+    },
     resolveAsset: (path) => `/assets/${path}`,
     images: {
       assets: {
@@ -170,8 +180,13 @@ function fixture(
     host,
     contexts,
     updates,
+    updateContexts,
     destroyed,
     listeners,
+    motion(next: boolean) {
+      motion = next;
+      notifyMotion(next);
+    },
     activity(next: boolean) {
       if (next === active) return;
       active = next;
@@ -183,56 +198,69 @@ function fixture(
   };
 }
 
-test("warm renderer pauses immediately, preserves identity/time for 59,999ms, releases once at 60,000ms", async () => {
-  const f = fixture();
-  await f.set();
-  expect(f.contexts).toHaveLength(1);
-  f.activity(false);
-  expect(f.updates.at(-1)).toBe(false);
-  expect(timers.size).toBe(1);
-  now += 59_999;
-  runDue();
-  expect(f.destroyed).toHaveLength(0);
-  f.activity(true);
-  await flush();
-  expect(f.contexts).toHaveLength(1);
-  expect(f.destroyed).toHaveLength(0);
-  f.activity(false);
-  now += 60_000;
-  runDue();
-  expect(f.destroyed).toEqual([0]);
-  expect(
-    f.host.children.some((node) => node.className === "background-preview"),
-  ).toBe(true);
-  f.activity(true);
-  await flush();
-  expect(f.destroyed).toEqual([0]);
-  expect(f.contexts).toHaveLength(2);
-  expect(
-    f.host.children.some((node) => node.className === "background-preview"),
-  ).toBe(true);
-  requiredValue(f.contexts[0]).reportPaint?.();
-  expect(
-    f.host.children.some((node) => node.className === "background-preview"),
-  ).toBe(true);
-  requiredValue(f.contexts[1]).reportPaint?.();
-  expect(
-    f.host.children.find((node) => node.className === "background-preview")
-      ?.removed,
-  ).toBe(true);
-});
+for (const duration of [60_001, 300_000, 3_600_000])
+  test(`painted renderer retains the same canvas across repeated ${String(duration)}ms inactivity`, async () => {
+    const f = fixture();
+    await f.set();
+    requiredValue(f.contexts[0]).reportPaint?.();
+    const mount = requiredValue(f.host.children[0]);
+    const canvas = requiredValue(mount.children[0]);
+    for (let cycle = 0; cycle < 3; cycle++) {
+      f.activity(false);
+      expect(f.updates.at(-1)).toBe(false);
+      now += duration;
+      runDue();
+      expect(f.destroyed).toEqual([]);
+      expect(f.host.children).toHaveLength(1);
+      expect(f.host.children[0]).toBe(mount);
+      expect(mount.children).toHaveLength(1);
+      expect(mount.children[0]).toBe(canvas);
+      expect(f.controller.current()).toMatchObject({
+        ready: true,
+        active: false,
+      });
+      expect(timers.size).toBe(0);
+      f.activity(true);
+      await flush();
+      expect(f.updates.at(-1)).toBe(true);
+      expect(f.contexts).toHaveLength(1);
+      expect(f.host.children).toHaveLength(1);
+      expect(f.host.children[0]).toBe(mount);
+      expect(mount.children).toHaveLength(1);
+      expect(mount.children[0]).toBe(canvas);
+      expect(f.destroyed).toEqual([]);
+    }
+    f.controller.destroy();
+    f.controller.destroy();
+    expect(f.destroyed).toEqual([0]);
+    expect(f.host.children).toEqual([]);
+  });
 
-test("overdue background timer is reconciled synchronously on regain without double release", async () => {
+test("resume after throttled timers retains the painted instance and applies latest hidden settings", async () => {
   const f = fixture();
   await f.set();
+  requiredValue(f.contexts[0]).reportPaint?.();
+  const mount = requiredValue(f.host.children[0]);
   f.activity(false);
-  now += 62_000;
+  const updateCount = f.updateContexts.length;
+  await f.set({ opacity: 0.3 });
+  f.motion(true);
+  await f.set({ opacity: 0.8 }, { ...palette, lightTheme: true });
+  expect(f.updateContexts).toHaveLength(updateCount);
+  now += 3_600_000; // No timer callbacks while the page is throttled.
   f.activity(true);
   await flush();
-  expect(f.destroyed).toEqual([0]);
-  expect(f.contexts).toHaveLength(2);
   runDue();
-  expect(f.destroyed).toEqual([0]);
+  expect(f.destroyed).toEqual([]);
+  expect(f.contexts).toHaveLength(1);
+  expect(f.host.children).toHaveLength(1);
+  expect(f.host.children[0]).toBe(mount);
+  expect(f.updateContexts.at(-1)).toMatchObject({
+    visible: true,
+    reducedMotion: true,
+    config: { opacity: 0.8 },
+    palette: { lightTheme: true },
+  });
 });
 
 test("inactive boot defers import and hidden changes coalesce to latest palette/config", async () => {
@@ -272,7 +300,9 @@ test("stale asynchronous factory cannot adopt or clear preview; newest reduced-m
   await flush();
   const stale = requiredValue(f.contexts[0]);
   f.activity(false);
-  motion = true;
+  now += 3_600_000;
+  runDue();
+  f.motion(true);
   await f.set({ opacity: 0.4 });
   resolve({
     update() {},
@@ -360,6 +390,35 @@ test("runtime failure and explicit retry keep fallback until the replacement rea
   ).toBe(true);
 });
 
+test("context loss after long inactivity disposes once and defers genuine recovery until resume", async () => {
+  const f = fixture();
+  await f.set();
+  requiredValue(f.contexts[0]).reportPaint?.();
+  f.activity(false);
+  now += 3_600_000;
+  runDue();
+  expect(f.destroyed).toEqual([]);
+  requiredValue(f.contexts[0]).reportRuntimeFailure(
+    new Error("WebGL context lost"),
+  );
+  expect(f.destroyed).toEqual([0]);
+  expect(f.controller.diagnostic?.retry).toBe("deferred");
+  expect(timers.size).toBe(0);
+  expect(f.host.children[0]?.className).toBe("background-preview");
+  f.activity(true);
+  expect(timers.size).toBe(1);
+  now += 1000;
+  runDue();
+  await flush();
+  expect(f.contexts).toHaveLength(2);
+  requiredValue(f.contexts[1]).reportPaint?.();
+  expect(f.controller.current().ready).toBe(true);
+  expect(f.controller.diagnostic?.retry).toBe("recovered");
+  f.controller.destroy();
+  f.controller.destroy();
+  expect(f.destroyed).toEqual([0, 1]);
+});
+
 test("hidden source mismatch destroys old instance immediately and imports only latest on resume", async () => {
   const f = fixture();
   await f.set();
@@ -372,9 +431,12 @@ test("hidden source mismatch destroys old instance immediately and imports only 
   await flush();
   expect(f.contexts).toHaveLength(2);
   expect(requiredValue(f.contexts[1]).config.opacity).toBe(0.8);
+  f.controller.destroy();
+  f.controller.destroy();
+  expect(f.destroyed).toEqual([0, 1]);
 });
 
-test("typed status readiness follows actual paint and activity release; stale paint cannot reveal a replacement", async () => {
+test("typed status stays ready during long inactivity; stale paint cannot reveal a switched replacement", async () => {
   const f = fixture();
   const states: boolean[] = [];
   const stop = f.controller.subscribe((status) => {
@@ -395,9 +457,11 @@ test("typed status readiness follows actual paint and activity release; stale pa
   runDue();
   await flush();
   expect(f.controller.current()).toMatchObject({
-    ready: false,
-    idleReleased: true,
+    ready: true,
+    active: false,
   });
+  await f.controller.set("none", {}, palette);
+  await f.set();
   f.activity(true);
   await flush();
   requiredValue(f.contexts[0]).reportPaint?.();

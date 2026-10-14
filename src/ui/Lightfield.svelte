@@ -47,7 +47,6 @@
     active: false,
     ready: false,
     mounting: false,
-    idleReleased: false,
     message: "",
     filterMessage: "",
     diagnostic: null,

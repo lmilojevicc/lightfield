@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { SEARCH_ENGINES } from "../../../src/ui/shell/search-engines";
 import { assertSearchFocus } from "./search-focus-browser";
+import { assertBootBackground } from "./boot-background-browser";
 
 // Opt-in production smoke owns only its disposable, explicitly headless browser.
 const binary = process.env.LIGHTFIELD_UI_HEADLESS_CHROME;
@@ -74,7 +75,9 @@ class CDP {
   }
 }
 
-test.skipIf(!binary).each(["search focus", "settings"] as const)(
+test
+  .skipIf(!binary)
+  .each(["search focus", "settings", "boot background"] as const)(
   "headless production %s: keyboard focus, dismissal and presentation geometry",
   async (suite) => {
     if (!binary) throw new Error("Explicit headless binary required");
@@ -230,6 +233,10 @@ test.skipIf(!binary).each(["search focus", "settings"] as const)(
       await wait(1000);
       if (suite === "search focus") {
         await assertSearchFocus(browser);
+        return;
+      }
+      if (suite === "boot background") {
+        await assertBootBackground(browser);
         return;
       }
       await evaluate(

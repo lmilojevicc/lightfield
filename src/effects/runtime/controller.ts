@@ -30,6 +30,10 @@ export type { BackgroundLoader } from "./loaders";
 import type { LocalImageAssetId } from "../../shared/local-image";
 import type { BackgroundControllerState, ThemePalette } from "./contracts";
 
+/** A cold mount may show the saved still preview, but only after this grace so a
+ *  fast mount never flashes a still image before its first live frame. */
+const PREVIEW_GRACE_MS = 250;
+
 /** Inactivity pauses the selected renderer in place, retaining its last painted frame. */
 export class BackgroundController {
   private readonly instances = new ActiveInstanceSlot();
@@ -48,6 +52,7 @@ export class BackgroundController {
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private cold = false;
   private preview: HTMLElement | undefined;
+  private previewTimer: ReturnType<typeof setTimeout> | undefined;
   private imageFilter = "none";
   private imageAbort: AbortController | undefined;
   private readonly listeners = new Set<(status: BackgroundStatus) => void>();
@@ -209,7 +214,11 @@ export class BackgroundController {
       this.publish();
       return;
     }
-    if (this.cold && id !== "local-image") this.showPreview(id);
+    if (this.cold && id !== "local-image") {
+      // A fallback that was already on screen stays; a fresh mount earns one.
+      if (this.preview) this.showPreview(id);
+      else this.showPreviewAfterGrace(id);
+    }
     if (id === "local-image") {
       const imageAbort = new AbortController();
       this.imageAbort = imageAbort;
@@ -487,6 +496,19 @@ export class BackgroundController {
     this.instances.clear();
     this.hasInstance = false;
   }
+  private showPreviewAfterGrace(id: BackgroundId): void {
+    this.cancelPreviewTimer();
+    this.previewTimer = setTimeout(() => {
+      this.previewTimer = undefined;
+      if (this.destroyed || this.painted || this.preview) return;
+      this.showPreview(id);
+    }, PREVIEW_GRACE_MS);
+  }
+  private cancelPreviewTimer(): void {
+    if (this.previewTimer === undefined) return;
+    clearTimeout(this.previewTimer);
+    this.previewTimer = undefined;
+  }
   private showPreview(id: BackgroundId): void {
     this.hidePreview();
     const preview = document.createElement("div");
@@ -498,6 +520,7 @@ export class BackgroundController {
     this.host.append(preview);
   }
   private hidePreview(): void {
+    this.cancelPreviewTimer();
     this.preview?.remove();
     this.preview = undefined;
   }

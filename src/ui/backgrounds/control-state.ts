@@ -53,11 +53,12 @@ export function relocate(
   const active = node.ownerDocument.activeElement;
   const focused =
     active instanceof HTMLElement && node.contains(active) ? active : null;
-  const mover = destination as HTMLElement & {
-    moveBefore?: (node: Node, before: Node | null) => void;
-  };
-  if (mover.moveBefore && node.isConnected && destination.isConnected)
-    mover.moveBefore(node, before ?? null);
+  if (
+    typeof destination.moveBefore === "function" &&
+    node.isConnected &&
+    destination.isConnected
+  )
+    destination.moveBefore(node, before ?? null);
   else if (before !== undefined) destination.insertBefore(node, before);
   else destination.append(node);
   focused?.focus({ preventScroll: true });

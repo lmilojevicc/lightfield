@@ -30,7 +30,7 @@ export type { BackgroundLoader } from "./loaders";
 import type { LocalImageAssetId } from "../../shared/local-image";
 import type { BackgroundControllerState, ThemePalette } from "./contracts";
 
-/** A renderer pauses immediately, remains warm for at most 60s, then releases its resources. */
+/** Inactivity pauses the selected renderer in place, retaining its last painted frame. */
 export class BackgroundController {
   private readonly instances = new ActiveInstanceSlot();
   private hasInstance = false;
@@ -46,9 +46,6 @@ export class BackgroundController {
   private lastFailure: BackgroundFailure | null = null;
   private retryUsed = false;
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
-  private idleTimer: ReturnType<typeof setTimeout> | undefined;
-  private inactiveSince: number | undefined;
-  private idleReleased = false;
   private cold = false;
   private preview: HTMLElement | undefined;
   private imageFilter = "none";
@@ -97,7 +94,6 @@ export class BackgroundController {
       active: !this.destroyed && this.activity.isActive(),
       ready: !this.state || this.state.id === "none" || this.painted,
       mounting: this.mounting,
-      idleReleased: this.idleReleased && !this.hasInstance,
       message: this.host.dataset.error ?? "",
       filterMessage: this.filterMessage,
       diagnostic: this.diagnostic,
@@ -407,7 +403,6 @@ export class BackgroundController {
     if (this.destroyed) return;
     this.destroyed = true;
     this.cancelRecovery();
-    this.cancelIdleTimer();
     this.generation++;
     this.releaseInstance();
     this.resizeObserver.disconnect();
@@ -425,10 +420,7 @@ export class BackgroundController {
     this.publish();
     if (this.destroyed) return;
     if (!active) {
-      if (this.inactiveSince !== undefined) return;
-      this.inactiveSince = Date.now();
-      this.idleReleased = false;
-      // In-flight imports/decodes must not adopt after inactivity. Completed matching instances stay warm.
+      // In-flight imports/decodes must not adopt after inactivity. Completed matching instances retain their last frame.
       if (
         this.mounting ||
         (this.state?.id === "local-image" && !this.hasInstance)
@@ -457,16 +449,9 @@ export class BackgroundController {
         this.publishFailure();
       }
       this.updateInstance();
-      this.scheduleIdleRelease();
       this.publish();
       return;
     }
-    const expired =
-      this.inactiveSince !== undefined &&
-      Date.now() - this.inactiveSince >= 60_000;
-    this.inactiveSince = undefined;
-    this.cancelIdleTimer();
-    if (expired && !this.idleReleased) this.releaseIdle();
     if (this.failure?.retry === "deferred") {
       this.scheduleRetry();
       return;
@@ -494,47 +479,6 @@ export class BackgroundController {
     }
   }
 
-  private scheduleIdleRelease(): void {
-    this.cancelIdleTimer();
-    if (this.inactiveSince === undefined) return;
-    this.idleTimer = setTimeout(
-      () => {
-        this.idleTimer = undefined;
-        if (this.inactiveSince === undefined || this.destroyed) return;
-        const remaining = 60_000 - (Date.now() - this.inactiveSince);
-        if (remaining > 0) {
-          this.scheduleIdleRelease();
-          return;
-        }
-        this.releaseIdle();
-      },
-      Math.max(1, 60_000 - (Date.now() - this.inactiveSince)),
-    );
-  }
-  private cancelIdleTimer(): void {
-    if (this.idleTimer !== undefined) clearTimeout(this.idleTimer);
-    this.idleTimer = undefined;
-  }
-  private releaseIdle(): void {
-    if (
-      this.idleReleased ||
-      (this.inactiveSince !== undefined &&
-        Date.now() - this.inactiveSince < 60_000)
-    )
-      return;
-    this.idleReleased = true;
-    if (
-      this.state?.id &&
-      this.state.id !== "none" &&
-      this.state.id !== "local-image"
-    )
-      this.showPreview(this.state.id);
-    this.releaseInstance();
-    this.generation++;
-    this.mounting = false;
-    this.cold = true;
-    this.publish();
-  }
   private releaseInstance(): void {
     this.thumbnailBorrower = undefined;
     this.painted = false;

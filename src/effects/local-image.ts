@@ -134,7 +134,7 @@ export async function createLocalImage(
     const mount = () => {
       owned.image.className = "local-image-background";
       owned.image.style.objectFit = settings.fit;
-      owned.image.hidden = !visible;
+      owned.image.hidden = false;
       host.append(owned.image);
       preparedByHost.set(host, { assetId, image: owned });
     };
@@ -153,7 +153,6 @@ export async function createLocalImage(
       update(next) {
         context = next;
         visible = next.visible;
-        owned.image.hidden = !visible;
         if (!visible) {
           resizeInvalidated = false;
           if (!filter)

@@ -96,7 +96,7 @@ beforeEach(() => {
     },
   );
   install("setTimeout", (fn: () => void, delay: number) => {
-    expect([1000, 60000]).toContain(delay);
+    expect(delay).toBe(1000);
     timers.set(++timerId, fn);
     return timerId;
   });
@@ -244,13 +244,13 @@ test("controller: hidden failures defer the same budget; pending retries cancel 
   await f.controller.set("fractal", {}, palette);
   visibility(false);
   requiredValue(f.contexts[0]).reportRuntimeFailure(new Error("context lost"));
-  expect(timers.size).toBe(1);
+  expect(timers.size).toBe(0);
   expect(f.controller.diagnostic?.retry).toBe("deferred");
   await f.controller.set("fractal", {}, palette);
   visibility(true);
   expect(timers.size).toBe(1);
   visibility(false);
-  expect(timers.size).toBe(1);
+  expect(timers.size).toBe(0);
   visibility(true);
   await advance();
   expect(f.contexts.length).toBe(2);
@@ -271,20 +271,6 @@ test("controller: hidden failures defer the same budget; pending retries cancel 
   expect(timers.size).toBe(0);
   await advance();
   expect(f.destroyed).toEqual([0, 1, 2, 3]);
-});
-
-test("controller: idle release uses controlled elapsed time and preserves the remaining budget", async () => {
-  const f = fixture();
-  await f.controller.set("fractal", {}, palette);
-  visibility(false);
-  now += 59_000;
-  await advance();
-  expect(f.destroyed).toEqual([]);
-  expect(timers.size).toBe(1);
-  now += 1000;
-  await advance();
-  expect(f.destroyed).toEqual([0]);
-  expect(timers.size).toBe(0);
 });
 
 for (const source of ["ascii", "none"] as const)

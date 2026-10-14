@@ -1,0 +1,11 @@
+{
+  "exceptions": [
+    {
+      "ghsa": "GHSA-86w9-cpqp-85rv",
+      "package": "node-forge",
+      "expires": "2027-01-15",
+      "reason": "Dev-only transitive dependency of web-ext's Firefox-for-Android runner (web-ext -> @devicefarmer/adbkit -> node-forge). The vulnerable RSA PKCS#1 v1.5 verification path is adbkit's tcpusb/socket.js, which no workflow here executes: web-ext is used for the lint command and for the Chromium runner plus Firefox RDP adapters, and none of those import adb (only extension-runners/firefox-android.js does). Nothing in this tree ships node-forge to users.",
+      "removal": "Delete this entry once node-forge publishes a release above 1.4.0 and bun.lock resolves it. Removal is required before the expiry check fails the audit."
+    }
+  ]
+}

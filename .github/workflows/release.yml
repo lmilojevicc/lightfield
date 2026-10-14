@@ -36,7 +36,8 @@ jobs:
           no-cache: true
       - run: bun install --frozen-lockfile
       - run: bun run validate
-      - run: bun audit --audit-level=high
+      - name: Audit dependencies (reviewed exceptions only)
+        run: bun run audit
       - name: Check package and built manifest versions
         id: version
         run: |

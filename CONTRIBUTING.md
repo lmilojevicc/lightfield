@@ -9,7 +9,7 @@ Use Node 24+, Bun **1.4.2** (pinned in `package.json`), and `zip` / `unzip` on P
 ```sh
 bun install --frozen-lockfile
 bun run validate
-bun audit --audit-level=high
+bun run audit
 ```
 
 Once bootstrapped, fork `lmilojevicc/lightfield`, branch from `main`, and open a PR back to `main`. Maintainer changes use PRs too. Keep changes focused and describe validation performed. Do not commit `dist/`, `artifacts/`, browser profiles or secrets.

@@ -34,7 +34,8 @@ jobs:
           no-cache: true
       - run: bun install --frozen-lockfile
       - run: bun run validate
-      - run: bun audit --audit-level=high
+      - name: Audit dependencies (reviewed exceptions only)
+        run: bun run audit
       - name: Upload unsigned Chromium ZIP for local testing
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

@@ -11,7 +11,9 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  rename,
   rm,
+  symlink,
   writeFile,
   utimes,
 } from "node:fs/promises";
@@ -22,6 +24,7 @@ import lockfile from "proper-lockfile";
 import {
   browserCache,
   browserPins,
+  disableManagedFirefoxUpdates,
   managedPlatform,
   resolveManagedBinary,
 } from "./managed-browsers";
@@ -32,7 +35,18 @@ async function rejects(work: Promise<unknown>, message?: string) {
   if (message) expect(String(error)).toContain(message);
 }
 
-async function fixture() {
+function firefoxPolicyPath(executable: string, platform = managedPlatform()) {
+  return join(
+    dirname(executable),
+    ...(platform === BrowserPlatform.MAC || platform === BrowserPlatform.MAC_ARM
+      ? ["..", "Resources"]
+      : []),
+    "distribution",
+    "policies.json",
+  );
+}
+
+async function fixture(requireFirefoxPolicy = false) {
   const home = await mkdtemp(join(tmpdir(), "lightfield-managed-test-"));
   const env = {
     HOME: home,
@@ -57,9 +71,17 @@ async function fixture() {
       buildId: browserPins[target],
     });
     await mkdir(dirname(executable), { recursive: true });
+    if (target === "firefox")
+      await mkdir(dirname(dirname(firefoxPolicyPath(executable, platform))), {
+        recursive: true,
+      });
+    const policyCheck =
+      target === "firefox" && requireFirefoxPolicy
+        ? `grep -q '"DisableAppUpdate": true' "$(dirname "$0")/${platform === BrowserPlatform.MAC || platform === BrowserPlatform.MAC_ARM ? "../Resources/" : ""}distribution/policies.json" || exit 42\n`
+        : "";
     await writeFile(
       executable,
-      `#!/bin/sh\necho '${target === "chromium" ? "Google Chrome for Testing 151.0.7922.47" : "Mozilla Firefox 157.0.1"}'\n`,
+      `#!/bin/sh\n${policyCheck}echo '${target === "chromium" ? "Google Chrome for Testing 151.0.7922.47" : "Mozilla Firefox 157.0.1"}'\n`,
     );
     await chmod(executable, 0o700);
   };
@@ -397,6 +419,351 @@ test.skipIf(process.platform === "win32")(
           LIGHTFIELD_CHROMIUM_BINARY: path,
         }),
       ).toBe(path);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test("managed Firefox policy uses the official app layout on every supported platform", async () => {
+  const f = await fixture();
+  try {
+    for (const platform of [
+      BrowserPlatform.MAC_ARM,
+      BrowserPlatform.MAC,
+      BrowserPlatform.LINUX,
+      BrowserPlatform.WIN64,
+    ]) {
+      const entry = join(f.home, platform);
+      const executable = computeExecutablePath({
+        cacheDir: entry,
+        browser: Browser.FIREFOX,
+        platform,
+        buildId: browserPins.firefox,
+      });
+      const app = join(entry, "firefox", `${platform}-${browserPins.firefox}`);
+      const policy = join(
+        app,
+        ...(platform === BrowserPlatform.MAC ||
+        platform === BrowserPlatform.MAC_ARM
+          ? ["Firefox.app", "Contents", "Resources"]
+          : [platform === BrowserPlatform.LINUX ? "firefox" : "core"]),
+        "distribution",
+        "policies.json",
+      );
+      expect(firefoxPolicyPath(executable, platform)).toBe(policy);
+      await mkdir(dirname(dirname(policy)), { recursive: true });
+      await disableManagedFirefoxUpdates(entry, platform, f.signal);
+      expect(JSON.parse(await readFile(policy, "utf8"))).toEqual({
+        policies: { DisableAppUpdate: true },
+      });
+    }
+  } finally {
+    await f.clean();
+  }
+});
+
+test.skipIf(process.platform === "win32")(
+  "managed Firefox disables updates before fresh and legacy-cache probes without changing the digest",
+  async () => {
+    const f = await fixture(true);
+    try {
+      const binary = await resolveManagedBinary(
+        "firefox",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      const policy = firefoxPolicyPath(binary);
+      const entry = join(
+        f.cache,
+        `${managedPlatform()}-firefox-${browserPins.firefox}`,
+      );
+      const marker = await readFile(join(entry, "complete.sha256"), "utf8");
+      expect(marker).toBe(
+        createHash("sha256")
+          .update(await readFile(binary))
+          .digest("hex"),
+      );
+      await rm(dirname(policy), { recursive: true });
+      const paths = await Promise.all(
+        Array.from({ length: 3 }, () =>
+          resolveManagedBinary("firefox", f.signal, f.env, () => {
+            throw new Error("legacy cache must not redownload");
+          }),
+        ),
+      );
+      expect(paths).toEqual([binary, binary, binary]);
+      expect(JSON.parse(await readFile(policy, "utf8"))).toEqual({
+        policies: { DisableAppUpdate: true },
+      });
+      expect(await readFile(join(entry, "complete.sha256"), "utf8")).toBe(
+        marker,
+      );
+      expect(await readdir(dirname(policy))).toEqual(["policies.json"]);
+      expect(
+        (await readdir(f.cache)).some((name) => name.endsWith(".lock")),
+      ).toBe(false);
+      expect(f.installs()).toBe(1);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "managed Firefox preserves custom settings and rejects malformed policies without overwriting them",
+  async () => {
+    const f = await fixture(true);
+    try {
+      const binary = await resolveManagedBinary(
+        "firefox",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      const policy = firefoxPolicyPath(binary);
+      const custom = {
+        comment: "keep",
+        policies: { DisableTelemetry: true, DisableAppUpdate: false },
+      };
+      await writeFile(policy, JSON.stringify(custom));
+      await resolveManagedBinary("firefox", f.signal, f.env, f.installer);
+      expect(JSON.parse(await readFile(policy, "utf8"))).toEqual({
+        ...custom,
+        policies: { ...custom.policies, DisableAppUpdate: true },
+      });
+      const unchanged = await readFile(policy, "utf8");
+      await resolveManagedBinary("firefox", f.signal, f.env, f.installer);
+      expect(await readFile(policy, "utf8")).toBe(unchanged);
+      for (const malformed of [
+        "{",
+        "null",
+        "[]",
+        "{}",
+        '{"policies":[]}',
+        '{"policies":{"DisableAppUpdate":"true"}}',
+      ]) {
+        await writeFile(policy, malformed);
+        await rejects(
+          resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+          "Could not disable managed Firefox application updates",
+        );
+        expect(await readFile(policy, "utf8")).toBe(malformed);
+      }
+      expect(f.installs()).toBe(1);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "managed Firefox refuses policy symlinks and write failures without touching external files",
+  async () => {
+    const f = await fixture();
+    try {
+      const binary = await resolveManagedBinary(
+        "firefox",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      const policy = firefoxPolicyPath(binary);
+      const outside = join(f.home, "outside");
+      await mkdir(outside);
+      const externalPolicy = join(outside, "policies.json");
+      await writeFile(externalPolicy, "external");
+      await rm(policy);
+      await symlink(externalPolicy, policy);
+      await rejects(
+        resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+        "not a symlink",
+      );
+      await rm(dirname(policy), { recursive: true });
+      await symlink(outside, dirname(policy));
+      await rejects(
+        resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+        "not a symlink",
+      );
+      await rm(dirname(policy));
+      await mkdir(dirname(policy));
+      await chmod(dirname(policy), 0o500);
+      try {
+        await rejects(
+          resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+          "cache permissions",
+        );
+      } finally {
+        await chmod(dirname(policy), 0o700);
+      }
+      const entry = join(
+        f.cache,
+        `${managedPlatform()}-firefox-${browserPins.firefox}`,
+      );
+      const moved = join(f.home, "moved-entry");
+      await rename(entry, moved);
+      await symlink(moved, entry);
+      await rejects(
+        resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+        "not a symlink",
+      );
+      expect(await readdir(dirname(policy))).toEqual([]);
+      expect(await readFile(externalPolicy, "utf8")).toBe("external");
+      expect(await readdir(outside)).toEqual(["policies.json"]);
+      expect(f.installs()).toBe(1);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "managed Firefox validates checksum before policy migration and still rejects version drift",
+  async () => {
+    const f = await fixture(true);
+    try {
+      const binary = await resolveManagedBinary(
+        "firefox",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      const policy = firefoxPolicyPath(binary);
+      await rm(policy);
+      await writeFile(
+        binary,
+        (await readFile(binary, "utf8")).replace("157.0.1", "158.0"),
+      );
+      await rejects(
+        resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+        "checksum differs",
+      );
+      expect(await readdir(dirname(policy))).toEqual([]);
+      const entry = join(
+        f.cache,
+        `${managedPlatform()}-firefox-${browserPins.firefox}`,
+      );
+      await writeFile(
+        join(entry, "complete.sha256"),
+        createHash("sha256")
+          .update(await readFile(binary))
+          .digest("hex"),
+      );
+      await rejects(
+        resolveManagedBinary("firefox", f.signal, f.env, f.installer),
+        "version mismatch: expected 157.0.1, got 158.0",
+      );
+      expect(f.installs()).toBe(1);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "Chromium and explicit Firefox overrides never receive managed Firefox policies",
+  async () => {
+    const f = await fixture();
+    try {
+      const chromium = await resolveManagedBinary(
+        "chromium",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      expect(await readdir(dirname(chromium))).not.toContain("distribution");
+      const external = join(f.home, "external");
+      await f.installer("firefox", external, managedPlatform());
+      const binary = computeExecutablePath({
+        cacheDir: external,
+        browser: Browser.FIREFOX,
+        platform: managedPlatform(),
+        buildId: browserPins.firefox,
+      });
+      const policy = firefoxPolicyPath(binary);
+      await mkdir(dirname(policy));
+      await writeFile(policy, "custom external policy, do not parse or modify");
+      expect(
+        await resolveManagedBinary(
+          "firefox",
+          f.signal,
+          { ...f.env, LIGHTFIELD_FIREFOX_BINARY: binary },
+          f.installer,
+        ),
+      ).toBe(binary);
+      expect(await readFile(policy, "utf8")).toBe(
+        "custom external policy, do not parse or modify",
+      );
+      expect(await readdir(f.cache)).toEqual([
+        `${managedPlatform()}-chromium-${browserPins.chromium}`,
+      ]);
+    } finally {
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "Firefox policy migration waits for the cache lock and cancellation leaves legacy policy untouched",
+  async () => {
+    const f = await fixture(true);
+    let release: (() => Promise<void>) | undefined;
+    try {
+      const binary = await resolveManagedBinary(
+        "firefox",
+        f.signal,
+        f.env,
+        f.installer,
+      );
+      const policy = firefoxPolicyPath(binary);
+      await rm(policy);
+      const entry = join(
+        f.cache,
+        `${managedPlatform()}-firefox-${browserPins.firefox}`,
+      );
+      release = await lockfile.lock(entry, { realpath: false });
+      const cancel = new AbortController();
+      const pending = resolveManagedBinary(
+        "firefox",
+        cancel.signal,
+        f.env,
+        f.installer,
+      );
+      setTimeout(() => {
+        cancel.abort(new Error("cancel policy migration"));
+      }, 20);
+      await rejects(pending, "operation was aborted");
+      expect(await readdir(dirname(policy))).toEqual([]);
+      expect(await lockfile.check(entry, { realpath: false })).toBe(true);
+    } finally {
+      await release?.();
+      await f.clean();
+    }
+  },
+);
+
+test.skipIf(process.platform === "win32")(
+  "cancelled Firefox staging never probes or publishes an unprotected executable",
+  async () => {
+    const f = await fixture(true);
+    try {
+      const cancel = new AbortController();
+      await rejects(
+        resolveManagedBinary(
+          "firefox",
+          cancel.signal,
+          f.env,
+          async (target, stage, platform) => {
+            await f.installer(target, stage, platform);
+            cancel.abort(new Error("cancel before policy"));
+          },
+        ),
+        "cancel before policy",
+      );
+      expect(await readdir(f.cache)).toEqual([]);
+      await resolveManagedBinary("firefox", f.signal, f.env, f.installer);
+      expect(f.installs()).toBe(2);
     } finally {
       await f.clean();
     }

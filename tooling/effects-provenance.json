@@ -112,7 +112,8 @@
   {
     "source": "public/previews/dither-sky.webp",
     "path": "public/previews/dither-sky.webp",
-    "sha256": "ea4ee3192e31541a5c604484ec09dff71673c6bf65c8ae0a8b8364de9073ac8c"
+    "sha256": "dda513f1f1679b112b45f74164bbd15a8e693c98361587d655efcbecc37abeb2",
+    "modification": "Replaced duplicate Dither thumbnail with actual createDitherSky render: midnight theme via readThemePalette, descriptor defaults, 640x360 at DPR 1, RAF timestamp 10000ms; lossless WebP."
   },
   {
     "source": "public/previews/dither.webp",

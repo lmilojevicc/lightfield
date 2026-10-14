@@ -20,20 +20,22 @@ The maintainer owns GitHub settings. Workflow files alone do not enforce reposit
 ```sh
 bun install --frozen-lockfile
 bun run validate
-bun audit --audit-level=high
+bun run audit
 ```
 
-`zip` and `unzip` must be available (included on the hosted runner). Baseline tests do not provision real browsers; see [Contributing](../CONTRIBUTING.md). Failures block the job, including high/critical audit findings. Fix or update dependencies rather than ignoring the audit exit status.
+`zip` and `unzip` must be available (included on the hosted runner). Baseline tests do not provision real browsers; see [Contributing](../CONTRIBUTING.md). Failures block the job, including high/critical audit findings. Fix or update dependencies rather than ignoring the audit exit status. `bun run audit` wraps `bun audit --audit-level=high` with the reviewed exceptions in [`.github/audit-exceptions.json`](../.github/audit-exceptions.json); malformed or expired entries fail the step instead of weakening it.
 
 PR jobs receive only `contents: read`, no secrets, no persisted checkout credentials and no dependency/runtime caches. Actions are SHA-pinned with version comments. Superseded CI runs are cancelled; each job has a timeout. Successful runs retain `unsigned-local-use-chromium` and `unsigned-local-use-firefox` artifacts for three days. These are testing ZIPs, not signed releases, and PR artifacts are never release inputs.
 
 Dependabot checks Bun and Actions weekly, groups minor/patch updates, and limits each ecosystem to three open PRs. Major updates stay separate. No automerge or cooldown is configured. Review the exact Bun runtime pins separately; do not assume dependency updates upgrade the runtime.
 
-### Current audit blocker — 2026-10-14
+### Accepted audit exception — 2026-10-14
 
-With Bun 1.4.2, `bun run validate` passes (Firefox lint has two existing warnings), but the full `bun audit --audit-level=high` fails with one finding. **CI and draft releases are intentionally blocked.**
+One advisory is accepted for a code path no workflow here executes, and the acceptance expires on **2027-01-15**. Everything else still blocks CI and draft releases.
 
-- **High:** `node-forge@1.4.0` via `web-ext@10.7.0` → `@devicefarmer/adbkit@3.3.9`: [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv). No published fixed version at this check. Wait for a reviewed published fix; no audit exception, fork or tooling replacement is authorized.
+- **High:** `node-forge@1.4.0` via `web-ext@10.7.0` → `@devicefarmer/adbkit@3.3.9`: [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv), no published fixed version at this check. adbkit is pulled in by exactly one web-ext module, `util/adb.js`, which only `extension-runners/firefox-android.js` imports; the vulnerable RSA PKCS#1 v1.5 verification runs in adbkit's `tcpusb/socket.js`. `bun run lint:firefox` loads only the lint command (no adb), `bun run dev` imports the Chromium runner and Firefox RDP adapters (no adb), and the extension bundle contains no node-forge. Nothing here passes `--target=firefox-android`.
+- Removal is mandatory: delete the entry once node-forge publishes a release above 1.4.0 and `bun.lock` resolves it, and before the expiry date. `bun run audit` fails on a malformed or expired entry, so the exception cannot rot silently.
+- The reachability note above is the justification for _this_ advisory only. Do not reuse the mechanism for a finding on a path the project actually runs.
 
 Exact root overrides resolve the other two advisories:
 
@@ -41,7 +43,6 @@ Exact root overrides resolve the other two advisories:
 - `shell-quote@1.12.0`: `web-ext@10.7.0` → `fx-runner@1.6.0` pins vulnerable `1.10.0`. Regression tests cover quoted arguments/profile paths and rejection of comment line terminators without executing input.
 
 Remove each override when the parent chain permits patched versions normally, after checking all resolved copies and rerunning compatibility tests, frozen installation, full validation and audit. Do not ignore advisories or bypass the audit gate; recheck upstream fixes before updating this dated status.
-
 TypeScript 6.0.3 is paired with `svelte-check@4.7.6` (supports TS 5/6) and `typescript-eslint@8.71.2` (supports `<6.1.0`). All seven configured projects remain checked. Dependabot ignores only TypeScript `>=7`: TS 7 lacks the legacy compiler API required by the current Svelte checker. Revisit that limit when both integrations support it; supported TS 6 and other ecosystem updates remain enabled.
 
 ## Draft release

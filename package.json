@@ -23,6 +23,7 @@
     "inspect": "bun tooling/inspect.ts",
     "package": "bun tooling/package.ts",
     "lint:firefox": "bun --bun web-ext lint --source-dir dist/firefox --output text",
+    "audit": "bun tooling/audit.ts",
     "validate": "bun run check && bun run lint && bun run format:check && bun run deadcode && bun run test && bun run build && bun run inspect && bun run package && bun run lint:firefox"
   },
   "dependencies": {

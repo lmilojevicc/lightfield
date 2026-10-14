@@ -273,8 +273,16 @@ test("inactive boot defers import and hidden changes coalesce to latest palette/
   expect(f.contexts).toHaveLength(1);
   expect(requiredValue(f.contexts[0]).config.opacity).toBe(0.7);
   expect(requiredValue(f.contexts[0]).palette.lightTheme).toBe(true);
+  // A cold mount paints before the grace, so no still image is ever inserted.
   expect(
     f.host.children.some((node) => node.className === "background-preview"),
+  ).toBe(false);
+  now += 250;
+  runDue();
+  expect(
+    f.host.children.some(
+      (node) => node.className === "background-preview" && !node.removed,
+    ),
   ).toBe(true);
   requiredValue(f.contexts[0]).reportPaint?.();
   expect(
@@ -318,12 +326,54 @@ test("stale asynchronous factory cannot adopt or clear preview; newest reduced-m
   expect(f.contexts.at(-1)?.reducedMotion).toBe(true);
   expect(f.contexts.at(-1)?.config.opacity).toBe(0.4);
   stale.reportPaint?.();
+  now += 250;
+  runDue();
   expect(
     f.host.children.some(
       (node) => node.className === "background-preview" && !node.removed,
     ),
   ).toBe(true);
   requiredValue(f.contexts.at(-1)).reportPaint?.();
+  expect(
+    f.host.children.find((node) => node.className === "background-preview")
+      ?.removed,
+  ).toBe(true);
+});
+
+test("prompt cold boot never inserts the still preview", async () => {
+  const f = fixture(false);
+  await f.set();
+  f.activity(true);
+  await flush();
+  requiredValue(f.contexts[0]).reportPaint?.();
+  now += 60_000;
+  runDue();
+  expect(
+    f.host.children.some((node) => node.className === "background-preview"),
+  ).toBe(false);
+  expect(f.destroyed).toEqual([]);
+});
+
+test("a slow cold mount still falls back to the still preview", async () => {
+  const f = fixture(false, () => ({
+    update() {},
+    resize() {},
+    destroy() {},
+  }));
+  await f.set();
+  f.activity(true);
+  await flush();
+  expect(
+    f.host.children.some((node) => node.className === "background-preview"),
+  ).toBe(false);
+  now += 250;
+  runDue();
+  expect(
+    f.host.children.some(
+      (node) => node.className === "background-preview" && !node.removed,
+    ),
+  ).toBe(true);
+  requiredValue(f.contexts[0]).reportPaint?.();
   expect(
     f.host.children.find((node) => node.className === "background-preview")
       ?.removed,

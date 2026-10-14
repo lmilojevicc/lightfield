@@ -379,7 +379,7 @@
     <header class="sheet__head">
       <div class="modal__title-group drawer__title-group">
         <h2 class="sheet__title modal__title drawer__title" id="settings-title">
-          lightfield Settings
+          Lightfield Settings
         </h2>
         <span class="modal__subtitle drawer__subtitle">Preferences</span>
       </div>

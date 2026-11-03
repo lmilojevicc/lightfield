@@ -1,0 +1,16 @@
+# Fast local checks before every push. Install once per clone: `lefthook install`.
+pre-push:
+  parallel: true
+  jobs:
+    - name: prettier
+      glob: "*.{ts,js,svelte,json,md,css,html}"
+      run: bun --bun prettier --check --ignore-unknown {push_files}
+    - name: oxlint
+      glob: "*.{ts,js}"
+      run: bunx oxlint --type-aware --deny-warnings
+    - name: eslint (svelte)
+      glob: "*.svelte"
+      run: bun --bun eslint --max-warnings 0 {push_files}
+    - name: typecheck
+      glob: "*.{ts,svelte}"
+      run: bun run check

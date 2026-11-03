@@ -4,7 +4,7 @@ Source publication is on hold pending licence review. The public repository is c
 
 ## Development
 
-Use Node 24+, Bun **1.4.2** (pinned in `package.json`), and `zip` / `unzip` on PATH.
+Use Node 24+, Bun **1.4.4** (pinned in `package.json`), and `zip` / `unzip` on PATH.
 
 ```sh
 bun install --frozen-lockfile

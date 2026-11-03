@@ -7,7 +7,7 @@
 <p align="center">
   <a href="#install"><img alt="Chrome" src="https://shieldcn.dev/badge/chrome.svg?variant=outline&amp;logo=ri:FaChrome"></a>
   <a href="#install"><img alt="Firefox" src="https://shieldcn.dev/badge/firefox.svg?variant=outline&amp;logo=ri:FaFirefoxBrowser"></a>
-  <a href="package.json"><img alt="Built with Bun 1.4.2" src="https://shieldcn.dev/badge/bun-1.4.2.svg?variant=outline&amp;logo=bun"></a>
+  <a href="package.json"><img alt="Built with Bun 1.4.4" src="https://shieldcn.dev/badge/bun-1.4.4.svg?variant=outline&amp;logo=bun"></a>
   <img alt="Svelte 5" src="https://shieldcn.dev/badge/svelte-5.svg?variant=outline&amp;logo=svelte">
   <a href="https://github.com/lmilojevicc/lightfield/blob/main/package.json"><img alt="Version on main" src="https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Flmilojevicc%2Flightfield%2Fmain%2Fpackage.json&amp;query=%24.version&amp;label=version&amp;prefix=v&amp;variant=outline"></a>
   <a href="https://github.com/lmilojevicc/lightfield/actions/workflows/ci.yml"><img alt="CI on main" src="https://shieldcn.dev/github/ci/lmilojevicc/lightfield.svg?workflow=ci.yml&amp;branch=main&amp;variant=outline"></a>
@@ -74,7 +74,7 @@ Those hosts are exactly the ones declared in the manifest's `connect-src`; there
 
 ## Development
 
-Requires [Bun](https://bun.sh) 1.4.2, Node 24+ and `zip` / `unzip`.
+Requires [Bun](https://bun.sh) 1.4.4, Node 24+ and `zip` / `unzip`.
 
 ```sh
 bun install --frozen-lockfile

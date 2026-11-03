@@ -31,13 +31,11 @@ PR jobs receive only `contents: read`, no secrets, no persisted checkout credent
 
 Dependabot checks Bun and Actions weekly, groups minor/patch updates, and limits each ecosystem to three open PRs. Major updates stay separate. No automerge or cooldown is configured. Review the exact Bun runtime pins separately; do not assume dependency updates upgrade the runtime.
 
-### Accepted audit exception — 2026-10-14
+### Audit exceptions — none (2026-11-03)
 
-One advisory is accepted for a code path no workflow here executes, and the acceptance expires on **2027-01-15**. Everything else still blocks CI and draft releases.
+[`.github/audit-exceptions.json`](../.github/audit-exceptions.json) is empty. The node-forge exception accepted on 2026-10-14 (GHSA-86w9-cpqp-85rv, via `web-ext` → `@devicefarmer/adbkit`) was removed once `node-forge@1.4.1` resolved in `bun.lock`; that release also fixes the five node-forge advisories published since. The same update moved `undici` to 7.30.1 and `zod` to 4.6.6 within their ranges. The remaining findings are below the `high` gate (a moderate `minimatch` and a low `deepmerge` advisory).
 
-- **High:** `node-forge@1.4.0` via `web-ext@10.7.0` → `@devicefarmer/adbkit@3.3.9`: [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv), no published fixed version at this check. adbkit is pulled in by exactly one web-ext module, `util/adb.js`, which only `extension-runners/firefox-android.js` imports; the vulnerable RSA PKCS#1 v1.5 verification runs in adbkit's `tcpusb/socket.js`. `bun run lint:firefox` loads only the lint command (no adb), `bun run dev` imports the Chromium runner and Firefox RDP adapters (no adb), and the extension bundle contains no node-forge. Nothing here passes `--target=firefox-android`.
-- Removal is mandatory: delete the entry once node-forge publishes a release above 1.4.0 and `bun.lock` resolves it, and before the expiry date. `bun run audit` fails on a malformed or expired entry, so the exception cannot rot silently.
-- The reachability note above is the justification for _this_ advisory only. Do not reuse the mechanism for a finding on a path the project actually runs.
+If an exception is needed again, it must name one advisory, explain why the vulnerable path cannot run here, and carry an expiry and a removal condition; `bun run audit` fails on a malformed or expired entry.
 
 Exact root overrides resolve the other two advisories:
 

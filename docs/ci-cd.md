@@ -15,15 +15,17 @@ The maintainer owns GitHub settings. Workflow files alone do not enforce reposit
 
 ## Validation boundary
 
-`ci.yml` runs on PRs targeting `main`, pushes to `main`, and manual dispatch. Its stable required job name is **Validate**. Ubuntu 24.04, Node 24 and the exact Bun version in `package.json` run:
+`ci.yml` runs on PRs targeting `main`, pushes to `main`, and manual dispatch. Its stable required job name is **Validate**: a verdict job that passes only when every job below succeeded (a failed, skipped or cancelled job fails it). Ubuntu 24.04, Node 24 and the exact Bun version in `package.json` run the same scripts as `bun run validate`, as parallel jobs after `bun install --frozen-lockfile`:
 
-```sh
-bun install --frozen-lockfile
-bun run validate
-bun run audit
-```
+| Job                  | Runs                                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| Typecheck            | `bun run check` (svelte-check for the app, `bun check` for the six TS projects)              |
+| Lint                 | `bun run lint` (Oxlint, type-aware, for `.ts`/`.js`; ESLint for `.svelte`)                   |
+| Format and dead code | `bun run format:check && bun run deadcode`                                                   |
+| Test                 | `bun run test`                                                                               |
+| Build and package    | `build`, `inspect`, `package`, `lint:firefox`, then `bun run audit` and the artifact uploads |
 
-`zip` and `unzip` must be available (included on the hosted runner). Baseline tests do not provision real browsers; see [Contributing](../CONTRIBUTING.md). Failures block the job, including high/critical audit findings. Fix or update dependencies rather than ignoring the audit exit status. `bun run audit` wraps `bun audit --audit-level=high` with the reviewed exceptions in [`.github/audit-exceptions.json`](../.github/audit-exceptions.json); malformed or expired entries fail the step instead of weakening it.
+The draft release workflow still runs `bun run validate` in one job. `zip` and `unzip` must be available (included on the hosted runner). Baseline tests do not provision real browsers; see [Contributing](../CONTRIBUTING.md). Failures block the job, including high/critical audit findings. Fix or update dependencies rather than ignoring the audit exit status. `bun run audit` wraps `bun audit --audit-level=high` with the reviewed exceptions in [`.github/audit-exceptions.json`](../.github/audit-exceptions.json); malformed or expired entries fail the step instead of weakening it.
 
 PR jobs receive only `contents: read`, no secrets, no persisted checkout credentials and no dependency/runtime caches. Actions are SHA-pinned with version comments. Superseded CI runs are cancelled; each job has a timeout. Successful runs retain `unsigned-local-use-chromium` and `unsigned-local-use-firefox` artifacts for three days. These are testing ZIPs, not signed releases, and PR artifacts are never release inputs.
 
@@ -43,7 +45,7 @@ Exact root overrides resolve the other two advisories:
 - `shell-quote@1.12.0`: `web-ext@10.7.0` → `fx-runner@1.6.0` pins vulnerable `1.10.0`. Regression tests cover quoted arguments/profile paths and rejection of comment line terminators without executing input.
 
 Remove each override when the parent chain permits patched versions normally, after checking all resolved copies and rerunning compatibility tests, frozen installation, full validation and audit. Do not ignore advisories or bypass the audit gate; recheck upstream fixes before updating this dated status.
-TypeScript 6.0.3 is paired with `svelte-check@4.7.6` (supports TS 5/6) and `typescript-eslint@8.71.2` (supports `<6.1.0`). All seven configured projects remain checked. Dependabot ignores only TypeScript `>=7`: TS 7 lacks the legacy compiler API required by the current Svelte checker. Revisit that limit when both integrations support it; supported TS 6 and other ecosystem updates remain enabled.
+TypeScript 6.0.3 is paired with `svelte-check@4.7.6` (supports TS 5/6) and `typescript-eslint@8.71.2` (supports `<6.1.0`, now used for `.svelte` files only). All seven configured projects remain checked. Dependabot ignores only TypeScript `>=7`: TS 7 lacks the legacy compiler API required by the current Svelte checker. Revisit that limit when both integrations support it; supported TS 6 and other ecosystem updates remain enabled.
 
 ## Draft release
 

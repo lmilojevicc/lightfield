@@ -13,11 +13,46 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# `bun run validate` runs these one after another locally; CI runs the same
+# scripts as parallel jobs, so a PR waits for the slowest one (tests) only.
 jobs:
-  validate:
-    name: Validate
+  checks:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Typecheck
+            run: bun run check
+          - name: Lint
+            run: bun run lint
+          - name: Format and dead code
+            run: bun run format:check && bun run deadcode
+          - name: Test
+            run: bun run test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+          no-cache: true
+      - run: bun install --frozen-lockfile
+      - run: ${{ matrix.run }}
+
+  package:
+    name: Build and package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -33,7 +68,7 @@ jobs:
           bun-version-file: package.json
           no-cache: true
       - run: bun install --frozen-lockfile
-      - run: bun run validate
+      - run: bun run build && bun run inspect && bun run package && bun run lint:firefox
       - name: Audit dependencies (reviewed exceptions only)
         run: bun run audit
       - name: Upload unsigned Chromium ZIP for local testing
@@ -50,3 +85,20 @@ jobs:
           path: artifacts/lightfield-firefox.zip
           if-no-files-found: error
           retention-days: 3
+
+  # The required check. One always-running job, so a failed, skipped or
+  # cancelled dependency can never report green.
+  validate:
+    name: Validate
+    if: always()
+    needs: [checks, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require every check
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for result in $RESULTS; do test "$result" = success; done
